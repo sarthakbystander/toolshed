@@ -61,6 +61,26 @@
     }
   },
   {
+    "id": "regex-tester",
+    "name": "Regex Tester",
+    "description": "Test JavaScript regular expressions against your own text, with live match stats and a split view. Runs entirely in your browser.",
+    "category": "Developer",
+    "tags": [
+      "developer",
+      "matching",
+      "regex",
+      "regular-expression",
+      "tester"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "text-diff",
     "name": "Text Diff",
     "description": "Compare two texts and see additions and removals highlighted clearly.",

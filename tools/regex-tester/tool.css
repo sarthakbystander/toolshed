@@ -1,0 +1,120 @@
+/* Regex Tester - widget styles layered over the shared Toolshed design system. */
+
+.regex-toolbody .mono {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+
+.flags {
+  max-width: 140px;
+}
+
+.render {
+  background: var(--surface-2;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm;
+  padding: 14px;
+  min-height: 120px;
+  max-height: 420px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+}
+
+.render mark.match {
+  background: var(--accent-soft;
+  color: var(--text);
+  border-bottom: 2px solid var(--accent;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.render.placeholder {
+  color: var(--text-3;
+  font-style: italic;
+  white-space: normal;
+}
+
+.matches summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2;
+  padding: 6px 2px;
+}
+
+.match-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--border;
+}
+
+.match-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--border;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.m-idx {
+  color: var(--accent;
+  font-weight: 700;
+  font-size: 11px;
+  min-width: 3.5em;
+}
+
+.m-pos {
+  color: var(--text-3;
+  font-size: 11px;
+}
+
+.m-match {
+  flex: 1 1 auto;
+  min-width: 120px;
+  overflow-wrap: anywhere;
+  color: var(--text;
+  white-space: pre-wrap;
+}
+
+.m-caps {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 0 0 2.5em;
+}
+
+.m-caps span {
+  font-size: 11px;
+  color: var(--text-2;
+  background: var(--surface-2;
+  border: 1px solid var(--border;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.m-more {
+  color: var(--text-3;
+  font-style: italic;
+  border-bottom: none !important;
+}
