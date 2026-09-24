@@ -44,7 +44,8 @@ tools/
 Rules:
 
 - The directory name is the tool's `id` and must be `lowercase-kebab-case` (no spaces, no uppercase, no random abbreviations). Examples: `json-formatter`, `image-compressor`, `color-converter`, `uuid-generator`, `markdown-preview`.
-- The tool must be self-contained under its directory and load no external scripts from CDNs or third-party hosts. (External assets would be a review flag — see [SECURITY.md](SECURITY.md).)
+- The tool must be self-contained under its directory and load no external scripts from CDNs or third-party hosts.
+- **Use the shared design system.** Link `../../assets/toolshed.css` in the page `<head>` (before any `tool.css`), reference the logo `../../assets/logo.svg` as the favicon,and reuse the site header/footer markup from existing tools. Add only tool-specific widget styles to `tool.css`;do not duplicate shared chrome. (External assets would be a review flag — see [SECURITY.md](SECURITY.md).)
 - Tools run in the browser. Do not introduce a build step, a framework, or a Node.js runtime requirement for tools.
 - The homepage will link to each tool at `tools/<id>/`, so keep the path stable once merged.
 

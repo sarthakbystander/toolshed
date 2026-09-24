@@ -9,7 +9,8 @@
   },
   "scripts": {
     "generate": "node scripts/generators/generate-registry.js",
-    "verify": "node scripts/qa_verification/verify.js"
+    "verify": "node scripts/qa_verification/verify.js && node scripts/qa_verification/run-tool-tests.js",
+    "test:tools": "node scripts/qa_verification/run-tool-tests.js"
   },
   "keywords": [
     "web-tools",

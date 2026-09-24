@@ -21,6 +21,9 @@ toolshed/
 │       ├── tool.json              # Required — metadata contract
 │       ├── README.md              # Recommended
 │       └── tests/                 # Recommended
+├── assets/
+│   ├── toolshed.css               # Shared site design system (tokens, header, grid, buttons, footer)
+│   └── logo.svg                   # Site logo — favicon and on-page mark
 ├── registry/
 │   └── tools.json                 # GENERATED — do not hand-edit
 ├── scripts/
@@ -65,7 +68,22 @@ tools/
     └── tests/
 ```
 
-Adding a new tool must require only adding a directory under `tools/`, plus regenerating `registry/tools.json`. It must never require changing the core website architecture, the generator, or the verifier, unless the change is a deliberate contract evolution.
+Adding a new tool must require only adding a directory under `tools/`, plus regenerating `registry/tools.json`. It must never require changing the core website architecture,the generator,or the verifier,unless the change is a deliberate contract evolution.
+
+## Website chrome and design system
+
+- **Shared chrome lives in `assets/`.** `assets/toolshed.css` defines the site design system:design tokens,(warm paper background,terracotta accent,dark-mode support),header with logo,hero,category chips,tool grid,buttons,panes,and footer. `assets/logo.svg` is the site logo,used as the favicon and as the on-page mark.
+
+- **Both the homepage and every tool page load `assets/toolshed.css` first** (homepage: `assets/toolshed.css`;tool page: `../../assets/toolshed.css`),then the page's own stylesheet has needed. Tool-specific widget styles go in the tool's own `tool.css`;do not put widget styles in `assets/toolshed.css`.
+
+
+- **The logo** appears in every page header. On tool pages it links home(`href="../.."`);on the homepage it links to the top(`href="#"`). Do not replace it with another mark or wordmark,and do not change the favicon link.
+
+
+- **Chrome must stay consistent across pages.** When restyling the site,edit `assets/toolshed.css` plus the affected page shells;do not invent a parallel design in individual tool pages.
+
+
+- **The homepage renders from `registry/tools.json`** via `fetch("registry/tools.json")` with category chips,search,and a tool grid. The registry is the single source of tool listings;do not hardcode tool lists elsewhere than the fallback sample in `index.html` (used only when the registry cannot be fetched)..
 
 
 
@@ -209,9 +227,7 @@ User → Toolshed server → Third-party API
 - The verification philosophy:real checks only,and no fake tests.
 - The privacy and security invariants documented here,and in [SECURITY.md](SECURITY.md).
 
-.
 
-.
 
 If a task seems to require changing one of these,stop,and flag it in the PR description with a justification. Do not silently restructure the repo.
 

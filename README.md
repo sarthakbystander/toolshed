@@ -22,6 +22,9 @@ toolshed/
 │       ├── tool.json             # Tool metadata (source of truth)
 │       ├── README.md
 │       └── tests/
+├── assets/
+│   ├── toolshed.css              # Shared design system (tokens, header, grid, panes, footer)
+│   └── logo.svg                  # Site logo — favicon and on-page mark
 ├── registry/
 │   └── tools.json                # Generated from tools/*/tool.json — do not edit
 ├── scripts/
@@ -44,6 +47,8 @@ toolshed/
 Each tool lives at `tools/<tool-name>/` containing its own `index.html`, optional `tool.js` / `tool.css`, a `tool.json` metadata manifest, a README, and tests. The homepage links directly to each tool page.
 
 Tool IDs follow `lowercase-kebab-case` (e.g. `json-formatter`, `image-compressor`) and must match their directory name. The `tool.json` metadata contract is documented in [CONTRIBUTING.md](CONTRIBUTING.md#tool-metadata-contract).
+
+The site shares one design system. All pages load `assets/toolshed.css` (tokens, header, grid, panes, buttons, footer) and use `assets/logo.svg` as the favicon and header logo. Individual tools add only their widget-specific styles in their own `tool.css`.
 
 ## How verification works
 

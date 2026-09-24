@@ -1,1 +1,103 @@
-[]
+[
+  {
+    "id": "color-converter",
+    "name": "Color Converter",
+    "description": "Convert colors between HEX, RGB and HSL in your browser.",
+    "category": "Developer",
+    "tags": [
+      "color",
+      "converter",
+      "developer",
+      "hex",
+      "hsl",
+      "rgb"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
+    "id": "csv-to-json",
+    "name": "CSV to JSON",
+    "description": "Convert CSV into clean JSON, locally in your browser.",
+    "category": "Data",
+    "tags": [
+      "converter",
+      "csv",
+      "data",
+      "json",
+      "spreadsheet"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
+    "id": "json-formatter",
+    "name": "JSON Formatter",
+    "description": "Format, validate and inspect JSON in your browser.",
+    "category": "Developer",
+    "tags": [
+      "developer",
+      "formatter",
+      "json",
+      "minify",
+      "validator"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
+    "id": "text-diff",
+    "name": "Text Diff",
+    "description": "Compare two texts and see additions and removals highlighted clearly.",
+    "category": "Text",
+    "tags": [
+      "changes",
+      "compare",
+      "diff",
+      "review",
+      "text"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
+    "id": "uuid-generator",
+    "name": "UUID Generator",
+    "description": "Generate UUID v4 values, one or many at a time, in your browser.",
+    "category": "Developer",
+    "tags": [
+      "developer",
+      "generator",
+      "id",
+      "uuid",
+      "v4"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  }
+]

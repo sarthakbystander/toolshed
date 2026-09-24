@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Text Diff — Toolshed</title>
+  <meta name="description" content="Compare two texts and see exactly what changed. All computation happens in your tab.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / text-diff</div>
+      <h1>Text Diff</h1>
+      <p>Paste two versions of some text and see exactly what changed. All computation happens in your tab.</p>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="diff-panes">
+          <div>
+            <label for="text-a">BEFORE</label>
+            <textarea id="text-a" placeholder="The original text..." spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div>
+            <label for="text-b">AFTER</label>
+            <textarea id="text-b" placeholder="The changed text..." spellcheck="false" autocomplete="off"></textarea>
+          </div>
+        </div>
+
+        <div class="diff-toolbar">
+          <button type="button" class="btn" id="btn-diff">Compare</button>
+          <button type="button" class="btn danger" id="btn-clear">Clear</button>
+        </div>
+
+        <div class="diff-stats hidden" id="diff-stats" aria-live="polite"></div>
+        <div class="diffview hidden" id="diffview"></div>
+        <p class="hint">Green rows were added, coral rows removed. Line numbers on the left refer to each side.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.textDiff;
+      var textA = document.getElementById("text-a");
+      var textB = document.getElementById("text-b");
+      var view = document.getElementById("diffview");
+      var statsEl = document.getElementById("diff-stats");
+
+      function esc(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function runDiff() {
+        var result = lib.diffLines(textA.value, textB.value);
+        var stats = lib.countStats(textA.value, textB.value);
+        var html = "";
+        var aNum = 1;
+        var bNum = 1;
+        result.blocks.forEach(function (blk) {
+          if (blk.type === "equal") {
+            blk.lines.forEach(function (line) {
+              html += '<div class="diffrow equal"><span class="ln-a">' + aNum + '</span><span class="txt txt-a">' + esc(line) + '</span><span class="ln-b">' + bNum + '</span><span class="txt txt-b">' + esc(line) + '</span></div>';
+              aNum++;
+              bNum++;
+            });
+          } else if (blk.type === "delete") {
+            blk.lines.forEach(function (line) {
+              html += '<div class="diffrow del"><span class="ln-a">' + aNum + '</span><span class="txt txt-a">' + esc(line) + '</span><span class="ln-b"></span><span class="txt txt-b"></span></div>';
+              aNum++;
+            });
+          } else {
+            blk.lines.forEach(function (line) {
+              html += '<div class="diffrow add"><span class="ln-a"></span><span class="txt txt-a"></span><span class="ln-b">' + bNum + '</span><span class="txt txt-b">' + esc(line) + '</span></div>';
+              bNum++;
+            });
+          }
+        });
+        if (html === "") html = '<div class="diffrow equal"><span class="ln-a"></span><span class="txt txt-a">(no content)</span><span class="ln-b"></span><span class="txt txt-b"></span></div>';
+        view.innerHTML = html;
+        statsEl.classList.remove("hidden");
+        statsEl.innerHTML = '<span class="stat-add">+ ' + stats.added + ' added</span><span class=\"stat-del\">- ' + stats.removed + " removed</span>";
+        view.classList.remove("hidden");
+      }
+
+      function clearAll() {
+        textA.value = "";
+        textB.value = "";
+        view.classList.add("hidden");
+        statsEl.classList.add("hidden");
+        textA.focus();
+      }
+
+      document.getElementById("btn-diff").addEventListener("click", runDiff);
+      document.getElementById("btn-clear").addEventListener("click", clearAll);
+      textA.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runDiff();
+      });
+      textB.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runDiff();
+      });
+    })();
+  </script>
+</body>
+</html>
