@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Toolshed tool metadata",
+  "description": "Schema for tools/<tool-name>/tool.json. This is the contract every tool must satisfy. New fields must be added as optional properties so existing tools are never broken (see CONTRIBUTING.md).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "id",
+    "name",
+    "description",
+    "category",
+    "tags",
+    "version",
+    "runtime",
+    "privacy"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Unique tool identifier. Must be lowercase-kebab-case and must match the tool's directory name (tools/<id>/)."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable tool name, e.g. \"JSON Formatter\"."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One or two sentence description of what the tool does."
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Coarse grouping shown on the homepage (e.g. Developer, Text, Image). See CONTRIBUTING.md for the current conventions."
+    },
+    "tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      },
+      "description": "Lowercase keywords used for search and discovery."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the tool (major.minor.patch)."
+    },
+    "runtime": {
+      "type": "string",
+      "enum": [
+        "browser"
+      ],
+      "description": "Where the tool runs. Initially always \"browser\"."
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "execution",
+        "dataUploaded",
+        "storage"
+      ],
+      "properties": {
+        "execution": {
+          "type": "string",
+          "enum": [
+            "local"
+          ],
+          "description": "Where the tool's logic executes. Initially always \"local\"."
+        },
+        "dataUploaded": {
+          "type": "boolean",
+          "description": "True if the tool ever transmits user input or derived data over the network."
+        },
+        "storage": {
+          "type": "string",
+          "enum": [
+            "none",
+            "localStorage",
+            "sessionStorage",
+            "indexedDB"
+          ],
+          "description": "Where the tool persists data, if anywhere."
+        }
+      }
+    }
+  }
+}

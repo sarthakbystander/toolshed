@@ -1,0 +1,20 @@
+{
+  "name": "toolshed",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An open-source collection of useful web tools — free to use, easy to contribute to, and built to run directly in your browser.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "generate": "node scripts/generators/generate-registry.js",
+    "verify": "node scripts/qa_verification/verify.js"
+  },
+  "keywords": [
+    "web-tools",
+    "static-site",
+    "privacy-first",
+    "browser"
+  ]
+}

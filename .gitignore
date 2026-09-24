@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Local verification artifacts
+.agent_tmp/
+
+# NOTE: registry/tools.json is intentionally NOT ignored — it is generated and
+# then committed. The tool directories under tools/ are the source of truth,
+# but the registry is part of the published website.
