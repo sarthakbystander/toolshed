@@ -1,0 +1,5 @@
+/* JSON Formatter - widget styles on top of the shared Toolshed design system. */
+
+.output#output-json { background: var(--surface-2); }
+.output#output-json:focus { box-shadow: none; }
+.placeholder { color: var(--text-3); }

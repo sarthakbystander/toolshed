@@ -1,0 +1,14 @@
+{
+  "id": "csv-to-json",
+  "name": "CSV to JSON",
+  "description": "Convert CSV into clean JSON, locally in your browser.",
+  "category": "Data",
+  "tags": ["csv", "json", "converter", "data", "spreadsheet"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

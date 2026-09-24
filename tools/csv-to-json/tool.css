@@ -1,0 +1,37 @@
+/* CSV to JSON - widget styles on top of the shared Toolshed design system. */
+
+.csv-options {
+  display: flex;
+  gap:  16px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+.csv-options label { display: flex; align-items: center; gap: 6px; }
+.csv-options input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+.csv-options select {
+  max-width: 140px;
+  font-size: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.out-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  background: var(--surface-2);
+}

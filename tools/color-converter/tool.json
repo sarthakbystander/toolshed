@@ -1,0 +1,14 @@
+{
+  "id": "color-converter",
+  "name": "Color Converter",
+  "description": "Convert colors between HEX, RGB and HSL in your browser.",
+  "category": "Developer",
+  "tags": ["color", "converter", "hex", "rgb", "hsl", "developer"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "uuid-generator",
+  "name": "UUID Generator",
+  "description": "Generate UUID v4 values, one or many at a time, in your browser.",
+  "category": "Developer",
+  "tags": ["uuid", "generator", "v4", "id", "developer"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

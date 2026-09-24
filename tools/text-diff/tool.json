@@ -1,0 +1,14 @@
+{
+  "id": "text-diff",
+  "name": "Text Diff",
+  "description": "Compare two texts and see additions and removals highlighted clearly.",
+  "category": "Text",
+  "tags": ["diff", "text", "compare", "changes", "review"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

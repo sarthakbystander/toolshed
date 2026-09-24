@@ -1,0 +1,97 @@
+/* Color Converter - widget styles on top of the shared Toolshed design system. */
+
+.swatches {
+  display: flex;
+  gap:  10px;
+  flex-wrap: wrap;
+}
+
+.swatch-option {
+  width: 44px;
+  height: 44px;
+  border:  2px solid var(--border-2);
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.08s ease, border-color .15s;
+}
+
+.swatch-option:hover { transform: translateY(-2px); border-color: var(--text-3); }
+.swatch-option:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.preview {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.preview-swatch {
+  width: 72px;
+  min-height: 72px;
+  border: 1px solid var(--border-2);;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.preview-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.preview-meta .big { font-size: 16px; font-weight: 700; }
+
+.field { margin-bottom: 12px; }
+.field > label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+
+.copy-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.copy-row .chip {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.copy-row .chip .val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.copy-row .chip button {
+  border:  1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.copy-row .chip button:hover { background: var(--text); color: var(--bg); }
+
+.color-input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-input-row input[type="text"] { flex: 1; }
+
+@media (max-width: 560px) {
+  .copy-row .chip { flex-basis: 100%; }
+}
