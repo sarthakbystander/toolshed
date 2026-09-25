@@ -1,0 +1,14 @@
+{
+  "id": "regex-tester",
+  "name": "Regex Tester",
+  "description": "Test JavaScript regular expressions against your own text, with live match stats and a split view. Runs entirely in your browser.",
+  "category": "Developer",
+  "tags": ["regex", "regular-expression", "tester", "matching", "developer"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

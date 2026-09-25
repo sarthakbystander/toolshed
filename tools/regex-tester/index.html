@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Regex Tester — Toolshed</title>
+  <meta name="description" content="Test JavaScript regular expressions against your own text — live match stats, capture groups and a highlighted view. Nothing leaves your tab.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48  ̃0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / regex-tester</div>
+      <h1>Regex Tester</h1>
+      <p class="lede">Craft and test a regular expression against your own text. See every match highlighted, the capture groups, and live stats — all locally in your tab.</p>
+    </section>
+
+    <section class="toolbody regex-toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">PATTERN</span>
+        </div>
+        <label class="field-label" for="pattern">Regular expression</label>
+        <input class="mono" type="text" id="pattern" placeholder='e.g. \b\w+@\w+\.\w+' spellcheck="false" autocomplete="off">
+        <label class="field-label" for="flags">Flags</label>
+        <input class="mono flags" type="text" id="flags" value="g" maxlength="10" spellcheck="false" autocomplete="off" aria-describedby="flag-hint">
+        <p class="hint" id="flag-hint">g global · i ignore case · m multiline · s dotAll · u unicode · v unicodeSets · y sticky</p>
+        <div class="row">
+          <button type="button" class="btn" id="btn-test">Test</button>
+          <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+          <button type="button" class="btn danger" id="btn-clear">Clear</button>
+        </div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <label class="pane-title" for="subject">SUBJECT TEXT</label>
+          <div class="row">
+            <span class="out-count hidden" id="out-count"></span>
+            <button type="button" class="btn secondary" id="btn-copy" disabled>Copy matches</button>
+          </div>
+        </div>
+        <textarea id="subject" placeholder="Text to test your pattern against. Try the sample if you need inspiration." spellcheck="false" autocomplete="off"></textarea>
+      </div>
+
+      <div class="pane wide">
+        <div class="pane-header">
+          <span class="pane-title">RESULTS</span>
+        </div>
+        <div class="status hidden" id="status" role="status" aria-live="polite"></div>
+        <div class="render placeholder" id="render" role="img" aria-label="Highlighted text; matched ranges are highlighted"></div>
+        <details class="matches" id="matches-details">
+          <summary>Match list</summary>
+          <ol class="match-list" id="match-list"></ol>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.regexTester;
+      var patternInput = document.getElementById("pattern");
+      var flagsInput = document.getElementById("flags");
+      var subjectInput = document.getElementById("subject");
+      var statusEl = document.getElementById("status");
+      var outCount = document.getElementById("out-count");
+      var renderEl = document.getElementById("render");
+      var listEl = document.getElementById("match-list");
+      var detailsEl = document.getElementById("matches-details");
+      var btnTest = document.getElementById("btn-test");
+      var btnSample = document.getElementById("btn-sample");
+      var btnClear = document.getElementById("btn-clear");
+      var btnCopy = document.getElementById("btn-copy");
+
+      var compiled = null;
+      var lastMatches = [];
+      var MAX_LISTED = 200;
+      var autoTimer = null;
+
+      var SAMPLE = {
+        pattern: "\\b[A-Z][a-z]+\\b",
+        flags: "g",
+        subject: "Ada Lovelace worked with Charles Babbage on the Analytical Engine. " +
+          "Grace Hopper popularized the first compiler, and Alan Turing proposed the Turing test."
+      };
+
+      function setStatus(message, kind) {
+        statusEl.textContent = message;
+        statusEl.classList.remove("hidden");
+        statusEl.classList.remove("error", "ok");
+        if (kind) statusEl.classList.add(kind);
+      }
+
+      function render(result) {
+        renderEl.classList.remove("placeholder");
+        renderEl.textContent = "";
+        listEl.textContent = "";
+        detailsEl.open = false;
+        var segments = result.segments;
+        var i;
+
+        for (i = 0; i < segments.length; i++) {
+          var seg = segments[i];
+          if (seg.type === "gap") {
+            renderEl.appendChild(document.createTextNode(subjectInput.value.slice(seg.start, seg.end)));
+          } else {
+            var mark = document.createElement("mark");
+            mark.className = "match";
+            mark.textContent = seg.match;
+            renderEl.appendChild(mark);
+          }
+        }
+
+        // fallback for empty-but-valid matches (zero-width matches never
+        // produce text; mark their positions with a thin caret glyph).
+
+        if (renderEl.textContent.length === 0 && result.segments.length > 1) {
+          renderEl.textContent = "\u200b";
+        }
+
+        lastMatches = [];
+        var shown = 0;
+        for (i = 0; i < segments.length; i++) {
+          if (segments[i].type !== "match") continue;
+          lastMatches.push(segments[i]);
+          if (shown < MAX_LISTED) {
+            var li = document.createElement("li");
+            var idx = document.createElement("span");
+            idx.className = "m-idx";
+            idx.textContent = "#" + (lastMatches.length);
+            var pos = document.createElement("span");
+            pos.className = "m-pos";
+            pos.textContent = segments[i].start + "–" + segments[i].end;
+            var m = document.createElement("span");
+            m.className = "m-match";
+            m.textContent = segments[i].match;
+            li.appendChild(idx);
+            li.appendChild(pos);
+            li.appendChild(m);
+
+            if (segments[i].captures && segments[i].captures.some(function (c) { return c !== undefined; })){
+              var caps = document.createElement("div");
+              caps.className = "m-caps";
+              for (var j = 0; j < segments[i].captures.length; j++) {
+                if (segments[i].captures[j] === undefined) continue;
+                var cspan = document.createElement("span");
+                cspan.textContent = "(" + (j + 1) + ") " + segments[i].captures[j];
+                caps.appendChild(cspan);
+              }
+              li.appendChild(caps);
+            }
+            listEl.appendChild(li);
+            shown++;
+          }
+        }
+        if (result.segments.length > MAX_LISTED) {
+          var note = document.createElement("li");
+          note.className = "m-more";
+          note.textContent = "…and " + (result.segments.length - MAX_LISTED) + " more matches";
+          listEl.appendChild(note);
+        }
+        if (lastMatches.length > 0) detailsEl.open = true;
+      }
+
+      function emptyRender(message) {
+        renderEl.classList.add("placeholder");
+        renderEl.textContent = message || "Run a test to see a highlighted view of your matches.";
+        listEl.textContent = "";
+      }
+
+      function run(showEmpty) {
+        if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+        var text = subjectInput.value;
+        var c = lib.compilePattern(patternInput.value, flagsInput.value);
+        if (!c.ok) {
+          setStatus(c.message, "error");
+          return;
+        }
+        if (!text.trim() && text.length === 0) {
+          setStatus("Your subject text is empty. Paste some text to match against.", "error");
+          return;
+        }
+        compiled = c.regex;
+        var res = lib.collectSegments(compiled, text);
+        var count = 0;
+        var chars = 0;
+        res.segments.forEach(function (seg) {
+          if (seg.type === "match") { count++; chars += seg.end - seg.start; }
+        });
+        var stats = count + " match" + (count === 1 ? "" : "es");
+        if (count > 0) {
+          stats += " · " + chars + " character" + (chars === 1 ? "" : "s") + " matched";
+        }
+        if (res.truncated) stats += " · showing first " + lib.MAX_MATCHES;
+        setStatus(stats + (count === 0 ? " — no matches." : ""), count === 0 ? "error" : "ok");
+        btnCopy.disabled = count === 0;
+        outCount.textContent = count > 0 ? count + " match" + (count === 1 ? "" : "es") : "";
+        outCount.classList.toggle("hidden", count === 0);
+        render(res);
+        void showEmpty;
+      }
+
+      function copyMatches() {
+        if (lastMatches.length === 0) return;
+        var body = lastMatches.map(function (m) { return m.match; }).join("\n");
+        if (!navigator.clipboard) {
+          setStatus("Clipboard API unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(body).then(function () {
+          var old = btnCopy.textContent;
+          btnCopy.textContent = "Copied ✓";
+          setStatus("Copied " + lastMatches.length + " match" + (lastMatches.length === 1 ? "" : "es") + " to the clipboard.", "ok");
+          setTimeout(function () { btnCopy.textContent = old; }, 1500);
+        }).catch(function () {
+          setStatus("Copy blocked by the browser. Select the matches and copy with Ctrl/Cmd+C.", "error");
+        });
+      }
+
+      function clearAll() {
+        patternInput.value = "";
+        flagsInput.value = "g";
+        subjectInput.value = "";
+        compiled = null;
+        lastMatches = [];
+        btnCopy.disabled = true;
+        outCount.classList.add("hidden");
+        statusEl.classList.add("hidden");
+        emptyRender();
+        patternInput.focus();
+      }
+
+      btnTest.addEventListener("click", function () { run(false); });
+      btnCopy.addEventListener("click", copyMatches);
+      btnSample.addEventListener("click", function () {
+        patternInput.value = SAMPLE.pattern;
+        flagsInput.value = SAMPLE.flags;
+        subjectInput.value = SAMPLE.subject;
+        run(false);
+      });
+      btnClear.addEventListener("click", clearAll);
+
+      // After the first test, keep results live as you type (debounced).
+      [patternInput, flagsInput, subjectInput].forEach(function (el) {
+        el.addEventListener("input", function () {
+          if (autoTimer) clearTimeout(autoTimer);
+          autoTimer = setTimeout(function () {
+            if (compiled) run(false);
+          }, 250);
+        });
+      });
+      [patternInput, flagsInput, subjectInput].forEach(function (el) {
+        el.addEventListener("keydown", function (e) {
+          if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run(false);
+        });
+      });
+
+      emptyRender();
+    })();
+  </script>
+</body>
+</html>
