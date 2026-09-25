@@ -141,16 +141,14 @@
       if (rows.length === 1 && useHeader) useHeader = true;
     }
 
-    var dataRows = rows;
     var headerCols = null;
     if (useHeader) {
       headerCols = rows[0].map(function (h) { return h.trim(); });
-      dataRows = rows.slice(1);
+      rows = rows.slice(1);
     }
 
     var out = [];
-    dataRows.forEach(function (r) {
-      var i = 0;
+    rows.forEach(function (r) {
       if (useHeader) {
         var obj = {};
         headerCols.forEach(function (col, idx) {
@@ -164,19 +162,6 @@
             obj[key] = val(cell);
           }
         });
-        if (options.columns && options.columns === "auto") {
-          // unused columns beyond header length
-          for (i = headerCols.length; i < r.length; i++) {
-            obj["extra_" + (i + 1)] = val(r[i]);
-          }
-        }
-        // missing columns become null instead of empty string when requested
-        if (options.fillMissing) {
-          headerCols.forEach(function (col, idx) {
-            var key = col || ("field_" + (idx + 1));
-            if (idx >= r.length) obj[key] = null;
-          });
-        }
         out.push(obj);
       } else {
         out.push(r.map(function (cell) { return val(cell); }));
@@ -187,16 +172,15 @@
 
   /**
    * Full pipeline: CSV text to JSON (array or object) with a useful error.
-   * @returns {{ok:true,json:Array|Object,count:number,rows:number}|{ok:false,error:string}}
+   * @returns {{ok:true,json:Array|Object,rows:number}|{ok:false,error:string}}
    */
   function convert(input, options) {
     try {
       var rows = parseCSV(input, (options || {}).delimiter);
       if (rows.length === 0) {
-        return { ok: true, json: [], count: 0, rows: 0 };
+        return { ok: true, json: [], rows: 0 };
       }
-      var json = rowsToJson(rows, options || {});
-      return { ok: true, json: json, count: rows.length, rows: rows.length };
+      return { ok: true, json: rowsToJson(rows, options || {}), rows: rows.length };
     } catch (e) {
       return { ok: false, error: e.message || String(e) };
     }

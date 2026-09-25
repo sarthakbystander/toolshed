@@ -189,7 +189,7 @@ async function init(){
 
 async function loadTools(){
   try{
-    const r = await fetch(REGISTRY_URL, {cache:'no-cache'});
+    const r = await fetch(REGISTRY_URL);
     if(!r.ok) throw 0;
     const d = await r.json();
     if(Array.isArray(d) && d.length) return d;
