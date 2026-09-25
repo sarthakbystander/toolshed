@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>File Checksum — Toolshed</title>
+  <meta name="description" content="Compute SHA-1, SHA-256, SHA-384 and MD5 checksums for any file. All computation happens in your tab.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+    <div class="wrap hd-in">
+      <a class="logo" href="../..">
+        <span class="logo-mark" aria-hidden="true"></span>
+        Toolshed
+      </a>
+      <nav>
+        <a href="../..#index">Tools</a>
+        <a href="../..">Home</a>
+        <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / file-checksum</div>
+      <h1>File Checksum</h1>
+      <p>Compute SHA-1, SHA-256, SHA-384 and MD5 checksums for any file, right in your browser. Files never leave your machine.</p>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose a file or drop one here">
+          <input type="file" id="file-input" hidden>
+          <p class="dz-main">Choose a file or drop one here</p>
+          <p class="dz-sub">Hashing happens locally — nothing is uploaded.</p>
+          <p class="dz-file hidden" id="dz-file"></p>
+        </div>
+
+        <fieldset class="algos" id="algos">
+          <legend>Algorithms</legend>
+          <label class="chk"><input type="checkbox" id="algo-SHA-1" value="SHA-1"><span>SHA-1</span></label>
+          <label class="chk"><input type="checkbox" id="algo-SHA-256" value="SHA-256" checked><span>SHA-256</span></label>
+          <label class="chk"><input type="checkbox" id="algo-SHA-384" value="SHA-384"><span>SHA-384</span></label>
+          <label class="chk"><input type="checkbox" id="algo-MD5" value="MD5" checked><span>MD5</span></label>
+        </fieldset>
+
+        <div class="row">
+          <button type="button" class="btn" id="btn-hash" disabled>Hash file</button>
+          <button type="button" class="btn secondary" id="btn-sample" disabled>Try sample</button
+          <button type="button" class="btn danger" id="btn-clear">Clear</button>
+        </div>
+
+        <p class="status hidden" id="status" role="status" aria-live="polite"></p>
+
+        <div class="results hidden" id="results">
+          <div class="result-row" id="row-SHA-256">
+            <span class="result-algo">SHA-256</span>
+            <code class="result-value" id="res-SHA-256">…</code>
+            <button type="button" class="copy-btn" data-algo="SHA-256" title="Copy SHA-256">Copy</button>
+          </div>
+          <div class="result-row" id="row-SHA-1">
+            <span class="result-algo">SHA-1</span>
+            <code class="result-value" id="res-SHA-1">…</code>
+            <button type="button" class="copy-btn" data-algo="SHA-1" title="Copy SHA-1">Copy</button>
+          </div>
+          <div class="result-row" id="row-SHA-384">
+            <span class="result-algo">SHA-384</span>
+            <code class="result-value" id="res-SHA-384">…</code>
+            <button type="button" class="copy-btn" data-algo="SHA-384" title="Copy SHA-384">Copy</button>
+          </div>
+          <div class="result-row" id="row-MD5">
+            <span class="result-algo">MD5</span>
+            <code class="result-value" id="res-MD5">…</code>
+            <button type="button" class="copy-btn" data-algo="MD5" title="Copy MD5">Copy</button>
+          </div>
+        </div>
+
+        <p class="hint">MD5 is computed with a built-in JavaScript implementation, so it works everywhere; SHA-* use your browser's Web Crypto. Copied values are never stored.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-in">
+      <div class="cr">
+        Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+      </div>
+      <nav>
+        <a href="../..">Home</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.fileChecksum;
+      var dropzone = document.getElementById("dropzone");
+      var fileInput = document.getElementById("file-input");
+      var dzFile = document.getElementById("dz-file");
+      var btnHash = document.getElementById("btn-hash");
+      var btnSample = document.getElementById("btn-sample");
+      var btnClear = document.getElementById("btn-clear");
+      var statusEl = document.getElementById("status");
+      var resultsEl = document.getElementById("results");
+
+      // The sample that "Try sample" hashes: an in-browser File-like object.
+      var SAMPLE_TEXT = "Toolshed sample file\nChecksum me!\n";
+      var sampleFile = null;
+
+      function selectedAlgorithms() {
+        var out = [];
+        var boxes = document.querySelectorAll("#algos input[type=checkbox]");
+        for (var i = 0; i < boxes.length; i++) {
+          if (boxes[i].checked) out.push(boxes[i].value);
+        }
+        return out;
+      }
+
+      function setStatus(msg, kind) {
+        statusEl.textContent = msg;
+        statusEl.className = "status" + (kind ? " " + kind : "");
+      }
+
+      function showResults(digests) {
+        var rows = document.querySelectorAll("#algos input[type=checkbox]");
+        var divs = resultsEl.querySelectorAll(".result-row");
+        for (var i = 0; i < rows.length; i++) {
+          var algo = rows[i].value;
+          var row = document.getElementById("row-" + algo);
+          if (row) row.classList.add("hidden");
+        }
+        for (var key in digests) {
+          var rowEl = document.getElementById("row-" + key);
+          if (rowEl) {
+            rowEl.querySelector(".result-value").textContent = digests[key];
+            rowEl.classList.remove("hidden");
+          }
+        }
+        resultsEl.classList.remove("hidden");
+      }
+
+      function updateButtons() {
+        var hasFile = fileInput.files && fileInput.files.length > 0;
+        var hasAlgo = selectedAlgorithms().length > 0;
+        btnHash.disabled = hasFile ? !hasAlgo : true;
+        btnSample.disabled = !hasAlgo;
+        btnSample.textContent = "Try sample";
+      }
+
+      async function hashInput(input, label) {
+        var algos = selectedAlgorithms();
+        if (algos.length === 0) {
+          setStatus("Choose at least one algorithm.", "error");
+          return;
+        }
+        setStatus("Hashing " + label + "…", null);
+        resultsEl.classList.add("hidden");
+        var result = await lib.compute(input, { algorithms: algos });
+        if (!result.ok) {
+          setStatus(result.message, "error");
+          return;
+        }
+        showResults(result.digests);
+        setStatus(
+          result.bytes + " bytes (" + lib.formatBytes(result.bytes) + ") hashed locally.",
+          "ok"
+        );
+      }
+
+      function readSelectedFile() {
+        var file = fileInput.files && fileInput.files[0];
+        if (!file) return null;
+        dzFile.textContent = file.name + " — " + lib.formatBytes(file.size);
+        dzFile.classList.remove("hidden");
+        return file;
+      }
+
+      dropzone.addEventListener("click", function () { fileInput.click(); });
+      dropzone.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          fileInput.click();
+        }
+      });
+      dropzone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        dropzone.classList.add("drag");
+      });
+      dropzone.addEventListener("dragleave", function () {
+        dropzone.classList.remove("drag");
+      });
+      dropzone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        dropzone.classList.remove("drag");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          readSelectedFile();
+          updateButtons();
+          setStatus("", null);
+          hashInput(fileInput.files[0], fileInput.files[0].name);
+        }
+      });
+      fileInput.addEventListener("change", function () {
+        readSelectedFile();
+        updateButtons();
+        setStatus("", null);
+      });
+      btnHash.addEventListener("click", function () {
+        var file = readSelectedFile();
+        if (file) hashInput(file, file.name);
+      });
+      btnSample.addEventListener("click", function () {
+        resultsEl.classList.add("hidden");
+        sampleFile = {
+          size: SAMPLE_TEXT.length,
+          arrayBuffer: function () {
+            return Promise.resolve(new TextEncoder().encode(SAMPLE_TEXT).buffer);
+          },
+        };
+        dzFile.textContent = "sample.txt — " + lib.formatBytes(SAMPLE_TEXT.length);
+        dzFile.classList.remove("hidden");
+        setStatus("", null);
+        hashInput(sampleFile, "sample.txt");
+      });
+      btnClear.addEventListener("click", function () {
+        fileInput.value = "";
+        dzFile.textContent = "";
+        dzFile.classList.add("hidden");
+        resultsEl.classList.add("hidden");
+        statusEl.className = "status hidden";
+        sampleFile = null;
+        updateButtons();
+        dropzone.focus();
+      });
+
+      // Copy buttons
+      resultsEl.addEventListener("click", function (e) {
+        var btn = e.target.closest(".copy-btn");
+        if (!btn) return;
+        var value = document.getElementById("res-" + btn.dataset.algo).textContent;
+        if (value === "…") return;
+        navigator.clipboard.writeText(value).then(function () {
+          var old = btn.textContent;
+          btn.textContent = "Copied";
+          window.setTimeout(function () { btn.textContent = old; }, 1200);
+        });
+      });
+
+      var algoBoxes = document.querySelectorAll("#algos input[type=checkbox]");
+      for (var i = 0; i < algoBoxes.length; i++) {
+        algoBoxes[i].addEventListener("change", updateButtons);
+      }
+
+      updateButtons();
+    })();
+  </script>
+</body>
+</html>
