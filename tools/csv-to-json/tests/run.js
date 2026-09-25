@@ -153,7 +153,7 @@ test("convert returns ok plus json", () => {
   const out = csv.convert("name,age\nalice,30\n");
   assert.strictEqual(out.ok, true);
   assert.deepStrictEqual(out.json, [{ name: "alice", age: 30 }]);
-  assert.strictEqual(out.count, 2);
+  assert.strictEqual(out.rows, 2);
 });
 
 test("convert reports errors", () => {
