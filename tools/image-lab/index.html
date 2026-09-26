@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Image Lab — Toolshed</title>
+  <meta name="description" content="Adjust brightness, contrast, saturation, blur and sharpen on your images locally in the browser. Nothing leaves your tab.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / image-lab</div>
+      <h1>Image Lab</h1>
+      <p class="lede">Adjust brightness, contrast, saturation, blur and sharpen — right in the browser. No uploads, no accounts, no server.</p>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">ADJUSTMENTS</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-compare" disabled aria-pressed="false">Before / After</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="b-brightness">Brightness <span class="field-val" id="b-brightness-val">0</span></label>
+          <input type="range" id="b-brightness" min="-100" max="100" step="1" value="0">
+        </div>
+        <div class="field">
+          <label class="field-label" for="b-contrast">Contrast <span class="field-val" id="b-contrast-val">0</span></label>
+          <input type="range" id="b-contrast" min="-100" max="100" step="1" value="0">
+        </div>
+        <div class="field">
+          <label class="field-label" for="b-saturation">Saturation <span class="field-val" id="b-saturation-val">100%</span></label>
+          <input type="range" id="b-saturation" min="0" max="200" step="1" value="100">
+        </div>
+        <div class="field">
+          <label class="field-label" for="b-blur">Blur <span class="field-val" id="b-blur-val">0</span></label>
+          <input type="range" id="b-blur" min="0" max="20" step="1" value="0">
+        </div>
+        <div class="field">
+          <label class="field-label" for="b-sharpen">Sharpen <span class="field-val" id="b-sharpen-val">0</span></label>
+          <input type="range" id="b-sharpen" min="0" max="100" step="1" value="0">
+        </div>
+
+        <div class="row presets">
+          <button type="button" class="btn secondary" id="btn-grayscale" disabled>Grayscale</button>
+          <button type="button" class="btn secondary" id="btn-sepia" disabled>Sepia</button>
+          <button type="button" class="btn secondary" id="btn-reset" disabled>Reset</button>
+        </div>
+        <p class="hint">Grayscale and Sepia bake the effect into the working image, so later slider changes build on top of them. Reset restores the sliders only.</p>
+      </div>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">PREVIEW</span>
+          <div class="row">
+            <span class="badge" id="size-badge">no image</span>
+          </div>
+        </div>
+
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Load an image: click to browse or drop a file">
+          <input type="file" id="file-input" accept="image/*" hidden>
+          <canvas id="canvas" class="preview-canvas" width="0" height="0" hidden></canvas>
+          <div class="dz-empty" id="dz-empty">
+            <p class="dz-main">Drop an image here, or <strong class="dz-browse">browse</strong></p>
+            <p class="dz-sub">JPG, PNG, WebP, GIF (first frame). Processed locally — never uploaded.</p>
+            <div class="dz-actions">
+              <button type="button" class="btn secondary" id="btn-sample">Try a sample image</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row preview-bar">
+          <button type="button" class="btn secondary" id="btn-zoom" disabled aria-pressed="true">Zoom to fit <span id="zoom-state">on</span></button>
+          <span class="status hidden" id="status" role="status" aria-live="polite"></span>
+        </div>
+
+        <div class="row export-row">
+          <button type="button" class="btn" id="btn-png" disabled>Download PNG</button>
+          <button type="button" class="btn" id="btn-jpg" disabled>Download JPEG</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.imageLab;
+      var canvas = document.getElementById("canvas");
+      var ctx = canvas.getContext("2d", { willReadFrequently: true });
+      var fileInput = document.getElementById("file-input");
+      var dropzone = document.getElementById("dropzone");
+      var dzEmpty = document.getElementById("dz-empty");
+      var sizeBadge = document.getElementById("size-badge");
+      var statusEl = document.getElementById("status");
+      var compareBtn = document.getElementById("btn-compare");
+      var zoomBtn = document.getElementById("btn-zoom");
+      var zoomState = document.getElementById("zoom-state");
+      var exportPng = document.getElementById("btn-png");
+      var exportJpg = document.getElementById("btn-jpg");
+
+      var sourceImg = null;
+      var sourceData = null;      // full-resolution RGBA, used for export
+      var sourceWidth = 0;
+      var sourceHeight = 0;
+      var previewData = null;     // downscaled RGBA, used for live preview
+      var previewWidth = 0;
+      var previewHeight = 0;
+      var workingData = null;
+      var workingCanvas = document.createElement("canvas");
+      var workingCtx = workingCanvas.getContext("2d", { willReadFrequently: true });
+      var comparing = false;
+      var zoomToFit = true;
+      var renderQueued = false;
+
+      // Preview budget. Blur/sharpen cost is linear in pixel count, so the
+      // live preview runs on a downscaled copy for large images while
+      // exports always re-run at full resolution.
+      var PREVIEW_MAX_DIM = 1600;
+      var PREVIEW_MAX_PIXELS = 2500000;
+
+      var sliders = [
+        { input: document.getElementById("b-brightness"), val: document.getElementById("b-brightness-val"), fmt: function (v) { return String(v); } },
+        { input: document.getElementById("b-contrast"), val: document.getElementById("b-contrast-val"), fmt: function (v) { return String(v); } },
+        { input: document.getElementById("b-saturation"), val: document.getElementById("b-saturation-val"), fmt: function (v) { return Math.round(v) + "%"; } },
+        { input: document.getElementById("b-blur"), val: document.getElementById("b-blur-val"), fmt: function (v) { return String(v); } },
+        { input: document.getElementById("b-sharpen"), val: document.getElementById("b-sharpen-val"), fmt: function (v) { return String(v); } }
+      ];
+
+      function setStatus(msg, kind) {
+        statusEl.classList.remove("ok", "error", "hidden");
+        if (!msg) {
+          statusEl.classList.add("hidden");
+          statusEl.textContent = "";
+          return;
+        }
+        if (kind) statusEl.classList.add(kind);
+        statusEl.textContent = msg;
+      }
+
+      function adjustments() {
+        return {
+          brightness: Number(sliders[0].input.value),
+          contrast: Number(sliders[1].input.value),
+          saturation: Number(sliders[2].input.value) / 100,
+          blur: Number(sliders[3].input.value),
+          sharpen: Number(sliders[4].input.value) / 100
+        };
+      }
+
+      function updateSliderLabels() {
+        for (var i = 0; i < sliders.length; i++) {
+          sliders[i].val.textContent = sliders[i].fmt(Number(sliders[i].input.value));
+        }
+      }
+
+      function scheduleRender() {
+        if (!sourceData || renderQueued) return;
+        renderQueued = true;
+        requestAnimationFrame(function () {
+          renderQueued = false;
+          render();
+        });
+      }
+
+      function enableForImage() {
+        sizeBadge.textContent = sourceWidth + " x " + sourceHeight + " px";
+        if (previewWidth !== sourceWidth || previewHeight !== sourceHeight) {
+          sizeBadge.textContent += " · preview " + previewWidth + " x " + previewHeight;
+        }
+        dzEmpty.hidden = true;
+        dropzone.classList.add("has-image");
+        canvas.hidden = false;
+        setStatus(null);
+        compareBtn.disabled = false;
+        zoomBtn.disabled = false;
+        document.getElementById("btn-grayscale").disabled = false;
+        document.getElementById("btn-sepia").disabled = false;
+        document.getElementById("btn-reset").disabled = false;
+        exportPng.disabled = false;
+        exportJpg.disabled = false;
+      }
+
+      function loadSource(img) {
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        if (!w || !h) {
+          setStatus("That image has no readable dimensions.", "error");
+          return;
+        }
+        sourceWidth = w;
+        sourceHeight = h;
+        workingCanvas.width = w;
+        workingCanvas.height = h;
+        workingCtx.clearRect(0, 0, w, h);
+        workingCtx.drawImage(img, 0, 0);
+        try {
+          sourceData = workingCtx.getImageData(0, 0, w, h).data;
+        } catch (e) {
+          setStatus("Could not read that image — it may be too large for your browser.", "error");
+          return;
+        }
+        buildPreview();
+        sourceImg = img;
+        workingData = null;
+        enableForImage();
+        updateSliderLabels();
+        scheduleRender();
+      }
+
+      // Downscale once per load so live slider edits stay smooth on big
+      // images. Exports ignore this and use the full-resolution source.
+      function buildPreview() {
+        var scale = Math.min(1, PREVIEW_MAX_DIM / Math.max(sourceWidth, sourceHeight));
+        if (scale * scale * sourceWidth * sourceHeight > PREVIEW_MAX_PIXELS) {
+          scale = Math.sqrt(PREVIEW_MAX_PIXELS / (sourceWidth * sourceHeight));
+        }
+        if (scale >= 1) {
+          previewData = sourceData;
+          previewWidth = sourceWidth;
+          previewHeight = sourceHeight;
+          return;
+        }
+        previewWidth = Math.max(1, Math.round(sourceWidth * scale));
+        previewHeight = Math.max(1, Math.round(sourceHeight * scale));
+        var cv = document.createElement("canvas");
+        cv.width = previewWidth;
+        cv.height = previewHeight;
+        var c = cv.getContext("2d", { willReadFrequently: true });
+        c.drawImage(workingCanvas, 0, 0, previewWidth, previewHeight);
+        previewData = c.getImageData(0, 0, previewWidth, previewHeight).data;
+      }
+
+      function ensureCanvasSize(w, h) {
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+      }
+
+      function loadImageFromFile(file) {
+        if (!file) return;
+        if (file.type && file.type.indexOf("image/") !== 0) {
+          setStatus("That does not look like an image file.", "error");
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          var img = new Image();
+          img.onload = function () { loadSource(img); };
+          img.onerror = function () { setStatus("That file could not be decoded as an image.", "error"); };
+          img.src = reader.result;
+        };
+        reader.onerror = function () { setStatus("Could not read that file.", "error"); };
+        reader.readAsDataURL(file);
+      }
+
+      // Drawn on a canvas so the sample needs no network request and no bundled asset.
+      function builtinSample() {
+        var w = 320, h = 200;
+        var cv = document.createElement("canvas");
+        cv.width = w;
+        cv.height = h;
+        var c = cv.getContext("2d");
+        var grad = c.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, "#3d5afe");
+        grad.addColorStop(0.45, "#8ec5fc");
+        grad.addColorStop(0.55, "#f6e58a");
+        grad.addColorStop(1, "#3b8d4a");
+        c.fillStyle = grad;
+        c.fillRect(0, 0, w, h);
+        c.fillStyle = "#ffd93b";
+        c.beginPath();
+        c.arc(230, 52, 30, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = "#3d5afe";
+        c.beginPath();
+        c.arc(242, 44, 10, 0, Math.PI * 2);
+        c.fill();
+        var hill = c.createLinearGradient(0, 120, 0, 200);
+        hill.addColorStop(0, "#4a8c5f");
+        hill.addColorStop(1, "#2f6d45");
+        c.fillStyle = hill;
+        c.beginPath();
+        c.moveTo(0, 200);
+        c.bezierCurveTo(60, 130, 140, 150, 200, 200);
+        c.bezierCurveTo(240, 150, 300, 140, 320, 190);
+        c.lineTo(320, 200);
+        c.closePath();
+        c.fill();
+        c.fillStyle = "#f2efe9";
+        c.font = "bold 26px sans-serif";
+        c.textAlign = "center";
+        c.textBaseline = "bottom";
+        c.fillText("Toolshed", 160, 115);
+        return cv.toDataURL("image/png");
+      }
+
+      function loadSample() {
+        var img = new Image();
+        img.onload = function () { loadSource(img); };
+        img.onerror = function () { setStatus("Could not build the sample image.", "error"); };
+        img.src = builtinSample();
+      }
+
+      function render() {
+        if (!previewData) return;
+        if (comparing) {
+          drawOriginal();
+          setStatus("Showing original", "ok");
+          return;
+        }
+        var adj = adjustments();
+        try {
+          workingData = lib.applyAdjustments(previewData, previewWidth, previewHeight, adj, null);
+        } catch (e) {
+          setStatus("Could not adjust that image.", "error");
+          return;
+        }
+        ensureCanvasSize(previewWidth, previewHeight);
+        ctx.putImageData(new ImageData(workingData, previewWidth, previewHeight), 0, 0);
+        positionCanvas();
+        var active = adj.blur > 0 || adj.sharpen > 0 || adj.brightness !== 0 || adj.contrast !== 0 || adj.saturation !== 1;
+        if (active) setStatus("Rendered", "ok");
+        else setStatus(null);
+      }
+
+      function drawOriginal() {
+        ensureCanvasSize(previewWidth, previewHeight);
+        ctx.clearRect(0, 0, previewWidth, previewHeight);
+        ctx.drawImage(sourceImg, 0, 0, previewWidth, previewHeight);
+        positionCanvas();
+      }
+
+      function positionCanvas() {
+        var cssW, cssH;
+        if (zoomToFit) {
+          var maxW = Math.max(1, dropzone.clientWidth - 34);
+          var maxH = Math.max(160, dropzone.clientHeight - 34);
+          var scale = Math.min(1, maxW / previewWidth, maxH / previewHeight);
+          cssW = Math.max(1, Math.floor(previewWidth * scale));
+          cssH = Math.max(1, Math.floor(previewHeight * scale));
+        } else {
+          cssW = previewWidth;
+          cssH = previewHeight;
+        }
+        canvas.style.width = cssW + "px";
+        canvas.style.height = cssH + "px";
+      }
+
+      function download(blob, filename) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      function exportImage(mime, ext) {
+        if (!sourceData) return;
+        var data;
+        try {
+          data = lib.applyAdjustments(sourceData, sourceWidth, sourceHeight, adjustments(), null);
+        } catch (e) {
+          setStatus("Could not render the export.", "error");
+          return;
+        }
+        var cv = document.createElement("canvas");
+        cv.width = sourceWidth;
+        cv.height = sourceHeight;
+        var c = cv.getContext("2d");
+        c.putImageData(new ImageData(data, sourceWidth, sourceHeight), 0, 0);
+        cv.toBlob(function (blob) {
+          if (!blob) {
+            setStatus("Export failed — could not encode that image.", "error");
+            return;
+          }
+          download(blob, "image-lab-" + Date.now() + "." + ext);
+          setStatus("Downloaded " + Math.round(blob.size / 1024) + " KB", "ok");
+        }, mime, 0.92);
+      }
+
+      function reset() {
+        for (var i = 0; i < sliders.length; i++) {
+          sliders[i].input.value = sliders[i].input.defaultValue;
+        }
+        updateSliderLabels();
+        scheduleRender();
+      }
+
+      function toggleCompare() {
+        if (!sourceData) return;
+        comparing = !comparing;
+        compareBtn.textContent = comparing ? "Show Edited" : "Before / After";
+        compareBtn.setAttribute("aria-pressed", comparing ? "true" : "false");
+        scheduleRender();
+      }
+
+      function toggleZoom() {
+        zoomToFit = !zoomToFit;
+        zoomState.textContent = zoomToFit ? "on" : "off";
+        zoomBtn.setAttribute("aria-pressed", zoomToFit ? "true" : "false");
+        scheduleRender();
+      }
+
+      // Grayscale/sepia are baked into both buffers so the effect survives
+      // slider changes and is included in exports.
+      function bake(fn) {
+        if (!sourceData) return;
+        sourceData = fn(sourceData, sourceWidth, sourceHeight, null);
+        if (previewData === sourceData) {
+          previewData = sourceData;
+        } else {
+          previewData = fn(previewData, previewWidth, previewHeight, null);
+        }
+        workingData = null;
+        scheduleRender();
+      }
+
+      dropzone.addEventListener("click", function (e) {
+        if (e.target.closest("button")) return;
+        fileInput.click();
+      });
+      dropzone.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          fileInput.click();
+        }
+      });
+      ["dragenter", "dragover"].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) {
+          e.preventDefault();
+          dropzone.classList.add("drag");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) {
+          e.preventDefault();
+          dropzone.classList.remove("drag");
+        });
+      });
+      dropzone.addEventListener("drop", function (e) {
+        var file = e.dataTransfer && e.dataTransfer.files[0];
+        if (file) loadImageFromFile(file);
+        else setStatus("No image in that drop.", "error");
+      });
+      fileInput.addEventListener("change", function () {
+        loadImageFromFile(fileInput.files[0]);
+        fileInput.value = "";
+      });
+      compareBtn.addEventListener("click", toggleCompare);
+      zoomBtn.addEventListener("click", toggleZoom);
+      document.getElementById("btn-grayscale").addEventListener("click", function () { bake(lib.grayscale); });
+      document.getElementById("btn-sepia").addEventListener("click", function () { bake(lib.sepia); });
+      document.getElementById("btn-reset").addEventListener("click", reset);
+      document.getElementById("btn-png").addEventListener("click", function () { exportImage("image/png", "png"); });
+      document.getElementById("btn-jpg").addEventListener("click", function () { exportImage("image/jpeg", "jpg"); });
+      document.getElementById("btn-sample").addEventListener("click", function (e) {
+        e.stopPropagation();
+        loadSample();
+      });
+      sliders.forEach(function (s) {
+        s.input.addEventListener("input", function () {
+          updateSliderLabels();
+          scheduleRender();
+        });
+      });
+      // Debounced because each render re-runs the pixel pipeline.
+      var resizeTimer = null;
+      window.addEventListener("resize", function () {
+        if (!sourceData) return;
+        if (comparing) { positionCanvas(); return; }
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(scheduleRender, 120);
+      });
+      updateSliderLabels();
+    })();
+  </script>
+</body>
+</html>
