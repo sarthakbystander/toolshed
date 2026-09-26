@@ -1,0 +1,14 @@
+{
+  "id": "image-lab",
+  "name": "Image Lab",
+  "description": "Adjust brightness, contrast, saturation, blur and sharpen on your images locally in the browser.",
+  "category": "Image",
+  "tags": ["blur", "brightness", "contrast", "image", "photo", "saturation", "sharpen"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

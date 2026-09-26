@@ -1,0 +1,169 @@
+/* Image Lab - widget styles layered on the shared Toolshed design system. */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.field-val {
+  flex: none;
+  min-width: 48px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.field input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 26px;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.field input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+}
+.field input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(33, 29, 23, .35);
+}
+.field input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+}
+.field input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+}
+.field input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.badge {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.presets { margin-top: 2px; }
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 220px;
+  padding: 34px 18px;
+  border: 2px dashed var(--rule-2);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  text-align: center;
+  cursor: pointer;
+  overflow: auto;
+  transition: border-color .15s, background .15s;
+}
+.dropzone:hover, .dropzone:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.dropzone:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.dropzone.drag {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.dropzone.has-image {
+  border-style: solid;
+  border-color: var(--rule);
+  background: var(--surface);
+  padding: 16px;
+  cursor: default;
+}
+.dropzone.has-image:hover { border-color: var(--rule); background: var(--surface); }
+
+.dz-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.dz-main {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.dz-sub {
+  font-size: 12px;
+  color: var(--ink-3);
+  max-width: 42ch;
+  line-height: 1.5;
+}
+.dz-browse { color: var(--accent); text-decoration: underline; }
+.dz-actions { margin-top: 12px; }
+
+.preview-canvas {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.preview-bar { justify-content: space-between; }
+.export-row {
+  border-top: 1px dashed var(--rule);
+  padding-top: 14px;
+}
+
+@media (max-width: 560px) {
+  .export-row .btn { flex: 1 1 auto; justify-content: center; }
+  .field-val { min-width: 42px; }
+  .dropzone { min-height: 180px; }
+}
