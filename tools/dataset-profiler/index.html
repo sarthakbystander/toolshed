@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Dataset Profiler — Toolshed</title>
+  <meta name="description" content="Profile a CSV, TSV or JSON dataset in your browser: column types, missing values, distributions, outliers, duplicates and correlations. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / dataset-profiler</div>
+      <h1>Dataset Profiler</h1>
+      <p class="lede">Paste, drop, or upload a CSV, TSV or JSON dataset and get an instant profile: inferred column types, missing values, distributions, outliers, duplicate rows, and correlations. Everything runs locally in your tab.</p>
+    </section>
+
+    <section class="toolbody prof-toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">DATASET</span>
+          <div class="row">
+            <span class="out-count hidden" id="status-inline"></span>
+          </div>
+        </div>
+
+        <div class="prof-controls">
+          <div class="prof-input" id="input-wrap">
+            <label class="field-label" for="data">Paste data</label>
+            <textarea id="data" class="mono" spellcheck="false" autocomplete="off" placeholder="Paste CSV, TSV or JSON here — for example:&#10;&#10;id,name,age,joined,active,score&#10;1,Alice,30,2024-01-15,true,88.5&#10;2,Bob,25,2023-11-02,false,72.0"></textarea>
+            <div class="prof-drop" id="drop" role="button" tabindex="0" aria-label="Drop a .csv, .tsv or .json file here, or activate to choose a file">
+              Drop a <strong>.csv</strong>, <strong>.tsv</strong>, <strong>.json</strong> file here, or click to choose
+            </div>
+            <input type="file" id="file" accept=".csv,.tsv,.txt,.json,text/csv,application/json,text/plain" hidden>
+          </div>
+
+          <div class="prof-options">
+            <div class="prof-field">
+              <label for="format">Format</label>
+              <select id="format">
+                <option value="auto">Auto-detect</option>
+                <option value="csv">CSV (comma)</option>
+                <option value="tsv">TSV (tab)</option>
+                <option value="semicolon">Semicolon</option>
+                <option value="pipe">Pipe</option>
+              </select>
+            </div>
+            <div class="prof-field">
+              <label for="header">First row</label>
+              <select id="header">
+                <option value="header">Is a header row</option>
+                <option value="data">Is data</option>
+              </select>
+            </div>
+            <div class="prof-field">
+              <label for="bins">Histogram bins</label>
+              <input type="number" id="bins" min="4" max="30" step="1" value="12">
+            </div>
+            <label class="prof-check" for="trim">
+              <input type="checkbox" id="trim" checked>
+              Treat "", null, N/A, NaN as missing
+            </label>
+            <div class="prof-actions">
+              <button type="button" class="btn" id="btn-profile">Profile data</button>
+              <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+              <button type="button" class="btn danger" id="btn-clear">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="status hidden" id="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="pane prof-results" id="results" hidden>
+        <div class="pane-header">
+          <span class="pane-title">PROFILE</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-markdown" disabled>Copy Markdown report</button>
+            <button type="button" class="btn secondary" id="btn-json" disabled>Download JSON</button>
+          </div>
+        </div>
+
+        <div class="prof-summary" id="summary"></div>
+
+        <div>
+          <div class="prof-section-title">Columns at a glance</div>
+          <div class="prof-tablewrap">
+            <table class="prof-table" id="overview">
+              <caption class="hidden" id="overview-caption">Column summary</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Column</th>
+                  <th scope="col">Type</th>
+                  <th scope="col" class="num">Non-null</th>
+                  <th scope="col" class="num">Missing</th>
+                  <th scope="col" class="num">Distinct</th>
+                  <th scope="col">Range / top value</th>
+                </tr>
+              </thead>
+              <tbody id="overview-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="prof-section-title">Column detail</div>
+          <div class="prof-cards" id="cards"></div>
+        </div>
+
+        <div id="corr-section" hidden>
+          <div class="prof-section-title">Correlations (Pearson)</div>
+          <div class="corrwrap">
+            <table class="corr" id="corr"></table>
+          </div>
+          <p class="corr-note">Computed pairwise on rows where both values are present. Correlation shows association, not causation.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.datasetProfiler;
+
+      var dataEl = document.getElementById("data");
+      var inputWrap = document.getElementById("input-wrap");
+      var dropEl = document.getElementById("drop");
+      var fileEl = document.getElementById("file");
+      var formatEl = document.getElementById("format");
+      var headerEl = document.getElementById("header");
+      var binsEl = document.getElementById("bins");
+      var trimEl = document.getElementById("trim");
+      var statusEl = document.getElementById("status");
+      var statusInline = document.getElementById("status-inline");
+      var resultsEl = document.getElementById("results");
+      var summaryEl = document.getElementById("summary");
+      var overviewBody = document.getElementById("overview-body");
+      var cardsEl = document.getElementById("cards");
+      var corrSection = document.getElementById("corr-section");
+      var corrEl = document.getElementById("corr");
+      var btnProfile = document.getElementById("btn-profile");
+      var btnSample = document.getElementById("btn-sample");
+      var btnClear = document.getElementById("btn-clear");
+      var btnMarkdown = document.getElementById("btn-markdown");
+      var btnJson = document.getElementById("btn-json");
+
+      var currentProfile = null;
+      var currentMarkdown = "";
+
+      var SAMPLE = [
+        "id,first_name,age,department,salary,joined,full_time,rating",
+        "1,Alice,30,Engineering,95000,2021-04-12,true,4.5",
+        "2,Bob,25,Marketing,62000,2022-11-03,true,3.8",
+        "3,Carol,41,Engineering,118000,2018-01-22,true,4.9",
+        "4,Dan,35,Sales,,2020-06-15,false,3.2",
+        "5,Erin,29,Engineering,101000,2023-02-01,true,4.1",
+        "6,Frank,52,Sales,87000,2015-09-30,true,4.4",
+        "7,Grace,,Marketing,58000,2022-07-19,false,",
+        "8,Heidi,38,Sales,91000,2019-03-08,true,3.9",
+        "9,Ivan,44,Engineering,127000,2017-05-25,true,4.7",
+        "10,Judy,31,Marketing,67000,2021-12-11,true,4.0",
+        "11,Mallory,47,Sales,96000,2016-08-02,false,3.5",
+        "12,Niaj,26,Engineering,88000,2023-06-20,true,4.2",
+        "13,Olivia,39,Marketing,74000,2019-10-14,true,4.6",
+        "14,Peggy,55,Sales,109000,2014-02-27,false,3.1",
+        "15,Quinn,33,Engineering,93000,2020-01-09,true,4.3"
+      ].join("\n");
+
+      function setStatus(message, kind) {
+        if (!message) {
+          statusEl.classList.add("hidden");
+          statusInline.classList.add("hidden");
+          return;
+        }
+        statusEl.textContent = message;
+        statusEl.classList.remove("hidden", "error", "ok");
+        if (kind) statusEl.classList.add(kind);
+      }
+
+      function delimiterFor(format) {
+        switch (format) {
+          case "tsv": return "\t";
+          case "semicolon": return ";";
+          case "pipe": return "|";
+          case "csv": return ",";
+          default: return null;
+        }
+      }
+
+      function binCount() {
+        var n = parseInt(binsEl.value, 10);
+        if (!isFinite(n)) return 12;
+        return Math.max(4, Math.min(30, n));
+      }
+
+      function buildOptions() {
+        var opts = { binCount: binCount() };
+        var d = delimiterFor(formatEl.value);
+        if (d) opts.delimiter = d;
+        opts.header = headerEl.value === "header";
+        if (!trimEl.checked) opts.nullStrings = [];
+        return opts;
+      }
+
+      // ---- rendering ---------------------------------------------------
+
+      function stat(label, value) {
+        var div = document.createElement("div");
+        div.className = "prof-stat";
+        var k = document.createElement("span");
+        k.className = "k";
+        k.textContent = label;
+        var v = document.createElement("span");
+        v.className = "v";
+        v.textContent = value;
+        div.appendChild(k);
+        div.appendChild(v);
+        return div;
+      }
+
+      function renderSummary(p) {
+        summaryEl.textContent = "";
+        var pctMissing = (p.missingRatio * 100).toFixed(1) + "%";
+        summaryEl.appendChild(stat("Rows", String(p.rowCount)));
+        summaryEl.appendChild(stat("Columns", String(p.columnCount)));
+        summaryEl.appendChild(stat("Cells", String(p.cellCount)));
+        summaryEl.appendChild(stat("Missing cells", pctMissing));
+        summaryEl.appendChild(stat("Duplicate rows", String(p.duplicateRows)));
+      }
+
+      function renderOverview(p) {
+        overviewBody.textContent = "";
+        p.columns.forEach(function (col) {
+          var tr = document.createElement("tr");
+
+          var th = document.createElement("th");
+          th.scope = "row";
+          th.className = "name";
+          th.textContent = col.name;
+          tr.appendChild(th);
+
+          var tdType = document.createElement("td");
+          var badge = document.createElement("span");
+          badge.className = "typebadge";
+          badge.dataset.type = col.type;
+          badge.textContent = col.type;
+          tdType.appendChild(badge);
+          tr.appendChild(tdType);
+
+          var tdCount = document.createElement("td");
+          tdCount.className = "num";
+          tdCount.textContent = String(col.count);
+          tr.appendChild(tdCount);
+
+          var tdMissing = document.createElement("td");
+          tdMissing.className = "num";
+          tdMissing.textContent = col.nulls + " (" + (col.nullRatio * 100).toFixed(1) + "%)";
+          tr.appendChild(tdMissing);
+
+          var tdDistinct = document.createElement("td");
+          tdDistinct.className = "num";
+          tdDistinct.textContent = String(col.distinct) + (col.distinctTruncated ? "+" : "");
+          tr.appendChild(tdDistinct);
+
+          var tdRange = document.createElement("td");
+          tdRange.textContent = rangeText(col);
+          tr.appendChild(tdRange);
+
+          overviewBody.appendChild(tr);
+        });
+      }
+
+      function rangeText(col) {
+        if (col.numeric) {
+          return lib.formatNumber(col.numeric.min) + " – " + lib.formatNumber(col.numeric.max);
+        }
+        if (col.type === "date") return col.min + " – " + col.max;
+        if (col.top && col.top.length) return String(col.top[0].value);
+        return "—";
+      }
+
+      function kv(key, value) {
+        var k = document.createElement("span");
+        k.className = "k";
+        k.textContent = key;
+        var v = document.createElement("span");
+        v.className = "v";
+        v.textContent = value;
+        var frag = document.createDocumentFragment();
+        frag.appendChild(k);
+        frag.appendChild(v);
+        return frag;
+      }
+
+      function renderHistogram(hist) {
+        var wrap = document.createElement("div");
+        wrap.className = "hist";
+        var label = document.createElement("div");
+        label.className = "hist-label";
+        label.textContent = "Distribution";
+        wrap.appendChild(label);
+
+        var bars = document.createElement("div");
+        bars.className = "hist-bars";
+        var max = hist.maxCount || 1;
+        hist.counts.forEach(function (count) {
+          var bar = document.createElement("div");
+          bar.className = "hist-bar";
+          bar.style.height = Math.max(1, Math.round((count / max) * 100)) + "%";
+          bar.title = count + " value" + (count === 1 ? "" : "s");
+          bars.appendChild(bar);
+        });
+        wrap.appendChild(bars);
+
+        if (hist.edges.length >= 2) {
+          var axis = document.createElement("div");
+          axis.className = "hist-axis";
+          var lo = document.createElement("span");
+          lo.textContent = lib.formatNumber(hist.edges[0]);
+          var hi = document.createElement("span");
+          hi.textContent = lib.formatNumber(hist.edges[hist.edges.length - 1]);
+          axis.appendChild(lo);
+          axis.appendChild(hi);
+          wrap.appendChild(axis);
+        }
+        return wrap;
+      }
+
+      function renderTopList(top) {
+        var wrap = document.createElement("div");
+        wrap.className = "toplist";
+        var label = document.createElement("div");
+        label.className = "hist-label";
+        label.textContent = "Most frequent";
+        wrap.appendChild(label);
+        var max = top.length ? top[0].count : 1;
+        top.forEach(function (entry) {
+          var row = document.createElement("div");
+          row.className = "toprow";
+          var val = document.createElement("span");
+          val.className = "tval";
+          val.style.setProperty("--w", Math.max(4, Math.round((entry.count / max) * 100)) + "%");
+          val.textContent = String(entry.value);
+          val.title = String(entry.value);
+          var count = document.createElement("span");
+          count.className = "tcount";
+          count.textContent = entry.count;
+          row.appendChild(val);
+          row.appendChild(count);
+          wrap.appendChild(row);
+        });
+        return wrap;
+      }
+
+      function renderCards(p) {
+        cardsEl.textContent = "";
+        p.columns.forEach(function (col) {
+          var card = document.createElement("article");
+          card.className = "prof-card";
+
+          var h = document.createElement("h3");
+          var nameSpan = document.createElement("span");
+          nameSpan.textContent = col.name;
+          var badge = document.createElement("span");
+          badge.className = "typebadge";
+          badge.dataset.type = col.type;
+          badge.textContent = col.type;
+          h.appendChild(nameSpan);
+          h.appendChild(badge);
+          card.appendChild(h);
+
+          var grid = document.createElement("div");
+          grid.className = "prof-kv";
+          grid.appendChild(kv("Non-null", col.count + " / " + p.rowCount));
+          grid.appendChild(kv("Missing", col.nulls + " (" + (col.nullRatio * 100).toFixed(1) + "%)"));
+          grid.appendChild(kv("Distinct", String(col.distinct) + (col.distinctTruncated ? "+" : "")));
+
+          if (col.numeric) {
+            var n = col.numeric;
+            grid.appendChild(kv("Min", lib.formatNumber(n.min)));
+            grid.appendChild(kv("Q1", lib.formatNumber(n.q1)));
+            grid.appendChild(kv("Median", lib.formatNumber(n.median)));
+            grid.appendChild(kv("Q3", lib.formatNumber(n.q3)));
+            grid.appendChild(kv("Max", lib.formatNumber(n.max)));
+            grid.appendChild(kv("Mean", lib.formatNumber(n.mean)));
+            grid.appendChild(kv("Std dev", lib.formatNumber(n.stdev)));
+            grid.appendChild(kv("Outliers", String(n.outliers)));
+          }
+          if (col.type === "date") {
+            grid.appendChild(kv("Earliest", col.min));
+            grid.appendChild(kv("Latest", col.max));
+          }
+          if (col.type === "boolean") {
+            grid.appendChild(kv("True", String(col.trueCount)));
+            grid.appendChild(kv("False", String(col.falseCount)));
+          }
+          if (col.type === "text") {
+            grid.appendChild(kv("Min length", String(col.minLength)));
+            grid.appendChild(kv("Max length", String(col.maxLength)));
+          }
+          card.appendChild(grid);
+
+          if (col.numeric && col.numeric.histogram && col.numeric.histogram.counts.length) {
+            card.appendChild(renderHistogram(col.numeric.histogram));
+          } else if (col.top && col.top.length) {
+            card.appendChild(renderTopList(col.top));
+          }
+
+          cardsEl.appendChild(card);
+        });
+      }
+
+      function corrColor(v) {
+        if (v === null || v === undefined) return "transparent";
+        var a = Math.abs(v);
+        var color = v >= 0 ? "46,125,78" : "179,64,42";
+        return "rgba(" + color + "," + (0.08 + a * 0.72).toFixed(3) + ")";
+      }
+
+      function renderCorrelations(corr) {
+        corrEl.textContent = "";
+        if (!corr) {
+          corrSection.hidden = true;
+          return;
+        }
+        corrSection.hidden = false;
+
+        var thead = document.createElement("thead");
+        var headRow = document.createElement("tr");
+        headRow.appendChild(document.createElement("th"));
+        corr.columns.forEach(function (name) {
+          var th = document.createElement("th");
+          th.scope = "col";
+          th.title = name;
+          th.textContent = name;
+          headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        corrEl.appendChild(thead);
+
+        var tbody = document.createElement("tbody");
+        corr.matrix.forEach(function (row, i) {
+          var tr = document.createElement("tr");
+          var th = document.createElement("th");
+          th.scope = "row";
+          th.title = corr.columns[i];
+          th.textContent = corr.columns[i];
+          tr.appendChild(th);
+          row.forEach(function (value, j) {
+            var td = document.createElement("td");
+            if (i === j) {
+              td.className = "diag";
+              td.textContent = "—";
+            } else {
+              td.textContent = value === null ? "n/a" : value.toFixed(2);
+              td.style.background = corrColor(value);
+            }
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        corrEl.appendChild(tbody);
+      }
+
+      function render(profile) {
+        currentProfile = profile;
+        renderSummary(profile);
+        renderOverview(profile);
+        renderCards(profile);
+        renderCorrelations(profile.correlations);
+        resultsEl.hidden = false;
+        btnMarkdown.disabled = false;
+        btnJson.disabled = false;
+      }
+
+      // ---- actions -----------------------------------------------------
+
+      function runProfile() {
+        var text = dataEl.value;
+        if (text.trim() === "") {
+          setStatus("Paste or upload a dataset first — try the sample if you need inspiration.", "error");
+          resultsEl.hidden = true;
+          currentProfile = null;
+          return;
+        }
+        var out = lib.profileText(text, buildOptions());
+        if (!out.ok) {
+          setStatus(out.error, "error");
+          resultsEl.hidden = true;
+          currentProfile = null;
+          return;
+        }
+        var p = out.profile;
+        if (p.columnCount === 0) {
+          setStatus("That input did not contain any columns.", "error");
+          resultsEl.hidden = true;
+          return;
+        }
+        render(p);
+        var kind = out.format === "json" ? "JSON" : "delimited text";
+        var msg = "Profiled " + p.rowCount + " row" + (p.rowCount === 1 ? "" : "s") +
+          " × " + p.columnCount + " column" + (p.columnCount === 1 ? "" : "s") +
+          " from " + kind + ".";
+        if (p.truncated) msg += " Large input truncated for safety.";
+        setStatus(msg, "ok");
+        statusInline.textContent = p.rowCount + " × " + p.columnCount;
+        statusInline.classList.remove("hidden");
+      }
+
+      function clearAll() {
+        dataEl.value = "";
+        dataEl.focus();
+        currentProfile = null;
+        currentMarkdown = "";
+        resultsEl.hidden = true;
+        summaryEl.textContent = "";
+        overviewBody.textContent = "";
+        cardsEl.textContent = "";
+        corrEl.textContent = "";
+        corrSection.hidden = true;
+        btnMarkdown.disabled = true;
+        btnJson.disabled = true;
+        setStatus(null);
+      }
+
+      function loadSample() {
+        dataEl.value = SAMPLE;
+        formatEl.value = "auto";
+        headerEl.value = "header";
+        binsEl.value = "12";
+        trimEl.checked = true;
+        runProfile();
+      }
+
+      function copyMarkdown() {
+        if (!currentProfile) return;
+        var md = lib.toMarkdown(currentProfile);
+        currentMarkdown = md;
+        if (!navigator.clipboard) {
+          setStatus("Clipboard API unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(md).then(function () {
+          var old = btnMarkdown.textContent;
+          btnMarkdown.textContent = "Copied ✓";
+          setStatus("Markdown report copied to the clipboard.", "ok");
+          setTimeout(function () { btnMarkdown.textContent = old; }, 1600);
+        }).catch(function () {
+          setStatus("Copy blocked by the browser. Use Download JSON instead.", "error");
+        });
+      }
+
+      function downloadJson() {
+        if (!currentProfile) return;
+        var blob = new Blob([JSON.stringify(currentProfile, null, 2)], { type: "application/json" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "dataset-profile-" + Date.now() + ".json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setStatus("Downloaded profile as JSON.", "ok");
+      }
+
+      function readFile(file) {
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          dataEl.value = String(reader.result || "");
+          if (/\.tsv$/i.test(file.name)) formatEl.value = "tsv";
+          else if (/\.json$/i.test(file.name)) formatEl.value = "auto";
+          else if (/\.csv$/i.test(file.name)) formatEl.value = "auto";
+          runProfile();
+        };
+        reader.onerror = function () {
+          setStatus("Could not read that file.", "error");
+        };
+        reader.readAsText(file);
+      }
+
+      // ---- wiring ------------------------------------------------------
+
+      btnProfile.addEventListener("click", runProfile);
+      btnSample.addEventListener("click", loadSample);
+      btnClear.addEventListener("click", clearAll);
+      btnMarkdown.addEventListener("click", copyMarkdown);
+      btnJson.addEventListener("click", downloadJson);
+
+      dropEl.addEventListener("click", function () { fileEl.click(); });
+      dropEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          fileEl.click();
+        }
+      });
+      fileEl.addEventListener("change", function () {
+        readFile(fileEl.files[0]);
+        fileEl.value = "";
+      });
+
+      ["dragenter", "dragover"].forEach(function (ev) {
+        dropEl.addEventListener(ev, function (e) {
+          e.preventDefault();
+          dropEl.classList.add("drag");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (ev) {
+        dropEl.addEventListener(ev, function (e) {
+          e.preventDefault();
+          dropEl.classList.remove("drag");
+        });
+      });
+      dropEl.addEventListener("drop", function (e) {
+        var file = e.dataTransfer && e.dataTransfer.files[0];
+        if (file) readFile(file);
+        else setStatus("No file found in that drop.", "error");
+      });
+      // Allow dropping anywhere over the input column.
+      ["dragenter", "dragover"].forEach(function (ev) {
+        inputWrap.addEventListener(ev, function (e) {
+          e.preventDefault();
+          inputWrap.classList.add("drag");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (ev) {
+        inputWrap.addEventListener(ev, function (e) {
+          e.preventDefault();
+          inputWrap.classList.remove("drag");
+        });
+      });
+      inputWrap.addEventListener("drop", function (e) {
+        var file = e.dataTransfer && e.dataTransfer.files[0];
+        if (file) readFile(file);
+      });
+
+      dataEl.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runProfile();
+      });
+
+      // Re-run automatically after options change once a profile exists.
+      [formatEl, headerEl, binsEl, trimEl].forEach(function (el) {
+        el.addEventListener("change", function () {
+          if (currentProfile && dataEl.value.trim() !== "") runProfile();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

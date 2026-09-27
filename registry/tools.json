@@ -41,6 +41,27 @@
     }
   },
   {
+    "id": "dataset-profiler",
+    "name": "Dataset Profiler",
+    "description": "Profile CSV, TSV or JSON datasets in your browser: column types, missing values, distributions, outliers, duplicates and correlations. Nothing is uploaded.",
+    "category": "Data",
+    "tags": [
+      "csv",
+      "data",
+      "dataset",
+      "json",
+      "profiler",
+      "statistics"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "file-checksum",
     "name": "File Checksum",
     "description": "Compute SHA-1, SHA-256, SHA-384 and MD5 checksums for any file, right in your browser.",
