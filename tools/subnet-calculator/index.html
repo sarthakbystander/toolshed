@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Subnet Calculator — Toolshed</title>
+  <meta name="description" content="Calculate IPv4 network and broadcast addresses, netmasks, wildcard masks, usable host ranges and reverse DNS, split subnets by prefix or host count, merge CIDR lists and check address membership. Runs entirely in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / subnet-calculator</div>
+      <h1>Subnet Calculator</h1>
+      <p class="lede">Work out IPv4 network and broadcast addresses, netmasks, wildcard masks, usable host ranges and reverse DNS — then split a block into subnets, merge a CIDR list, or test whether an address belongs to a range. All local, no lookups.</p>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">SUBNET CALCULATOR</span>
+          <div class="row">
+            <span class="out-count hidden" id="status-inline"></span>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Calculator mode">
+          <button class="tab" role="tab" id="tab-subnet" aria-controls="panel-subnet" aria-selected="true" tabindex="0">Subnet</button>
+          <button class="tab" role="tab" id="tab-split" aria-controls="panel-split" aria-selected="false" tabindex="-1">Split</button>
+          <button class="tab" role="tab" id="tab-merge" aria-controls="panel-merge" aria-selected="false" tabindex="-1">Merge</button>
+          <button class="tab" role="tab" id="tab-check" aria-controls="panel-check" aria-selected="false" tabindex="-1">Check</button>
+        </div>
+
+        <!-- ============================ SUBNET ============================ -->
+        <div class="panel" id="panel-subnet" role="tabpanel" aria-labelledby="tab-subnet" tabindex="0">
+          <div class="controls">
+            <div class="field">
+              <label class="field-label" for="subnet-input">IPv4 address / CIDR</label>
+              <input type="text" id="subnet-input" class="mono" inputmode="decimal" spellcheck="false" autocomplete="off"
+                placeholder="192.168.10.130/26" value="192.168.10.130/26">
+            </div>
+            <div class="field">
+              <label class="field-label" for="subnet-prefix">Prefix length</label>
+              <input type="number" id="subnet-prefix" min="0" max="32" step="1" value="26" inputmode="numeric">
+            </div>
+            <div class="actions">
+              <button type="button" class="btn" id="btn-subnet">Calculate</button>
+              <button type="button" class="btn secondary" id="btn-subnet-sample">Load sample</button>
+              <button type="button" class="btn danger" id="btn-subnet-clear">Clear</button>
+            </div>
+          </div>
+
+          <div class="status hidden" id="subnet-status" role="status" aria-live="polite"></div>
+
+          <div id="subnet-results" hidden>
+            <div class="resulthead">
+              <span class="resulthead-cidr" id="result-cidr"></span>
+              <span class="pill" id="result-kind"></span>
+            </div>
+
+            <dl class="resultgrid" id="result-grid"></dl>
+
+            <div class="binwrap">
+              <div class="bin-label">Binary breakdown</div>
+              <div class="bin" id="result-binary" aria-hidden="true"></div>
+              <div class="bin-legend">
+                <span class="lg"><span class="sw net"></span> network bits (<span id="bin-netlen">26</span>)</span>
+                <span class="lg"><span class="sw host"></span> host bits (<span id="bin-hostlen">6</span>)</span>
+              </div>
+            </div>
+
+            <div class="row end">
+              <button type="button" class="btn secondary" id="btn-subnet-copy">Copy result</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================= SPLIT ============================= -->
+        <div class="panel hidden" id="panel-split" role="tabpanel" aria-labelledby="tab-split" tabindex="0">
+          <div class="controls">
+            <div class="field">
+              <label class="field-label" for="split-input">Block to split</label>
+              <input type="text" id="split-input" class="mono" inputmode="decimal" spellcheck="false" autocomplete="off"
+                placeholder="10.20.0.0/16" value="10.20.0.0/16">
+            </div>
+            <div class="field">
+              <label class="field-label" for="split-mode">Split by</label>
+              <select id="split-mode">
+                <option value="prefix">Target prefix</option>
+                <option value="hosts">Hosts per subnet</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="split-value">Value</label>
+              <input type="number" id="split-value" min="0" max="65534" step="1" value="24" inputmode="numeric">
+            </div>
+            <div class="actions">
+              <button type="button" class="btn" id="btn-split">Split</button>
+              <button type="button" class="btn secondary" id="btn-split-sample">Load sample</button>
+            </div>
+          </div>
+
+          <div class="status hidden" id="split-status" role="status" aria-live="polite"></div>
+
+          <div id="split-results" hidden>
+            <div class="resulthead">
+              <span class="resulthead-cidr" id="split-summary"></span>
+              <div class="row">
+                <button type="button" class="btn secondary" id="btn-split-copy">Copy CSV</button>
+                <button type="button" class="btn secondary" id="btn-split-download">Download CSV</button>
+              </div>
+            </div>
+            <div class="tablewrap">
+              <table class="subtable" id="split-table">
+                <caption class="hidden">Subnets produced by the split</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Subnet</th>
+                    <th scope="col">Network</th>
+                    <th scope="col">Usable range</th>
+                    <th scope="col">Broadcast</th>
+                    <th scope="col" class="num">Hosts</th>
+                  </tr>
+                </thead>
+                <tbody id="split-body"></tbody>
+              </table>
+            </div>
+            <p class="hint" id="split-note"></p>
+          </div>
+        </div>
+
+        <!-- ============================= MERGE ============================= -->
+        <div class="panel hidden" id="panel-merge" role="tabpanel" aria-labelledby="tab-merge" tabindex="0">
+          <div class="controls stack">
+            <div class="field grow">
+              <label class="field-label" for="merge-input">CIDR blocks (one per line, or space/comma separated)</label>
+              <textarea id="merge-input" class="mono" spellcheck="false" autocomplete="off" placeholder="10.0.0.0/25&#10;10.0.0.128/25&#10;192.168.1.0/24"></textarea>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn" id="btn-merge">Merge</button>
+              <button type="button" class="btn secondary" id="btn-merge-sample">Load sample</button>
+              <button type="button" class="btn danger" id="btn-merge-clear">Clear</button>
+            </div>
+          </div>
+
+          <div class="status hidden" id="merge-status" role="status" aria-live="polite"></div>
+
+          <div id="merge-results" hidden>
+            <div class="resulthead">
+              <span class="resulthead-cidr" id="merge-summary"></span>
+              <div class="row">
+                <button type="button" class="btn secondary" id="btn-merge-copy">Copy result</button>
+                <button type="button" class="btn secondary" id="btn-merge-download">Download CSV</button>
+              </div>
+            </div>
+            <div class="tablewrap">
+              <table class="subtable" id="merge-table">
+                <caption class="hidden">Merged CIDR blocks</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">CIDR</th>
+                    <th scope="col">Network</th>
+                    <th scope="col">Usable range</th>
+                    <th scope="col">Broadcast</th>
+                    <th scope="col" class="num">Hosts</th>
+                  </tr>
+                </thead>
+                <tbody id="merge-body"></tbody>
+              </table>
+            </div>
+            <p class="hint" id="merge-note"></p>
+          </div>
+        </div>
+
+        <!-- ============================= CHECK ============================= -->
+        <div class="panel hidden" id="panel-check" role="tabpanel" aria-labelledby="tab-check" tabindex="0">
+          <div class="controls">
+            <div class="field">
+              <label class="field-label" for="check-address">IPv4 address</label>
+              <input type="text" id="check-address" class="mono" inputmode="decimal" spellcheck="false" autocomplete="off"
+                placeholder="10.20.30.40" value="10.20.30.40">
+            </div>
+            <div class="field grow">
+              <label class="field-label" for="check-list">CIDR list to test against</label>
+              <textarea id="check-list" class="mono" spellcheck="false" autocomplete="off" placeholder="10.20.0.0/16&#10;192.168.0.0/16"></textarea>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn" id="btn-check">Check</button>
+              <button type="button" class="btn secondary" id="btn-check-sample">Load sample</button>
+            </div>
+          </div>
+
+          <div class="status hidden" id="check-status" role="status" aria-live="polite"></div>
+
+          <div id="check-results" hidden>
+            <div class="verdict" id="check-verdict" role="status"></div>
+            <div class="tablewrap">
+              <table class="subtable">
+                <caption class="hidden">Blocks that contain the address</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Matched block</th>
+                    <th scope="col">Usable range</th>
+                    <th scope="col">Broadcast</th>
+                    <th scope="col" class="num">Hosts</th>
+                  </tr>
+                </thead>
+                <tbody id="check-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">REFERENCE</span>
+        </div>
+        <div class="ref" id="reference">
+          <p class="hint">Prefix cheatsheet — total addresses and usable hosts per CIDR prefix.</p>
+          <div class="tablewrap">
+            <table class="subtable compact" id="ref-table">
+              <caption class="hidden">Prefix reference table</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Prefix</th>
+                  <th scope="col">Netmask</th>
+                  <th scope="col" class="num">Total addresses</th>
+                  <th scope="col" class="num">Usable hosts</th>
+                  <th scope="col">Notes</th>
+                </tr>
+              </thead>
+              <tbody id="ref-body"></tbody>
+            </table>
+          </div>
+          <p class="hint">The reference table shows totals for a full /n block. /31 point-to-point links and /32 host routes have all their addresses usable, per RFC 3021.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.subnetCalculator;
+
+      // ---- tiny DOM helpers ------------------------------------------
+
+      function $(id) { return document.getElementById(id); }
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+
+      function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+      function setStatus(node, message, kind) {
+        if (!message) { node.classList.add("hidden"); node.textContent = ""; return; }
+        node.textContent = message;
+        node.classList.remove("hidden", "error", "ok");
+        if (kind) node.classList.add(kind);
+      }
+
+      function definition(term, value, mono) {
+        var d = el("div", "def");
+        d.appendChild(el("dt", null, term));
+        var dd = el("dd", mono ? "mono" : null, value);
+        d.appendChild(dd);
+        return d;
+      }
+
+      function copyText(text, button, okMessage, errNode) {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus(errNode, "Clipboard API unavailable in this browser — use Download instead.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = button.textContent;
+          button.textContent = "Copied ✓";
+          setTimeout(function () { button.textContent = old; }, 1500);
+        }).catch(function () {
+          setStatus(errNode, "Copy blocked by the browser. Use Download instead.", "error");
+        });
+      }
+
+      function download(name, text) {
+        var blob = new Blob([text], { type: "text/csv" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      function csvEscape(value) {
+        var s = String(value == null ? "" : value);
+        return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }
+
+      function toCsv(header, rows) {
+        var lines = [header.map(csvEscape).join(",")];
+        rows.forEach(function (row) { lines.push(row.map(csvEscape).join(",")); });
+        return lines.join("\n") + "\n";
+      }
+
+      // ---- tabs ------------------------------------------------------
+
+      var TABS = ["subnet", "split", "merge", "check"];
+      var tabButtons = TABS.map(function (name) { return $("tab-" + name); });
+      var panels = TABS.map(function (name) { return $("panel-" + name); });
+
+      function activateTab(name, focus) {
+        TABS.forEach(function (tab, i) {
+          var selected = tab === name;
+          tabButtons[i].setAttribute("aria-selected", String(selected));
+          tabButtons[i].tabIndex = selected ? 0 : -1;
+          panels[i].classList.toggle("hidden", !selected);
+          if (selected && focus) tabButtons[i].focus();
+        });
+      }
+
+      tabButtons.forEach(function (button, i) {
+        button.addEventListener("click", function () { activateTab(TABS[i], false); });
+        button.addEventListener("keydown", function (e) {
+          var dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+          if (!dir) return;
+          e.preventDefault();
+          var next = (i + dir + TABS.length) % TABS.length;
+          activateTab(TABS[next], true);
+        });
+      });
+
+      // ---- subnet ----------------------------------------------------
+
+      var subnetInput = $("subnet-input");
+      var subnetPrefix = $("subnet-prefix");
+      var subnetStatus = $("subnet-status");
+      var subnetResults = $("subnet-results");
+      var resultCidr = $("result-cidr");
+      var resultKind = $("result-kind");
+      var resultGrid = $("result-grid");
+      var resultBinary = $("result-binary");
+      var binNetlen = $("bin-netlen");
+      var binHostlen = $("bin-hostlen");
+      var btnSubnetCopy = $("btn-subnet-copy");
+      var lastSubnet = null;
+
+      function binaryGroups(address, prefix) {
+        var v = address >>> 0;
+        var bits = "";
+        for (var i = 31; i >= 0; i--) bits += ((v >>> i) & 1);
+        var groups = [];
+        for (var g = 0; g < 4; g++) groups.push(bits.slice(g * 4, g * 4 + 4));
+        return { bits: bits, groups: groups };
+      }
+
+      function renderBinary(address, prefix) {
+        clear(resultBinary);
+        var info = binaryGroups(address, prefix);
+        for (var g = 0; g < 4; g++) {
+          var group = el("span", "bin-group");
+          for (var b = 0; b < 4; b++) {
+            var idx = g * 4 + b;
+            var bit = el("span", "bit" + (idx < prefix ? " net" : " host"), info.groups[g].charAt(b));
+            group.appendChild(bit);
+          }
+          resultBinary.appendChild(group);
+          if (g < 3) resultBinary.appendChild(el("span", "bindot", "."));
+        }
+        binNetlen.textContent = String(prefix);
+        binHostlen.textContent = String(32 - prefix);
+      }
+
+      function kindLabel(result) {
+        if (result.prefix >= 31) return result.classification;
+        return result.classification + " · " + result.role + " address";
+      }
+
+      // Derive the address and prefix from the two subnet inputs, letting the
+      // prefix field win when it holds a valid value.
+      function readSubnetInputs() {
+        var text = subnetInput.value.trim();
+        if (text === "") return { ok: false, error: "Enter an IPv4 address, optionally with a prefix (e.g. 192.168.10.130/26)." };
+        var address = lib.parseOctets(text.indexOf("/") === -1 ? text : text.slice(0, text.indexOf("/")));
+        if (address === null) {
+          return { ok: false, error: lib.looksLikeIPv6(text) ? "IPv6 addresses are not supported. Enter an IPv4 address." : '"' + text + '" is not a valid IPv4 address.' };
+        }
+        var prefix;
+        var explicit = lib.parsePrefix(subnetPrefix.value);
+        if (text.indexOf("/") !== -1) {
+          var parsed = lib.parseCidr(text);
+          if (!parsed.ok) return parsed;
+          prefix = parsed.prefix;
+        } else if (explicit !== null) {
+          prefix = explicit;
+        } else {
+          prefix = 32;
+        }
+        return { ok: true, address: address, prefix: prefix };
+      }
+
+      function runSubnet() {
+        var read = readSubnetInputs();
+        if (!read.ok) {
+          setStatus(subnetStatus, read.error, "error");
+          subnetResults.hidden = true;
+          lastSubnet = null;
+          return;
+        }
+        var result = lib.calculate(read.address, read.prefix);
+        lastSubnet = result;
+        subnetPrefix.value = String(result.prefix);
+
+        resultCidr.textContent = result.inputCidr;
+        resultKind.textContent = kindLabel(result);
+
+        clear(resultGrid);
+        resultGrid.appendChild(definition("Network address", result.network, true));
+        resultGrid.appendChild(definition("Broadcast address", result.broadcast, true));
+        resultGrid.appendChild(definition("Netmask", result.netmask, true));
+        resultGrid.appendChild(definition("Wildcard mask", result.wildcard, true));
+        resultGrid.appendChild(definition("Usable range",
+          result.rangeStart ? result.rangeStart + " – " + result.rangeEnd : "Not defined for /" + result.prefix, true));
+        resultGrid.appendChild(definition("Total addresses", lib.formatCount(result.total)));
+        resultGrid.appendChild(definition("Usable hosts", lib.formatCount(result.usable)));
+        resultGrid.appendChild(definition("Prefix length", "/" + result.prefix));
+        resultGrid.appendChild(definition("Address class (legacy)", result.addressClass));
+        resultGrid.appendChild(definition("Address type", result.classification));
+        resultGrid.appendChild(definition("Reverse DNS", result.reverseDns, true));
+        resultGrid.appendChild(definition("Reverse zone", result.reverseZone, true));
+
+        renderBinary(read.address, result.prefix);
+
+        subnetResults.hidden = false;
+        var note = "Calculated from " + result.inputCidr + ".";
+        if (result.prefix >= 31) note += " /" + result.prefix + " blocks have no network or broadcast reservation.";
+        setStatus(subnetStatus, note, "ok");
+      }
+
+      function subnetAsText(r) {
+        return [
+          "Address:      " + r.inputCidr,
+          "Network:      " + r.network,
+          "Broadcast:    " + r.broadcast,
+          "Netmask:      " + r.netmask,
+          "Wildcard:     " + r.wildcard,
+          "Usable range: " + (r.rangeStart ? r.rangeStart + " - " + r.rangeEnd : "n/a"),
+          "Total:        " + lib.formatCount(r.total),
+          "Usable hosts: " + lib.formatCount(r.usable),
+          "Type:         " + r.classification,
+          "Class:        " + r.addressClass,
+          "Reverse DNS:  " + r.reverseDns,
+          "Reverse zone: " + r.reverseZone
+        ].join("\n");
+      }
+
+      $("btn-subnet").addEventListener("click", runSubnet);
+      $("btn-subnet-copy").addEventListener("click", function () {
+        if (!lastSubnet) return;
+        copyText(subnetAsText(lastSubnet), btnSubnetCopy, null, subnetStatus);
+      });
+      $("btn-subnet-sample").addEventListener("click", function () {
+        subnetInput.value = "192.168.10.130/26";
+        subnetPrefix.value = "26";
+        runSubnet();
+      });
+      $("btn-subnet-clear").addEventListener("click", function () {
+        subnetInput.value = "";
+        subnetPrefix.value = "";
+        subnetResults.hidden = true;
+        lastSubnet = null;
+        setStatus(subnetStatus, null);
+        subnetInput.focus();
+      });
+      subnetInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); runSubnet(); }
+      });
+      [subnetInput, subnetPrefix].forEach(function (input) {
+        input.addEventListener("change", function () { if (!subnetResults.hidden) runSubnet(); });
+      });
+
+      // ---- split -----------------------------------------------------
+
+      var splitInput = $("split-input");
+      var splitMode = $("split-mode");
+      var splitValue = $("split-value");
+      var splitStatus = $("split-status");
+      var splitResults = $("split-results");
+      var splitSummary = $("split-summary");
+      var splitBody = $("split-body");
+      var splitNote = $("split-note");
+      var btnSplitCopy = $("btn-split-copy");
+      var lastSplit = null;
+
+      var MAX_SPLIT_ROWS = 4096;
+
+      function syncSplitValue() {
+        if (splitMode.value === "hosts") {
+          splitValue.min = "1";
+          splitValue.max = "65534";
+          if (Number(splitValue.value) < 1 || splitValue.value === "24") splitValue.value = "50";
+        } else {
+          splitValue.min = "0";
+          splitValue.max = "32";
+          if (splitValue.value === "50" || splitValue.value === "") splitValue.value = "24";
+        }
+      }
+      splitMode.addEventListener("change", syncSplitValue);
+      syncSplitValue();
+
+      function runSplit() {
+        var parsed = lib.parseCidr(splitInput.value);
+        if (!parsed.ok) {
+          setStatus(splitStatus, parsed.error, "error");
+          splitResults.hidden = true;
+          lastSplit = null;
+          return;
+        }
+        var out = splitMode.value === "hosts"
+          ? lib.splitByHosts(parsed.address, parsed.prefix, Number(splitValue.value))
+          : lib.splitInto(parsed.address, parsed.prefix, Number(splitValue.value));
+
+        if (!out.ok) {
+          setStatus(splitStatus, out.error, "error");
+          splitResults.hidden = true;
+          lastSplit = null;
+          return;
+        }
+
+        lastSplit = out;
+        var source = lib.networkAddress(parsed.address, parsed.prefix);
+        splitSummary.textContent = lib.toDotted(source) + "/" + parsed.prefix + " → " +
+          out.count + " × /" + out.newPrefix + " (" + lib.formatCount(out.usable) + " hosts each)";
+
+        clear(splitBody);
+        var shown = Math.min(out.subnets.length, MAX_SPLIT_ROWS);
+        for (var i = 0; i < shown; i++) {
+          var subnet = out.subnets[i];
+          var tr = el("tr");
+          tr.appendChild(el("td", "rank", i + 1));
+          tr.appendChild(el("td", "mono", subnet.cidr));
+          tr.appendChild(el("td", "mono", subnet.network));
+          tr.appendChild(el("td", "mono", subnet.rangeStart ? subnet.rangeStart + " – " + subnet.rangeEnd : "—"));
+          tr.appendChild(el("td", "mono", subnet.broadcast));
+          tr.appendChild(el("td", "num", lib.formatCount(subnet.usable)));
+          splitBody.appendChild(tr);
+        }
+        splitNote.textContent = shown < out.subnets.length
+          ? "Showing the first " + lib.formatCount(shown) + " of " + lib.formatCount(out.subnets.length) + " subnets; copy or download for the full list."
+          : "";
+        splitNote.hidden = shown >= out.subnets.length;
+        splitResults.hidden = false;
+        setStatus(splitStatus, "Split " + lib.toDotted(source) + "/" + parsed.prefix + " into " +
+          lib.formatCount(out.count) + " subnet" + (out.count === 1 ? "" : "s") + " of /" + out.newPrefix + ".", "ok");
+      }
+
+      function splitCsv() {
+        if (!lastSplit) return "";
+        return toCsv(
+          ["subnet", "network", "usable_start", "usable_end", "broadcast", "usable_hosts"],
+          lastSplit.subnets.map(function (s) {
+            return [s.cidr, s.network, s.rangeStart || "", s.rangeEnd || "", s.broadcast, s.usable];
+          })
+        );
+      }
+
+      $("btn-split").addEventListener("click", runSplit);
+      $("btn-split-copy").addEventListener("click", function () {
+        copyText(splitCsv().replace(/\n$/, ""), btnSplitCopy, null, splitStatus);
+      });
+      $("btn-split-download").addEventListener("click", function () {
+        if (!lastSplit) return;
+        download("subnets-" + Date.now() + ".csv", splitCsv());
+        setStatus(splitStatus, "Downloaded " + lib.formatCount(lastSplit.count) + " subnets as CSV.", "ok");
+      });
+      $("btn-split-sample").addEventListener("click", function () {
+        splitInput.value = "10.20.0.0/16";
+        splitMode.value = "prefix";
+        syncSplitValue();
+        splitValue.value = "24";
+        runSplit();
+      });
+      [splitInput, splitValue].forEach(function (input) {
+        input.addEventListener("change", function () { if (!splitResults.hidden) runSplit(); });
+      });
+
+      // ---- merge -----------------------------------------------------
+
+      var mergeInput = $("merge-input");
+      var mergeStatus = $("merge-status");
+      var mergeResults = $("merge-results");
+      var mergeSummary = $("merge-summary");
+      var mergeBody = $("merge-body");
+      var mergeNote = $("merge-note");
+      var btnMergeCopy = $("btn-merge-copy");
+      var lastMerge = null;
+
+      var MAX_MERGE_ROWS = 5000;
+
+      function runMerge() {
+        var out = lib.mergeList(mergeInput.value);
+        if (!out.ok) {
+          setStatus(mergeStatus, out.error, "error");
+          mergeResults.hidden = true;
+          lastMerge = null;
+          return;
+        }
+        lastMerge = out;
+        mergeSummary.textContent = out.input.length + " block" + (out.input.length === 1 ? "" : "s") +
+          " → " + out.merged.length + " block" + (out.merged.length === 1 ? "" : "s");
+
+        clear(mergeBody);
+        var shown = Math.min(out.merged.length, MAX_MERGE_ROWS);
+        for (var i = 0; i < shown; i++) {
+          var block = out.merged[i];
+          var tr = el("tr");
+          tr.appendChild(el("td", "rank", i + 1));
+          tr.appendChild(el("td", "mono", block.cidr));
+          tr.appendChild(el("td", "mono", block.network));
+          tr.appendChild(el("td", "mono", block.rangeStart ? block.rangeStart + " – " + block.rangeEnd : "—"));
+          tr.appendChild(el("td", "mono", block.broadcast));
+          tr.appendChild(el("td", "num", lib.formatCount(block.usable)));
+          mergeBody.appendChild(tr);
+        }
+        mergeNote.textContent = shown < out.merged.length
+          ? "Showing the first " + lib.formatCount(shown) + " of " + lib.formatCount(out.merged.length) + " blocks."
+          : "";
+        mergeNote.hidden = shown >= out.merged.length;
+        mergeResults.hidden = false;
+        setStatus(mergeStatus, "Merged " + out.input.length + " input block" +
+          (out.input.length === 1 ? "" : "s") + " into " + out.merged.length + " covering block" +
+          (out.merged.length === 1 ? "" : "s") + ".", "ok");
+      }
+
+      function mergeCsv() {
+        if (!lastMerge) return "";
+        return toCsv(
+          ["cidr", "network", "usable_start", "usable_end", "broadcast", "usable_hosts"],
+          lastMerge.merged.map(function (b) {
+            return [b.cidr, b.network, b.rangeStart || "", b.rangeEnd || "", b.broadcast, b.usable];
+          })
+        );
+      }
+
+      $("btn-merge").addEventListener("click", runMerge);
+      $("btn-merge-copy").addEventListener("click", function () {
+        if (!lastMerge) return;
+        var text = lastMerge.merged.map(function (b) { return b.cidr; }).join("\n");
+        copyText(text, btnMergeCopy, null, mergeStatus);
+      });
+      $("btn-merge-download").addEventListener("click", function () {
+        if (!lastMerge) return;
+        download("merged-cidr-" + Date.now() + ".csv", mergeCsv());
+        setStatus(mergeStatus, "Downloaded merged blocks as CSV.", "ok");
+      });
+      $("btn-merge-sample").addEventListener("click", function () {
+        mergeInput.value = ["10.0.0.0/25", "10.0.0.128/25", "10.0.1.0/24", "192.168.1.0/24", "192.168.1.128/25"].join("\n");
+        runMerge();
+      });
+      $("btn-merge-clear").addEventListener("click", function () {
+        mergeInput.value = "";
+        mergeResults.hidden = true;
+        lastMerge = null;
+        setStatus(mergeStatus, null);
+        mergeInput.focus();
+      });
+      mergeInput.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); runMerge(); }
+      });
+
+      // ---- check -----------------------------------------------------
+
+      var checkAddress = $("check-address");
+      var checkList = $("check-list");
+      var checkStatus = $("check-status");
+      var checkResults = $("check-results");
+      var checkVerdict = $("check-verdict");
+      var checkBody = $("check-body");
+
+      function runCheck() {
+        var out = lib.checkMembership(checkAddress.value, checkList.value);
+        if (!out.ok) {
+          setStatus(checkStatus, out.error, "error");
+          checkResults.hidden = true;
+          return;
+        }
+        clear(checkBody);
+        out.matches.forEach(function (block) {
+          var tr = el("tr");
+          tr.appendChild(el("td", "mono", block.cidr));
+          tr.appendChild(el("td", "mono", block.rangeStart ? block.rangeStart + " – " + block.rangeEnd : "—"));
+          tr.appendChild(el("td", "mono", block.broadcast));
+          tr.appendChild(el("td", "num", lib.formatCount(block.usable)));
+          checkBody.appendChild(tr);
+        });
+        var count = out.matches.length;
+        checkVerdict.className = "verdict " + (count ? "match" : "nomatch");
+        checkVerdict.textContent = count
+          ? out.address + " is inside " + count + " of the listed block" + (count === 1 ? "" : "s") + "."
+          : out.address + " is not inside any of the listed blocks.";
+        checkResults.hidden = false;
+        setStatus(checkStatus, count ? "Match found." : "No match.", count ? "ok" : "error");
+      }
+
+      $("btn-check").addEventListener("click", runCheck);
+      $("btn-check-sample").addEventListener("click", function () {
+        checkAddress.value = "10.20.30.40";
+        checkList.value = ["10.20.0.0/16", "192.168.0.0/16", "172.16.5.0/24"].join("\n");
+        runCheck();
+      });
+      [checkAddress, checkList].forEach(function (input) {
+        input.addEventListener("change", function () { if (!checkResults.hidden) runCheck(); });
+      });
+
+      // ---- reference table -------------------------------------------
+
+      function renderReference() {
+        var body = $("ref-body");
+        clear(body);
+        var notes = {
+          31: "Point-to-point link (RFC 3021)",
+          32: "Single host route"
+        };
+        [8, 16, 20, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32].forEach(function (prefix) {
+          var tr = el("tr");
+          tr.appendChild(el("td", "mono", "/" + prefix));
+          tr.appendChild(el("td", "mono", lib.toDotted(lib.prefixToMask(prefix))));
+          tr.appendChild(el("td", "num", lib.formatCount(lib.totalAddresses(prefix))));
+          tr.appendChild(el("td", "num", lib.formatCount(lib.usableAddresses(prefix))));
+          tr.appendChild(el("td", notes[prefix] || ""));
+          body.appendChild(tr);
+        });
+      }
+
+      // ---- boot ------------------------------------------------------
+
+      renderReference();
+      runSubnet();
+    })();
+  </script>
+</body>
+</html>

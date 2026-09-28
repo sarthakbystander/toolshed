@@ -1,0 +1,287 @@
+/* Subnet Calculator — widget styles layered on the shared Toolshed design system.
+   Only tool-specific pieces live here; the chrome, panes, buttons, status and
+   hints come from assets/toolshed.css. */
+
+/* ---------- Tabs (file-folder index) ---------- */
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule-2);
+  margin-bottom: 4px;
+}
+.tab {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  position: relative;
+  top: 1px;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.tab:hover { color: var(--ink); background: var(--surface-2); }
+.tab[aria-selected="true"] {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--rule-2);
+  border-bottom: 1px solid var(--paper);
+}
+.tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 2px 2px;
+}
+
+/* ---------- Panels ---------- */
+.panel { display: flex; flex-direction: column; gap: 16px; padding-top: 6px; }
+.panel:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--radius-sm); }
+
+/* ---------- Controls ---------- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.controls.stack {
+  align-items: stretch;
+  flex-direction: column;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 180px;
+  min-width: 150px;
+}
+.field.grow { flex: 1 1 100%; }
+.field-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.mono { font-family: var(--mono); }
+
+.panel textarea {
+  min-height: 130px;
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule-2);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  outline: none;
+  resize: vertical;
+  transition: border-color .15s, box-shadow .15s;
+}
+.panel textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.actions .btn { flex: none; }
+
+/* ---------- Result header ---------- */
+.resulthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+.resulthead-cidr {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  word-break: break-word;
+}
+.pill {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+
+/* ---------- Result definition grid ---------- */
+.resultgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+.def {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+.def dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.def dd {
+  font-size: 14px;
+  color: var(--ink);
+  word-break: break-word;
+}
+.def dd.mono { font-family: var(--mono); font-size: 13.5px; }
+
+/* ---------- Binary breakdown ---------- */
+.binwrap {
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+.bin-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 9px;
+}
+.bin {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+}
+.bin-group { display: inline-flex; gap: 2px; }
+.bit {
+  display: inline-block;
+  width: 15px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 22px;
+  border-radius: 3px;
+}
+.bit.net { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.bit.host { background: var(--surface-2); color: var(--ink-2); }
+.bindot { color: var(--ink-3); padding: 0 2px; }
+.bin-legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.bin-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
+.bin-legend .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.bin-legend .sw.net { background: var(--accent-soft); border: 1px solid var(--accent); }
+.bin-legend .sw.host { background: var(--surface-2); border: 1px solid var(--rule-2); }
+
+/* ---------- Tables ---------- */
+.tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+.subtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 520px;
+}
+.subtable th,
+.subtable td {
+  text-align: left;
+  padding: 8px 11px;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+.subtable thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  z-index: 1;
+}
+.subtable tbody tr:last-child td { border-bottom: none; }
+.subtable tbody tr:hover td { background: var(--surface-2); }
+.subtable td.mono { font-family: var(--mono); }
+.subtable .num { text-align: right; font-variant-numeric: tabular-nums; }
+.subtable .rank { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.subtable.compact { min-width: 480px; }
+
+/* ---------- Check verdict ---------- */
+.verdict {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule);
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.verdict.match {
+  color: var(--ok);
+  background: rgba(46, 125, 78, .1);
+  border-color: rgba(46, 125, 78, .35);
+}
+.verdict.nomatch {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.row.end { justify-content: flex-end; }
+
+@media (max-width: 520px) {
+  .controls { flex-direction: column; align-items: stretch; }
+  .field { flex: 1 1 auto; }
+  .actions .btn { flex: 1 1 auto; justify-content: center; }
+  .resulthead { flex-direction: column; align-items: flex-start; }
+}
