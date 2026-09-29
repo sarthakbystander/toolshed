@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>OpenAPI Request Builder — Toolshed</title>
+  <meta name="description" content="Load an OpenAPI or Swagger document, pick an operation, fill in the parameters and get a runnable HTTP request plus curl, fetch, Node and Python snippets. Everything runs in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / openapi-request-builder</div>
+      <h1>OpenAPI Request Builder</h1>
+      <p class="lede">Load an OpenAPI 3 or Swagger 2 document, pick an operation, fill in the parameters, and get a ready-to-run request with curl, fetch, Node, Python and raw HTTP snippets. The spec never leaves your tab.</p>
+    </section>
+
+    <section class="oapi">
+
+      <!-- ---------------------------------------------------------- -->
+      <section class="pane oapi-source">
+        <div class="pane-header">
+          <span class="pane-title">1 · SPEC</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-load">Load spec</button>
+            <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+            <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <div class="oapi-tabs" role="tablist" aria-label="How to provide the spec">
+          <button type="button" class="oapi-tab" id="tab-paste" role="tab" aria-selected="true" aria-controls="panel-paste">Paste JSON</button>
+          <button type="button" class="oapi-tab" id="tab-file" role="tab" aria-selected="false" aria-controls="panel-file">Upload file</button>
+        </div>
+
+        <div id="panel-paste" role="tabpanel" aria-labelledby="tab-paste">
+          <label class="field-label" for="spec">OpenAPI / Swagger JSON</label>
+          <textarea id="spec" class="mono" spellcheck="false" autocomplete="off" placeholder='Paste an OpenAPI 3 or Swagger 2 document. For example:&#10;&#10;{&#10;  "openapi": "3.0.3",&#10;  "info": { "title": "Pet API", "version": "1.0.0" },&#10;  "servers": [{ "url": "https://api.example.com/v1" }],&#10;  "paths": {&#10;    "/pets": {&#10;      "get": { "summary": "List pets", "parameters": [&#10;        { "name": "limit", "in": "query", "schema": { "type": "integer" } }&#10;      ] }&#10;    }&#10;  }&#10;}'></textarea>
+        </div>
+
+        <div id="panel-file" role="tabpanel" aria-labelledby="tab-file" hidden>
+          <div class="oapi-drop" id="drop" role="button" tabindex="0" aria-label="Drop an OpenAPI JSON file here, or activate to choose a file">
+            Drop an <strong>.json</strong> OpenAPI or Swagger file here, or click to choose
+          </div>
+          <input type="file" id="file" accept=".json,application/json,text/json" hidden>
+        </div>
+
+        <div class="status hidden" id="spec-status" role="status" aria-live="polite"></div>
+        <p class="hint">Parsed entirely in memory — the document is never uploaded or saved. YAML specs should be converted to JSON first.</p>
+      </section>
+
+      <!-- ---------------------------------------------------------- -->
+      <section class="pane oapi-ops">
+        <div class="pane-header">
+          <span class="pane-title">2 · OPERATIONS</span>
+          <span class="oapi-count" id="op-count"></span>
+        </div>
+
+        <label class="field-label" for="op-search">Filter</label>
+        <input type="search" id="op-search" class="mono" placeholder="Search path, method, summary, tag…" autocomplete="off" spellcheck="false">
+
+        <div class="oapi-tagchips" id="op-tags" role="group" aria-label="Filter operations by tag"></div>
+
+        <p class="oapi-empty" id="ops-empty">Load a spec and its operations will appear here.</p>
+        <ul class="oapi-oplist" id="op-list" aria-label="Operations"></ul>
+      </section>
+
+      <!-- ---------------------------------------------------------- -->
+      <section class="pane oapi-request">
+        <div class="pane-header">
+          <span class="pane-title">3 · REQUEST</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-snippets" disabled>Copy request</button>
+          </div>
+        </div>
+
+        <p class="oapi-empty" id="req-empty">Pick an operation to build a request.</p>
+
+        <div id="req-body" hidden>
+          <div class="oapi-ophead">
+            <span class="oapi-method" id="req-method">GET</span>
+            <span class="oapi-opname" id="req-title"></span>
+          </div>
+          <p class="oapi-opdesc" id="req-desc"></p>
+
+          <div class="oapi-base">
+            <label class="field-label" for="base-url">Base URL</label>
+            <div class="oapi-baserow">
+              <select id="base-url" class="mono" aria-label="Server base URL"></select>
+              <input type="text" id="base-custom" class="mono" placeholder="Or type a base URL" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+
+          <div id="req-sections"></div>
+
+          <div class="oapi-previewwrap">
+            <div class="oapi-previewhead">
+              <span class="pane-title">Request preview</span>
+              <button type="button" class="btn secondary" id="btn-copy-url" disabled>Copy URL</button>
+            </div>
+            <pre class="oapi-url" id="req-url"></pre>
+            <div class="status hidden" id="req-status" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------------------- -->
+      <section class="pane oapi-snippets">
+        <div class="pane-header">
+          <span class="pane-title">4 · CODE</span>
+          <div class="row">
+            <label class="oapi-check" for="use-examples">
+              <input type="checkbox" id="use-examples" checked>
+              Use spec examples
+            </label>
+          </div>
+        </div>
+
+        <div class="oapi-tabs" role="tablist" aria-label="Snippet language" id="snippet-tabs">
+          <button type="button" class="oapi-tab" role="tab" data-snippet="curl" aria-selected="true">curl</button>
+          <button type="button" class="oapi-tab" role="tab" data-snippet="fetch" aria-selected="false">fetch</button>
+          <button type="button" class="oapi-tab" role="tab" data-snippet="node" aria-selected="false">Node</button>
+          <button type="button" class="oapi-tab" role="tab" data-snippet="python" aria-selected="false">Python</button>
+          <button type="button" class="oapi-tab" role="tab" data-snippet="http" aria-selected="false">HTTP</button>
+        </div>
+
+        <div class="oapi-codewrap">
+          <button type="button" class="btn secondary oapi-copycode" id="btn-copy-code" disabled>Copy snippet</button>
+          <pre class="oapi-code" id="snippet" tabindex="0" aria-live="polite">Load a spec and choose an operation to see code.</pre>
+        </div>
+        <p class="hint" id="snippet-note">Snippets are generated from the current form values. Nothing is sent anywhere.</p>
+      </section>
+
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var lib = window.Toolshed.openapiRequestBuilder;
+
+      // ---- element handles ------------------------------------------------
+      var specEl = document.getElementById("spec");
+      var specStatus = document.getElementById("spec-status");
+      var btnLoad = document.getElementById("btn-load");
+      var btnSample = document.getElementById("btn-sample");
+      var btnClear = document.getElementById("btn-clear");
+      var tabPaste = document.getElementById("tab-paste");
+      var tabFile = document.getElementById("tab-file");
+      var panelPaste = document.getElementById("panel-paste");
+      var panelFile = document.getElementById("panel-file");
+      var dropEl = document.getElementById("drop");
+      var fileEl = document.getElementById("file");
+
+      var opSearch = document.getElementById("op-search");
+      var opTags = document.getElementById("op-tags");
+      var opList = document.getElementById("op-list");
+      var opsEmpty = document.getElementById("ops-empty");
+      var opCount = document.getElementById("op-count");
+
+      var reqEmpty = document.getElementById("req-empty");
+      var reqBody = document.getElementById("req-body");
+      var reqMethod = document.getElementById("req-method");
+      var reqTitle = document.getElementById("req-title");
+      var reqDesc = document.getElementById("req-desc");
+      var baseSelect = document.getElementById("base-url");
+      var baseCustom = document.getElementById("base-custom");
+      var reqSections = document.getElementById("req-sections");
+      var reqUrl = document.getElementById("req-url");
+      var reqStatus = document.getElementById("req-status");
+      var btnCopyUrl = document.getElementById("btn-copy-url");
+      var btnSnippets = document.getElementById("btn-snippets");
+
+      var useExamplesEl = document.getElementById("use-examples");
+      var snippetTabs = document.getElementById("snippet-tabs");
+      var snippetEl = document.getElementById("snippet");
+      var snippetNote = document.getElementById("snippet-note");
+      var btnCopyCode = document.getElementById("btn-copy-code");
+
+      // ---- state ----------------------------------------------------------
+      var DOC = null;
+      var OP = null;          // selected operation descriptor
+      var INPUTS = null;      // deriveInputs() result, mutated by the form
+      var FILTER_TAG = "All";
+      var SNIPPET = "curl";
+      var LAST_SNIPPETS = {};
+
+      // ---- status helper --------------------------------------------------
+      function setStatus(el, message, kind) {
+        el.textContent = message || "";
+        el.classList.remove("hidden", "error", "ok");
+        if (!message) { el.classList.add("hidden"); return; }
+        if (kind) el.classList.add(kind);
+      }
+
+      function setSpecStatus(message, kind) { setStatus(specStatus, message, kind); }
+      function setReqStatus(message, kind) { setStatus(reqStatus, message, kind); }
+
+      // ---- spec loading ---------------------------------------------------
+      function loadSpecText(text, sourceLabel) {
+        var result = lib.parseSpec(text);
+        if (!result.ok) {
+          DOC = null; OP = null; INPUTS = null;
+          clearOperatorUI();
+          renderOperations();
+          setSpecStatus(result.error, "error");
+          return;
+        }
+        DOC = result.doc;
+        OP = null; INPUTS = null;
+        clearOperatorUI();
+        buildTags();
+        renderOperations();
+        renderSnippets();
+
+        var ops = lib.listOperations(DOC);
+        var title = DOC.info && DOC.info.title ? String(DOC.info.title) : "Untitled API";
+        var version = DOC.info && DOC.info.version ? " v" + DOC.info.version : "";
+        setSpecStatus(
+          (sourceLabel ? sourceLabel + " · " : "") +
+          title + version + " — " + result.flavor + " " + result.version + ", " +
+          ops.length + " operation" + (ops.length === 1 ? "" : "s") + ".",
+          "ok"
+        );
+
+        if (ops.length) selectOperation(ops[0]);
+      }
+
+      function loadSample() {
+        specEl.value = lib.SAMPLE_SPEC_TEXT;
+        setActiveTab("paste");
+        loadSpecText(lib.SAMPLE_SPEC_TEXT, "Sample spec");
+      }
+
+      function clearAll() {
+        specEl.value = "";
+        DOC = null; OP = null; INPUTS = null;
+        clearOperatorUI();
+        opTags.textContent = "";
+        opList.textContent = "";
+        opsEmpty.hidden = false;
+        opSearch.value = "";
+        FILTER_TAG = "All";
+        opCount.textContent = "";
+        renderSnippets();
+        setSpecStatus("");
+        specEl.focus();
+      }
+
+      function clearOperatorUI() {
+        reqBody.hidden = true;
+        reqEmpty.hidden = false;
+        reqUrl.textContent = "";
+        reqSections.textContent = "";
+        setReqStatus("");
+        btnCopyUrl.disabled = true;
+        btnSnippets.disabled = true;
+        btnCopyCode.disabled = true;
+        reqTitle.textContent = "";
+        reqDesc.textContent = "";
+      }
+
+      // ---- tabs -----------------------------------------------------------
+      function setActiveTab(which) {
+        var paste = which === "paste";
+        tabPaste.setAttribute("aria-selected", String(paste));
+        tabFile.setAttribute("aria-selected", String(!paste));
+        panelPaste.hidden = !paste;
+        panelFile.hidden = paste;
+      }
+
+      // ---- operations list ------------------------------------------------
+      function buildTags() {
+        opTags.textContent = "";
+        FILTER_TAG = "All";
+        var tags = lib.listTags(DOC);
+        var rows = [["All", lib.listOperations(DOC).length]];
+        tags.forEach(function (t) { rows.push([t, lib.searchOperations(DOC, "", t).length]); });
+
+        rows.forEach(function (pair) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "oapi-tagchip";
+          b.dataset.tag = pair[0];
+          b.setAttribute("aria-pressed", String(pair[0] === FILTER_TAG));
+          b.appendChild(document.createTextNode(pair[0]));
+          var n = document.createElement("span");
+          n.className = "n";
+          n.textContent = String(pair[1]);
+          b.appendChild(n);
+          b.addEventListener("click", function () {
+            FILTER_TAG = pair[0];
+            Array.prototype.forEach.call(opTags.children, function (chip) {
+              chip.setAttribute("aria-pressed", String(chip.dataset.tag === FILTER_TAG));
+            });
+            renderOperations();
+          });
+          opTags.appendChild(b);
+        });
+      }
+
+      function renderOperations() {
+        opList.textContent = "";
+        if (!DOC) {
+          opsEmpty.hidden = false;
+          opsEmpty.textContent = "Load a spec and its operations will appear here.";
+          opCount.textContent = "";
+          return;
+        }
+        var ops = lib.searchOperations(DOC, opSearch.value.trim(), FILTER_TAG);
+        opCount.textContent = ops.length + " shown";
+        if (!ops.length) {
+          opsEmpty.hidden = false;
+          opsEmpty.textContent = "No operations match that filter.";
+          return;
+        }
+        opsEmpty.hidden = true;
+
+        ops.forEach(function (op) {
+          var li = document.createElement("li");
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "oapi-op";
+          btn.setAttribute("aria-pressed", String(OP ? OP.key === op.key : false));
+
+          var m = document.createElement("span");
+          m.className = "oapi-method m-" + op.method.toLowerCase();
+          m.textContent = op.method;
+
+          var body = document.createElement("span");
+          body.className = "oapi-op-body";
+          var path = document.createElement("span");
+          path.className = "oapi-op-path";
+          path.textContent = op.path;
+          body.appendChild(path);
+          var label = op.summary || op.operationId;
+          if (label) {
+            var sum = document.createElement("span");
+            sum.className = "oapi-op-summary";
+            sum.textContent = label;
+            body.appendChild(sum);
+          }
+          if (op.deprecated) {
+            var dep = document.createElement("span");
+            dep.className = "oapi-op-dep";
+            dep.textContent = "deprecated";
+            body.appendChild(dep);
+          }
+
+          btn.appendChild(m);
+          btn.appendChild(body);
+          btn.addEventListener("click", function () { selectOperation(op); });
+          btn.dataset.key = op.key;
+          li.appendChild(btn);
+          opList.appendChild(li);
+        });
+      }
+
+      // ---- request building -----------------------------------------------
+      function selectOperation(op) {
+        OP = op;
+        INPUTS = lib.deriveInputs(DOC, op.path, op.pathItem, op.operation, { useExamples: useExamplesEl.checked });
+        reqEmpty.hidden = true;
+        reqBody.hidden = false;
+        reqMethod.textContent = op.method;
+        reqMethod.className = "oapi-method m-" + op.method.toLowerCase();
+        reqTitle.textContent = op.summary || op.operationId || op.path;
+        reqDesc.textContent = op.description || "";
+
+        buildBaseSelect();
+        renderRequestSections();
+        updateRequest();
+
+        Array.prototype.forEach.call(opList.children, function (li) {
+          var btn = li.firstChild;
+          if (btn) btn.setAttribute("aria-pressed", String(btn.dataset.key === op.key));
+        });
+      }
+
+      function buildBaseSelect() {
+        baseSelect.textContent = "";
+        var servers = lib.listServers(DOC);
+        if (!servers.length) {
+          var opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "No server in spec — type one below";
+          baseSelect.appendChild(opt);
+          baseSelect.disabled = true;
+          return;
+        }
+        baseSelect.disabled = false;
+        servers.forEach(function (url) {
+          var opt = document.createElement("option");
+          opt.value = url;
+          opt.textContent = url;
+          baseSelect.appendChild(opt);
+        });
+        baseCustom.value = "";
+      }
+
+      function currentBaseUrl() {
+        return (baseCustom.value.trim() || baseSelect.value || "").trim();
+      }
+
+      // ---- editable sections ----------------------------------------------
+      function renderRequestSections() {
+        reqSections.textContent = "";
+        if (!INPUTS) return;
+
+        if (INPUTS.pathParams.length) {
+          reqSections.appendChild(section("Path parameters", INPUTS.pathParams, "path"));
+        }
+        if (INPUTS.query.length) {
+          reqSections.appendChild(section("Query parameters", INPUTS.query, "query"));
+        }
+        if (INPUTS.headers.length) {
+          reqSections.appendChild(section("Headers", INPUTS.headers, "header"));
+        }
+        if (INPUTS.cookies.length) {
+          reqSections.appendChild(section("Cookies", INPUTS.cookies, "cookie"));
+        }
+        if (INPUTS.body.hasSchema || INPUTS.body.mediaTypes.length) {
+          reqSections.appendChild(bodySection());
+        }
+      }
+
+      function section(titleText, rows, kind) {
+        var wrap = document.createElement("div");
+        wrap.className = "oapi-section";
+
+        var head = document.createElement("div");
+        head.className = "oapi-section-head";
+        var h = document.createElement("span");
+        h.className = "oapi-section-title";
+        h.textContent = titleText;
+        head.appendChild(h);
+        wrap.appendChild(head);
+
+        rows.forEach(function (row) {
+          wrap.appendChild(parameterRow(row, kind));
+        });
+        return wrap;
+      }
+
+      function parameterRow(row, kind) {
+        var el = document.createElement("div");
+        el.className = "oapi-param";
+
+        var check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = kind === "path" ? true : row.enabled !== false;
+        check.disabled = kind === "path";
+        check.setAttribute("aria-label", (check.checked ? "Include " : "Exclude ") + row.name);
+        check.addEventListener("change", function () {
+          row.enabled = check.checked;
+          updateRequest();
+        });
+
+        var label = document.createElement("span");
+        label.className = "oapi-param-name";
+        label.textContent = row.name;
+        label.title = row.name + (row.description ? " — " + row.description : "");
+        if (row.required) {
+          var req = document.createElement("span");
+          req.className = "oapi-param-req";
+          req.textContent = "required";
+          label.appendChild(req);
+        }
+
+        var input = document.createElement("input");
+        input.type = "text";
+        input.className = "mono";
+        input.value = row.value || "";
+        input.placeholder = "value";
+        input.setAttribute("aria-label", "Value for " + row.name);
+        input.addEventListener("input", function () {
+          row.value = input.value;
+          updateRequest();
+        });
+
+        el.appendChild(check);
+        el.appendChild(label);
+        el.appendChild(input);
+        return el;
+      }
+
+      function bodySection() {
+        var wrap = document.createElement("div");
+        wrap.className = "oapi-section";
+
+        var head = document.createElement("div");
+        head.className = "oapi-section-head";
+        var h = document.createElement("span");
+        h.className = "oapi-section-title";
+        h.textContent = "Request body";
+        head.appendChild(h);
+        if (INPUTS.body.required) {
+          var req = document.createElement("span");
+          req.className = "oapi-param-req";
+          req.textContent = "required";
+          head.appendChild(req);
+        }
+        wrap.appendChild(head);
+
+        if (INPUTS.body.mediaTypes.length > 1) {
+          var mediaRow = document.createElement("div");
+          mediaRow.className = "oapi-param";
+          var mediaLabel = document.createElement("label");
+          mediaLabel.className = "oapi-param-name";
+          mediaLabel.textContent = "Content-Type";
+          mediaLabel.setAttribute("for", "body-media");
+          var sel = document.createElement("select");
+          sel.id = "body-media";
+          sel.className = "mono";
+          sel.setAttribute("aria-label", "Request body content type");
+          INPUTS.body.mediaTypes.forEach(function (mt) {
+            var opt = document.createElement("option");
+            opt.value = mt;
+            opt.textContent = mt;
+            sel.appendChild(opt);
+          });
+          sel.value = INPUTS.body.contentType;
+          sel.addEventListener("change", function () {
+            INPUTS.body.contentType = sel.value;
+            refreshBodyExample();
+            updateRequest();
+          });
+          mediaRow.appendChild(document.createElement("span"));
+          mediaRow.appendChild(mediaLabel);
+          mediaRow.appendChild(sel);
+          wrap.appendChild(mediaRow);
+        }
+
+        var ta = document.createElement("textarea");
+        ta.id = "body-text";
+        ta.className = "mono oapi-bodyinput";
+        ta.spellcheck = false;
+        ta.value = INPUTS.body.text || "";
+        ta.placeholder = '{"key": "value"}';
+        ta.setAttribute("aria-label", "Request body");
+        ta.addEventListener("input", function () {
+          INPUTS.body.text = ta.value;
+          updateRequest();
+        });
+        wrap.appendChild(ta);
+
+        var hint = document.createElement("p");
+        hint.className = "hint";
+        hint.textContent = "Edit freely — the snippet and preview update as you type.";
+        wrap.appendChild(hint);
+        return wrap;
+      }
+
+      function refreshBodyExample() {
+        var ta = document.getElementById("body-text");
+        if (!ta || !DOC || !OP) return;
+        var info = lib.requestBodySchema(DOC, OP.operation);
+        if (!info || !info.schema) return;
+        var example = lib.exampleFromSchema(DOC, info.schema, { useExamples: useExamplesEl.checked });
+        if (example !== null && example !== undefined) {
+          INPUTS.body.text = typeof example === "object"
+            ? JSON.stringify(example, null, 2)
+            : String(example);
+        } else {
+          INPUTS.body.text = "";
+        }
+        ta.value = INPUTS.body.text;
+      }
+
+      // ---- request preview + snippets -------------------------------------
+      function collectPathParams() {
+        var out = {};
+        (INPUTS.pathParams || []).forEach(function (p) { out[p.name] = p.value; });
+        return out;
+      }
+
+      function updateRequest() {
+        if (!DOC || !OP || !INPUTS) return;
+        var req = lib.buildRequest(DOC, OP.method, OP.path, {
+          baseUrl: currentBaseUrl(),
+          pathParams: collectPathParams(),
+          query: INPUTS.query,
+          headers: INPUTS.headers,
+          body: INPUTS.body.text,
+          contentType: INPUTS.body.contentType,
+        });
+
+        reqUrl.textContent = req.url || "(no URL yet)";
+
+        var messages = req.errors.concat(req.warnings);
+        if (messages.length) setReqStatus(messages.join(" "), req.errors.length ? "error" : "");
+        else setReqStatus("");
+
+        LAST_SNIPPETS = lib.toSnippets(req);
+        renderSnippets();
+        btnCopyUrl.disabled = !req.url;
+        btnSnippets.disabled = false;
+      }
+
+      function renderSnippets() {
+        if (!DOC || !OP) {
+          snippetEl.textContent = "Load a spec and choose an operation to see code.";
+          snippetNote.textContent = "Snippets are generated from the current form values. Nothing is sent anywhere.";
+          btnCopyCode.disabled = true;
+          return;
+        }
+        var text = LAST_SNIPPETS[SNIPPET] || "";
+        snippetEl.textContent = text || "—";
+        snippetNote.textContent = noteFor(SNIPPET);
+        btnCopyCode.disabled = !text;
+      }
+
+      function noteFor(kind) {
+        if (kind === "curl") return "Sends the body verbatim — no JavaScript required.";
+        if (kind === "fetch") return "Browser fetch with the body serialized via JSON.stringify.";
+        if (kind === "node") return "Node.js 18+ exposes a global fetch; run with node request.mjs.";
+        if (kind === "python") return "Python 3 with the requests library; JSON payloads use json=payload.";
+        return "The raw HTTP/1.1 message for reference or manual testing.";
+      }
+
+      function setSnippet(kind) {
+        SNIPPET = kind;
+        Array.prototype.forEach.call(snippetTabs.children, function (tab) {
+          tab.setAttribute("aria-selected", String(tab.dataset.snippet === kind));
+        });
+        renderSnippets();
+      }
+
+      // ---- clipboard ------------------------------------------------------
+      function copyText(text, button, okMessage) {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setReqStatus("Clipboard API unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = button.textContent;
+          button.textContent = "Copied ✓";
+          if (okMessage) setReqStatus(okMessage, "ok");
+          setTimeout(function () { button.textContent = old; }, 1400);
+        }).catch(function () {
+          setReqStatus("Copy was blocked by the browser.", "error");
+        });
+      }
+
+      // ---- wiring ---------------------------------------------------------
+      btnLoad.addEventListener("click", function () {
+        loadSpecText(specEl.value, "Pasted spec");
+      });
+      btnSample.addEventListener("click", loadSample);
+      btnClear.addEventListener("click", clearAll);
+      tabPaste.addEventListener("click", function () { setActiveTab("paste"); });
+      tabFile.addEventListener("click", function () { setActiveTab("file"); });
+
+      opSearch.addEventListener("input", function () { renderOperations(); });
+
+      baseSelect.addEventListener("change", function () { baseCustom.value = ""; updateRequest(); });
+      baseCustom.addEventListener("input", function () { updateRequest(); });
+
+      useExamplesEl.addEventListener("change", function () {
+        if (!DOC || !OP) return;
+        INPUTS = lib.deriveInputs(DOC, OP.path, OP.pathItem, OP.operation, { useExamples: useExamplesEl.checked });
+        renderRequestSections();
+        updateRequest();
+      });
+
+      btnCopyUrl.addEventListener("click", function () { copyText(reqUrl.textContent, btnCopyUrl, "Request URL copied."); });
+      btnCopyCode.addEventListener("click", function () { copyText(LAST_SNIPPETS[SNIPPET] || "", btnCopyCode, "Snippet copied."); });
+      btnSnippets.addEventListener("click", function () { copyText(LAST_SNIPPETS[SNIPPET] || "", btnSnippets, "Request copied."); });
+
+      Array.prototype.forEach.call(snippetTabs.children, function (tab) {
+        tab.addEventListener("click", function () { setSnippet(tab.dataset.snippet); });
+      });
+
+      // File upload
+      dropEl.addEventListener("click", function () { fileEl.click(); });
+      dropEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileEl.click(); }
+      });
+      fileEl.addEventListener("change", function () {
+        readFile(fileEl.files[0]);
+        fileEl.value = "";
+      });
+      ["dragenter", "dragover"].forEach(function (ev) {
+        dropEl.addEventListener(ev, function (e) { e.preventDefault(); dropEl.classList.add("drag"); });
+      });
+      ["dragleave", "drop"].forEach(function (ev) {
+        dropEl.addEventListener(ev, function (e) { e.preventDefault(); dropEl.classList.remove("drag"); });
+      });
+      dropEl.addEventListener("drop", function (e) {
+        var file = e.dataTransfer && e.dataTransfer.files[0];
+        if (file) readFile(file);
+        else setSpecStatus("No file found in that drop.", "error");
+      });
+
+      function readFile(file) {
+        if (!file) return;
+        if (!/\.json$/i.test(file.name) && !/json/i.test(file.type)) {
+          setSpecStatus("Please choose a .json OpenAPI or Swagger file.", "error");
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          var text = String(reader.result || "");
+          specEl.value = text;
+          setActiveTab("paste");
+          loadSpecText(text, file.name);
+        };
+        reader.onerror = function () { setSpecStatus("Could not read that file.", "error"); };
+        reader.readAsText(file);
+      }
+
+      specEl.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") loadSpecText(specEl.value, "Pasted spec");
+      });
+
+      // Keyboard shortcut: "/" focuses the filter.
+      document.addEventListener("keydown", function (e) {
+        var tag = (e.target.tagName || "").toLowerCase();
+        if (e.key === "/" && tag !== "input" && tag !== "textarea" && !e.metaKey && !e.ctrlKey) {
+          e.preventDefault();
+          opSearch.focus();
+        }
+        if (e.key === "Escape" && document.activeElement === opSearch) {
+          opSearch.value = "";
+          renderOperations();
+        }
+      });
+
+      setActiveTab("paste");
+      setSnippet("curl");
+      loadSample();
+    })();
+  </script>
+</body>
+</html>
