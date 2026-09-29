@@ -125,6 +125,28 @@
     }
   },
   {
+    "id": "openapi-request-builder",
+    "name": "OpenAPI Request Builder",
+    "description": "Load an OpenAPI 3 or Swagger 2 document, pick an operation, fill in the parameters and get a runnable request with curl, fetch, Node, Python and raw HTTP snippets. Runs entirely in your browser.",
+    "category": "Developer",
+    "tags": [
+      "api",
+      "developer",
+      "openapi",
+      "request",
+      "rest",
+      "snippets",
+      "swagger"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "regex-tester",
     "name": "Regex Tester",
     "description": "Test JavaScript regular expressions against your own text, with live match stats and a split view. Runs entirely in your browser.",
