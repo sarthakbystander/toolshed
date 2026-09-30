@@ -1,0 +1,14 @@
+{
+  "id": "file-integrity-auditor",
+  "name": "File Integrity Auditor",
+  "description": "Verify a set of files against a checksum manifest and see what matches, what changed and what is missing. Hashing and comparison run locally in your browser.",
+  "category": "Developer",
+  "tags": ["checksum", "hash", "integrity", "manifest", "sha256", "md5", "verify"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

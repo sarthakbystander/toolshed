@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>File Integrity Auditor — Toolshed</title>
+  <meta name="description" content="Audit a folder of files against a checksum manifest (sha256sum, BSD, RFC 9530 or CSV) in your browser. Hashing and comparison run locally — nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+    <div class="wrap hd-in">
+      <a class="logo" href="../..">
+        <span class="logo-mark" aria-hidden="true"></span>
+        Toolshed
+      </a>
+      <nav>
+        <a href="../..#index">Tools</a>
+        <a href="../..">Home</a>
+        <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66-.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / file-integrity-auditor</div>
+      <h1>File Integrity Auditor</h1>
+      <p class="lede">Verify a set of files against a checksum manifest and see exactly which ones match, which were changed, and which are missing. Hashing and comparison run entirely in your tab — nothing is uploaded.</p>
+    </section>
+
+    <section class="toolbody fia-toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">MANIFEST</span>
+        </div>
+
+        <label class="field-label" for="manifest">Checksum manifest</label>
+        <textarea id="manifest" class="mono" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a checksum manifest, or drop a file. Examples:&#10;&#10;900150983cd24fb0d6963f7d28e17f72  app.js&#10;ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad *logo.png&#10;SHA256 (server.py) = 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae&#10;sha-256=:YOnHp7dT6j8SLJPAdM8J3pAxFmuV/THhYAVGqoOkm9E=:"></textarea>
+
+        <div class="fia-drop" id="manifest-drop" role="button" tabindex="0" aria-label="Drop a checksum file here, or activate to choose a file">
+          Drop a <strong>.txt</strong>, <strong>.md5</strong>, <strong>.sha256</strong>, <strong>.csv</strong> file here, or click to choose
+        </div>
+        <input type="file" id="manifest-file" accept=".txt,.md5,.sha1,.sha256,.sha384,.sha512,.csv,.digest,.sum,text/plain,text/csv" hidden>
+
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-sample-manifest">Load sample manifest</button>
+          <button type="button" class="btn danger" id="btn-clear-manifest">Clear</button>
+        </div>
+
+        <p class="fia-meta hidden" id="manifest-meta"></p>
+        <p class="fia-warn hidden" id="manifest-warn" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">FILES</span>
+        </div>
+
+        <div class="fia-drop" id="files-drop" role="button" tabindex="0" aria-label="Drop files or a folder here, or activate to choose files">
+          <span class="dz-main">Drop files or a folder here</span>
+          <span class="dz-sub">Only the file contents you choose are read, and only in your browser.</span>
+        </div>
+        <input type="file" id="files-input" multiple hidden>
+        <input type="file" id="folder-input" webkitdirectory directory multiple hidden>
+
+        <div class="row">
+          <button type="button" class="btn" id="btn-files">Choose files</button>
+          <button type="button" class="btn secondary" id="btn-folder">Choose folder</button>
+          <button type="button" class="btn secondary" id="btn-sample-files">Load sample files</button>
+          <button type="button" class="btn danger" id="btn-clear-files">Clear</button>
+        </div>
+
+        <ul class="fia-filelist hidden" id="filelist" aria-label="Selected files"></ul>
+        <p class="fia-meta hidden" id="files-meta"></p>
+      </div>
+    </section>
+
+    <section class="pane fia-audit" id="audit">
+      <div class="pane-header">
+        <span class="pane-title">AUDIT</span>
+        <div class="row">
+          <label class="chk" for="check-extras">
+            <input type="checkbox" id="check-extras" checked>
+            <span>Report files not in the manifest</span>
+          </label>
+          <button type="button" class="btn" id="btn-audit" disabled>Run audit</button>
+        </div>
+      </div>
+
+      <div class="fia-progress hidden" id="progress">
+        <div class="fia-bar" role="progressbar" aria-labelledby="progress-text" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressbar">
+          <span id="progress-fill"></span>
+        </div>
+        <span class="fia-progress-text" id="progress-text">Starting…</span>
+      </div>
+
+      <p class="status hidden" id="status" role="status" aria-live="polite"></p>
+
+      <div class="fia-summary hidden" id="summary" aria-live="polite"></div>
+
+      <div class="fia-results hidden" id="results">
+        <div class="row fia-filters" id="filters" role="group" aria-label="Filter results by status"></div>
+
+        <div class="fia-tablewrap">
+          <table class="fia-table" id="audit-table">
+            <caption class="hidden">Audit results</caption>
+            <thead>
+              <tr>
+                <th scope="col">Status</th>
+                <th scope="col">File</th>
+                <th scope="col">Expected</th>
+                <th scope="col">Actual</th>
+                <th scope="col">Note</th>
+              </tr>
+            </thead>
+            <tbody id="audit-body"></tbody>
+          </table>
+        </div>
+
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-csv">Download CSV report</button>
+          <button type="button" class="btn secondary" id="btn-report">Download text report</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane fia-help">
+      <h2>How it works</h2>
+      <p>The auditor reads your manifest, works out which digest algorithm each line uses, hashes the files you select, and matches them by file name. Each manifest entry becomes one result row.</p>
+      <ul>
+        <li><strong>OK</strong> — the file's digest matches the manifest.</li>
+        <li><strong>MISMATCH</strong> — the file was found but its digest differs. The file was modified or corrupted.</li>
+        <li><strong>MISSING</strong> — the manifest lists the file but it was not among the files you provided.</li>
+        <li><strong>EXTRA</strong> — the file was provided but is not listed in the manifest (optional, on by default).</li>
+        <li><strong>UNKNOWN</strong> — the entry could not be verified, for example a digest-only record with no file name.</li>
+      </ul>
+
+      <h2>Supported manifest formats</h2>
+      <ul>
+        <li>GNU coreutils output: <code>sha256sum</code>, <code>md5sum</code>, <code>sha1sum</code>, <code>sha384sum</code>, <code>sha512sum</code>, including the <code>*</code> binary-mode marker and <code>\</code> escapes.</li>
+        <li>BSD / <code>--tag</code> output: <code>SHA256 (file) = digest</code>.</li>
+        <li>RFC 9530 HTTP <code>Content-Digest</code>: <code>sha-256=:base64:</code> (reported as an unverifiable digest-only record).</li>
+        <li>Plain <code>digest  filename</code> lists, and two-column CSV in either order.</li>
+        <li>Unlabelled digests, where the algorithm is inferred from the digest length (32 = MD5, 40 = SHA-1, 64 = SHA-256, 96 = SHA-384, 128 = SHA-512).</li>
+      </ul>
+
+      <h2>Privacy</h2>
+      <p>Files are read with the browser's File API and hashed in memory. Nothing is uploaded, no network requests are made, and nothing is written to storage. Close the tab and it is all gone.</p>
+
+      <h2>Limitations</h2>
+      <ul>
+        <li>Files are matched by name, not by path, so duplicate basenames in different folders are reported as ambiguous.</li>
+        <li>SHA digests use the browser's Web Crypto; MD5 uses a bundled implementation so it works even where MD5 is unavailable.</li>
+        <li>Folder selection uses the non-standard <code>webkitdirectory</code> attribute, supported by current Chrome, Edge, Firefox and Safari.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-in">
+      <div class="cr">
+        Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+      </div>
+      <nav>
+        <a href="../..">Home</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var lib = window.Toolshed.fileIntegrityAuditor;
+      var STATUS_ORDER = [lib.STATUS.MATCH, lib.STATUS.MISMATCH, lib.STATUS.MISSING, lib.STATUS.EXTRA, lib.STATUS.UNKNOWN];
+
+      var els = {
+        manifest: document.getElementById("manifest"),
+        manifestDrop: document.getElementById("manifest-drop"),
+        manifestFile: document.getElementById("manifest-file"),
+        sampleManifest: document.getElementById("btn-sample-manifest"),
+        clearManifest: document.getElementById("btn-clear-manifest"),
+        manifestMeta: document.getElementById("manifest-meta"),
+        manifestWarn: document.getElementById("manifest-warn"),
+        filesDrop: document.getElementById("files-drop"),
+        filesInput: document.getElementById("files-input"),
+        folderInput: document.getElementById("folder-input"),
+        btnFiles: document.getElementById("btn-files"),
+        btnFolder: document.getElementById("btn-folder"),
+        btnSampleFiles: document.getElementById("btn-sample-files"),
+        btnClearFiles: document.getElementById("btn-clear-files"),
+        filelist: document.getElementById("filelist"),
+        filesMeta: document.getElementById("files-meta"),
+        checkExtras: document.getElementById("check-extras"),
+        btnAudit: document.getElementById("btn-audit"),
+        progress: document.getElementById("progress"),
+        progressbar: document.getElementById("progressbar"),
+        progressFill: document.getElementById("progress-fill"),
+        progressText: document.getElementById("progress-text"),
+        status: document.getElementById("status"),
+        summary: document.getElementById("summary"),
+        results: document.getElementById("results"),
+        filters: document.getElementById("filters"),
+        auditBody: document.getElementById("audit-body"),
+        btnCsv: document.getElementById("btn-csv"),
+        btnReport: document.getElementById("btn-report")
+      };
+
+      var state = {
+        files: [],
+        entries: [],
+        skipped: [],
+        rows: [],
+        summary: null,
+        filter: "all",
+        busy: false
+      };
+
+      // Sample manifest and matching sample files, so the tool is usable in one click.
+      // The sample deliberately mixes an OK, a mismatch, a missing file and a
+      // second algorithm for the same file.
+      var SAMPLE_TEXT = "Toolshed sample file\nChecksum me!\n";
+      var SAMPLE_MANIFEST = [
+        "# Toolshed sample manifest",
+        "36543cf81c9fc03bc42bf729d3d7da7f  readme.txt",
+        "daa6d6ff228629ed663fbd19d3316ef0dbc15ce8c93965d1f21c9b00969f8fa1  logo.txt",
+        "00000000000000000000000000000000  logo.txt",
+        "d41d8cd98f00b204e9800998ecf8427e  empty.txt",
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  notes.txt"
+      ].join("\n") + "\n";
+
+      function setStatus(message, kind) {
+        if (!message) {
+          els.status.textContent = "";
+          els.status.className = "status hidden";
+          return;
+        }
+        els.status.textContent = message;
+        els.status.className = "status" + (kind ? " " + kind : "");
+      }
+
+      function setProgress(fraction, label) {
+        if (fraction == null) {
+          els.progress.classList.add("hidden");
+          return;
+        }
+        var pct = Math.max(0, Math.min(100, Math.round(fraction * 100)));
+        els.progress.classList.remove("hidden");
+        els.progressFill.style.width = pct + "%";
+        els.progressbar.setAttribute("aria-valuenow", String(pct));
+        els.progressText.textContent = label || pct + "%";
+      }
+
+      function formatBytes(n) {
+        if (n < 1024) return n + " B";
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+        if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + " MB";
+        return (n / 1024 / 1024 / 1024).toFixed(2) + " GB";
+      }
+
+      function plural(n, one, many) {
+        return n + " " + (n === 1 ? one : many);
+      }
+
+      // -------------------------------------------------------------------
+      // Manifest
+      // -------------------------------------------------------------------
+
+      function algorithmsInUse(entries) {
+        var seen = {};
+        entries.forEach(function (e) { if (e.algorithm) seen[e.algorithm] = true; });
+        return Object.keys(seen).sort();
+      }
+
+      function refreshManifest() {
+        var parsed = lib.parseManifest(els.manifest.value);
+        state.entries = parsed.entries;
+        state.skipped = parsed.skipped;
+
+        if (state.entries.length === 0 && state.skipped.length === 0) {
+          els.manifestMeta.classList.add("hidden");
+          els.manifestWarn.classList.add("hidden");
+          updateAuditButton();
+          return;
+        }
+
+        var algos = algorithmsInUse(state.entries);
+        els.manifestMeta.textContent = plural(state.entries.length, "entry", "entries") +
+          (algos.length ? " · " + algos.join(", ") : "") +
+          (state.skipped.length ? " · " + plural(state.skipped.length, "line skipped", "lines skipped") : "");
+        els.manifestMeta.classList.remove("hidden");
+
+        if (state.skipped.length) {
+          var first = state.skipped[0];
+          els.manifestWarn.textContent = "Line " + first.line + " was not recognised as a checksum entry: “" +
+            first.text.slice(0, 80) + "”";
+          els.manifestWarn.classList.remove("hidden");
+        } else {
+          els.manifestWarn.classList.add("hidden");
+        }
+        updateAuditButton();
+      }
+
+      // -------------------------------------------------------------------
+      // Files
+      // -------------------------------------------------------------------
+
+      function renderFilelist() {
+        els.filelist.textContent = "";
+        var max = 200;
+        state.files.slice(0, max).forEach(function (f) {
+          var li = document.createElement("li");
+          var name = document.createElement("span");
+          name.className = "fia-file-name";
+          name.textContent = f.name;
+          var size = document.createElement("span");
+          size.className = "fia-file-size";
+          size.textContent = formatBytes(f.size);
+          li.appendChild(name);
+          li.appendChild(size);
+          els.filelist.appendChild(li);
+        });
+        if (state.files.length > max) {
+          var more = document.createElement("li");
+          more.className = "fia-file-more";
+          more.textContent = "…and " + plural(state.files.length - max, "more file", "more files");
+          els.filelist.appendChild(more);
+        }
+        els.filelist.classList.toggle("hidden", state.files.length === 0);
+      }
+
+      function refreshFiles() {
+        renderFilelist();
+        var total = state.files.reduce(function (sum, f) { return sum + f.size; }, 0);
+        if (state.files.length === 0) {
+          els.filesMeta.classList.add("hidden");
+        } else {
+          els.filesMeta.textContent = plural(state.files.length, "file", "files") + " · " + formatBytes(total);
+          els.filesMeta.classList.remove("hidden");
+        }
+        updateAuditButton();
+      }
+
+      function addFiles(fileList) {
+        var added = 0;
+        for (var i = 0; i < fileList.length; i++) {
+          var file = fileList[i];
+          if (!file || typeof file.size !== "number") continue;
+          state.files.push({ name: file.name, size: file.size, file: file });
+          added++;
+        }
+        state.files.sort(function (a, b) { return a.name.localeCompare(b.name); });
+        refreshFiles();
+        if (added) setStatus(plural(added, "file", "files") + " ready to audit.", null);
+      }
+
+      // -------------------------------------------------------------------
+      // Audit
+      // -------------------------------------------------------------------
+
+      function updateAuditButton() {
+        els.btnAudit.disabled = state.busy || state.entries.length === 0 || state.files.length === 0;
+      }
+
+      function hashAllFiles() {
+        var needed = algorithmsInUse(state.entries);
+        // MD5 is computed locally so it is always available; the SHA family
+        // needs Web Crypto.
+        var canHashSha = typeof crypto !== "undefined" && !!crypto.subtle;
+        var hashAlgorithms = needed.filter(function (a) { return a === "md5" || canHashSha; });
+        var unsupported = needed.filter(function (a) { return a !== "md5" && !canHashSha; });
+
+        var results = [];
+        var totalBytes = state.files.reduce(function (sum, f) { return sum + f.size; }, 0) || 1;
+        var doneBytes = 0;
+
+        // Files are hashed one after another so the progress bar is accurate
+        // and large selections never queue thousands of buffered reads.
+        function next(index) {
+          if (index >= state.files.length) return Promise.resolve();
+          var entry = state.files[index];
+          return entry.file.arrayBuffer().then(function (buffer) {
+            var bytes = new Uint8Array(buffer);
+            return lib.hashBytes(bytes, hashAlgorithms, {
+              onProgress: function (frac) {
+                setProgress((doneBytes + bytes.length * frac) / totalBytes, "Hashing " + entry.name);
+              }
+            }).then(function (digests) {
+              var hex = {};
+              Object.keys(digests).forEach(function (k) { hex[k] = digests[k].hex; });
+              results.push({ name: entry.name, digests: hex });
+              doneBytes += bytes.length;
+              setProgress(doneBytes / totalBytes, "Hashing " + entry.name);
+              return next(index + 1);
+            });
+          });
+        }
+
+        return next(0).then(function () {
+          return { files: results, unsupported: unsupported };
+        });
+      }
+
+      function runAudit() {
+        if (state.busy) return;
+        state.busy = true;
+        updateAuditButton();
+        els.results.classList.add("hidden");
+        els.summary.classList.add("hidden");
+        setStatus("Hashing files…", null);
+        setProgress(0, "Starting…");
+
+        hashAllFiles().then(function (out) {
+          var audit = lib.audit(out.files, state.entries, { checkExtras: els.checkExtras.checked });
+          state.rows = audit.rows;
+          state.summary = audit.summary;
+          state.filter = "all";
+          setProgress(null);
+          renderSummary();
+          renderFilters();
+          renderRows();
+          els.results.classList.remove("hidden");
+
+          if (out.unsupported.length) {
+            setStatus("Done. " + out.unsupported.join(", ") + " is not available in this browser, so those entries could not be verified.", "error");
+          } else if (audit.summary.mismatch || audit.summary.missing) {
+            setStatus(plural(audit.summary.mismatch, "mismatch", "mismatches") + ", " +
+              plural(audit.summary.missing, "missing file", "missing files") + ".", "error");
+          } else {
+            setStatus("All " + plural(audit.summary.match, "verifiable entry", "verifiable entries") + " passed.", "ok");
+          }
+        }).catch(function (err) {
+          setProgress(null);
+          setStatus("Something went wrong while hashing: " + (err && err.message ? err.message : "unknown error") + ".", "error");
+        }).then(function () {
+          state.busy = false;
+          updateAuditButton();
+        });
+      }
+
+      function renderSummary() {
+        els.summary.textContent = "";
+        var order = [
+          { key: lib.STATUS.MATCH, label: "OK" },
+          { key: lib.STATUS.MISMATCH, label: "Mismatch" },
+          { key: lib.STATUS.MISSING, label: "Missing" },
+          { key: lib.STATUS.EXTRA, label: "Extra" },
+          { key: lib.STATUS.UNKNOWN, label: "Unknown" }
+        ];
+        order.forEach(function (item) {
+          var box = document.createElement("div");
+          box.className = "fia-stat fia-stat-" + item.key;
+          var n = document.createElement("span");
+          n.className = "fia-stat-n";
+          n.textContent = String(state.summary[item.key] || 0);
+          var l = document.createElement("span");
+          l.className = "fia-stat-l";
+          l.textContent = item.label;
+          box.appendChild(n);
+          box.appendChild(l);
+          els.summary.appendChild(box);
+        });
+        els.summary.classList.remove("hidden");
+      }
+
+      function renderFilters() {
+        els.filters.textContent = "";
+        var options = [{ key: "all", label: "All", count: state.summary.total }];
+        STATUS_ORDER.forEach(function (s) {
+          options.push({ key: s, label: lib.STATUS_LABELS[s], count: state.summary[s] || 0 });
+        });
+        options.forEach(function (opt) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "fia-filter";
+          btn.setAttribute("aria-pressed", String(state.filter === opt.key));
+          btn.textContent = opt.label + " (" + opt.count + ")";
+          btn.addEventListener("click", function () {
+            state.filter = opt.key;
+            renderFilters();
+            renderRows();
+          });
+          els.filters.appendChild(btn);
+        });
+      }
+
+      function renderRows() {
+        els.auditBody.textContent = "";
+        var rows = state.rows.filter(function (r) {
+          return state.filter === "all" || r.status === state.filter;
+        });
+        if (rows.length === 0) {
+          var tr = document.createElement("tr");
+          var td = document.createElement("td");
+          td.colSpan = 5;
+          td.className = "fia-empty";
+          td.textContent = "No results in this category.";
+          tr.appendChild(td);
+          els.auditBody.appendChild(tr);
+          return;
+        }
+        rows.forEach(function (row) {
+          var tr = document.createElement("tr");
+          tr.className = "fia-row fia-row-" + row.status;
+
+          var statusTd = document.createElement("td");
+          var badge = document.createElement("span");
+          badge.className = "fia-badge fia-badge-" + row.status;
+          badge.textContent = lib.STATUS_LABELS[row.status] || row.status;
+          statusTd.appendChild(badge);
+          tr.appendChild(statusTd);
+
+          var nameTd = document.createElement("td");
+          nameTd.className = "fia-name";
+          nameTd.textContent = row.filename || "(no file name)";
+          if (row.line != null) nameTd.title = "Manifest line " + row.line;
+          tr.appendChild(nameTd);
+
+          tr.appendChild(digestCell(row.expected, row.algorithm));
+          tr.appendChild(digestCell(row.actual, row.algorithm));
+
+          var noteTd = document.createElement("td");
+          noteTd.className = "fia-note";
+          noteTd.textContent = row.note || "";
+          tr.appendChild(noteTd);
+
+          els.auditBody.appendChild(tr);
+        });
+      }
+
+      function digestCell(value, algorithm) {
+        var td = document.createElement("td");
+        td.className = "fia-digest";
+        if (!value) {
+          td.textContent = "—";
+          td.classList.add("fia-dash");
+          return td;
+        }
+        var short = value.length > 24 ? value.slice(0, 16) + "…" + value.slice(-8) : value;
+        var code = document.createElement("code");
+        code.textContent = short;
+        code.title = (algorithm ? algorithm + ": " : "") + value;
+        td.appendChild(code);
+        return td;
+      }
+
+      // -------------------------------------------------------------------
+      // Exports
+      // -------------------------------------------------------------------
+
+      function download(filename, text, mime) {
+        var blob = new Blob([text], { type: mime || "text/plain;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      // -------------------------------------------------------------------
+      // Events
+      // -------------------------------------------------------------------
+
+      els.manifest.addEventListener("input", refreshManifest);
+      bindDropzone(els.manifestDrop, function () { els.manifestFile.click(); }, loadManifestFile);
+      els.manifestFile.addEventListener("change", function () {
+        loadManifestFile(els.manifestFile.files);
+      });
+      els.sampleManifest.addEventListener("click", function () {
+        els.manifest.value = SAMPLE_MANIFEST;
+        refreshManifest();
+        setStatus("Sample manifest loaded.", null);
+      });
+      els.clearManifest.addEventListener("click", function () {
+        els.manifest.value = "";
+        els.manifestFile.value = "";
+        refreshManifest();
+        setStatus("", null);
+      });
+
+      function bindDropzone(el, onActivate, onFiles) {
+        var handleFiles = onFiles || addFiles;
+        el.addEventListener("click", onActivate);
+        el.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onActivate(); }
+        });
+        el.addEventListener("dragover", function (e) { e.preventDefault(); el.classList.add("drag"); });
+        el.addEventListener("dragleave", function () { el.classList.remove("drag"); });
+        el.addEventListener("drop", function (e) {
+          e.preventDefault();
+          el.classList.remove("drag");
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            handleFiles(e.dataTransfer.files);
+          }
+        });
+      }
+
+      function loadManifestFile(files) {
+        var file = files && files[0];
+        if (!file) return;
+        file.text().then(function (text) {
+          els.manifest.value = text;
+          refreshManifest();
+          setStatus("Loaded manifest from " + file.name + ".", null);
+        }, function () {
+          setStatus("Could not read " + file.name + ".", "error");
+        });
+      }
+
+      bindDropzone(els.filesDrop, function () { els.filesInput.click(); });
+
+      els.btnFiles.addEventListener("click", function () { els.filesInput.click(); });
+      els.btnFolder.addEventListener("click", function () { els.folderInput.click(); });
+      els.filesInput.addEventListener("change", function () {
+        addFiles(els.filesInput.files);
+        els.filesInput.value = "";
+      });
+      els.folderInput.addEventListener("change", function () {
+        addFiles(els.folderInput.files);
+        els.folderInput.value = "";
+      });
+      els.btnSampleFiles.addEventListener("click", function () {
+        var bytes = new TextEncoder().encode(SAMPLE_TEXT);
+        state.files = [
+          { name: "readme.txt", size: bytes.length, file: new File([bytes], "readme.txt") },
+          { name: "logo.txt", size: bytes.length, file: new File([bytes], "logo.txt") },
+          { name: "empty.txt", size: 0, file: new File([], "empty.txt") }
+        ];
+        refreshFiles();
+        setStatus("Sample files loaded.", null);
+      });
+      els.btnClearFiles.addEventListener("click", function () {
+        state.files = [];
+        els.filesInput.value = "";
+        els.folderInput.value = "";
+        refreshFiles();
+        setStatus("", null);
+      });
+
+      els.btnAudit.addEventListener("click", runAudit);
+
+      els.btnCsv.addEventListener("click", function () {
+        download("integrity-audit.csv", lib.toCsv(state.rows, els.checkExtras.checked), "text/csv;charset=utf-8");
+      });
+      els.btnReport.addEventListener("click", function () {
+        download("integrity-audit.txt", lib.toReport(state.rows, state.summary));
+      });
+
+      refreshManifest();
+      refreshFiles();
+    })();
+  </script>
+</body>
+</html>

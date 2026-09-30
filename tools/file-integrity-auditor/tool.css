@@ -1,0 +1,364 @@
+/* File Integrity Auditor — widget styles on top of the shared Toolshed design system. */
+
+.fia-toolbody {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 860px) {
+  .fia-toolbody {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fia-toolbody .pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ---------- Drop targets ---------- */
+
+.fia-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  border: 2px dashed var(--border-2);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.fia-drop:hover,
+.fia-drop:focus-visible,
+.fia-drop.drag {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.fia-drop .dz-main {
+  font-weight: 600;
+}
+.fia-drop .dz-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---------- Meta / warnings ---------- */
+
+.fia-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+}
+.fia-warn {
+  font-size: 12.5px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Selected file list ---------- */
+
+.fia-filelist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+.fia-filelist li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.fia-filelist li:last-child {
+  border-bottom: 0;
+}
+.fia-file-name {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+.fia-file-size {
+  flex: none;
+  color: var(--text-3);
+}
+.fia-file-more {
+  color: var(--text-3);
+  justify-content: flex-start;
+}
+
+/* ---------- Audit pane ---------- */
+
+.fia-audit {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 56px;
+}
+.fia-audit .pane-header {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.chk input {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.fia-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fia-bar {
+  flex: 1 1 auto;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.fia-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width .12s linear;
+}
+.fia-progress-text {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-2);
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Summary tiles ---------- */
+
+.fia-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 620px) {
+  .fia-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.fia-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.fia-stat-n {
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+.fia-stat-l {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.fia-stat-match .fia-stat-n { color: var(--ok); }
+.fia-stat-mismatch .fia-stat-n { color: var(--coral); }
+.fia-stat-missing .fia-stat-n { color: var(--cobalt); }
+
+/* ---------- Filters ---------- */
+
+.fia-filters {
+  gap: 6px;
+}
+.fia-filter {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+  border: 1px solid var(--border-2);
+  border-radius: 99px;
+  padding: 5px 12px;
+  background: var(--surface);
+  transition: color .15s, border-color .15s, background .15s;
+}
+.fia-filter:hover {
+  color: var(--text);
+  border-color: var(--ink-3);
+}
+.fia-filter[aria-pressed="true"] {
+  color: var(--paper);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---------- Results table ---------- */
+
+.fia-tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.fia-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.fia-table th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: var(--surface-2);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-2);
+  white-space: nowrap;
+}
+.fia-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.fia-table tr:last-child td {
+  border-bottom: 0;
+}
+.fia-name {
+  font-family: var(--mono);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.fia-digest code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.fia-dash {
+  color: var(--text-3);
+}
+.fia-note {
+  color: var(--text-2);
+  min-width: 140px;
+}
+.fia-empty {
+  text-align: center;
+  color: var(--text-3);
+  padding: 22px 10px !important;
+}
+
+.fia-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.fia-badge-match {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: rgba(46, 125, 78, .1);
+}
+.fia-badge-mismatch {
+  color: var(--coral);
+  border-color: var(--coral);
+  background: var(--accent-soft);
+}
+.fia-badge-missing {
+  color: var(--cobalt);
+  border-color: var(--cobalt);
+  background: rgba(61, 90, 128, .1);
+}
+.fia-badge-extra,
+.fia-badge-unknown {
+  color: var(--text-2);
+  background: var(--surface-2);
+}
+
+/* ---------- Help ---------- */
+
+.fia-help {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 56px;
+}
+.fia-help h2 {
+  font-size: 15px;
+  margin: 6px 0 0;
+}
+.fia-help p,
+.fia-help li {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.fia-help ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.fia-help code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 4px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 560px) {
+  .fia-digest code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
