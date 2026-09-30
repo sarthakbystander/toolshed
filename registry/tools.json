@@ -83,6 +83,28 @@
     }
   },
   {
+    "id": "file-integrity-auditor",
+    "name": "File Integrity Auditor",
+    "description": "Verify a set of files against a checksum manifest and see what matches, what changed and what is missing. Hashing and comparison run locally in your browser.",
+    "category": "Developer",
+    "tags": [
+      "checksum",
+      "hash",
+      "integrity",
+      "manifest",
+      "md5",
+      "sha256",
+      "verify"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "image-lab",
     "name": "Image Lab",
     "description": "Adjust brightness, contrast, saturation, blur and sharpen on your images locally in the browser.",
