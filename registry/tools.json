@@ -21,6 +21,27 @@
     }
   },
   {
+    "id": "csp-builder",
+    "name": "Content Security Policy Builder",
+    "description": "Build, validate, explain and export Content Security Policy headers in your browser. Score a policy, catch unsafe directives and copy it as a header, meta tag or server config. Nothing is uploaded.",
+    "category": "Developer",
+    "tags": [
+      "csp",
+      "developer",
+      "header",
+      "security",
+      "validation",
+      "web"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "csv-to-json",
     "name": "CSV to JSON",
     "description": "Convert CSV into clean JSON, locally in your browser.",
