@@ -1,0 +1,400 @@
+/* Content Security Policy Builder — widget styles layered on the shared
+   Toolshed design system (assets/toolshed.css). Only tool-specific pieces
+   live here; chrome, panes, buttons and status come from the design system. */
+
+.sr-only{
+  position:absolute;
+  width:1px;height:1px;
+  padding:0;margin:-1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+  border:0;
+}
+
+.mono{font-family:var(--mono)}
+
+.out-count{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+}
+
+/* ---------- Start pane ---------- */
+.csp-controls{padding-bottom:18px}
+
+.csp-start{
+  display:grid;
+  grid-template-columns:minmax(0,260px) minmax(0,1fr);
+  gap:14px 20px;
+  align-items:end;
+}
+@media (max-width:640px){
+  .csp-start{grid-template-columns:1fr;align-items:stretch}
+}
+
+.csp-field{display:flex;flex-direction:column;gap:6px}
+.csp-field label{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+}
+.csp-field textarea{min-height:120px}
+
+.csp-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+  cursor:pointer;
+}
+.csp-toggle input{accent-color:var(--accent);width:15px;height:15px}
+
+/* ---------- Two-column body ---------- */
+.csp-body{padding-bottom:22px}
+.csp-body .pane{min-height:320px}
+
+/* ---------- Directive builder ---------- */
+.csp-builder{display:flex;flex-direction:column;gap:14px}
+
+.csp-dir{
+  border:1px solid var(--rule);
+  border-radius:var(--radius-sm);
+  background:var(--paper);
+  padding:12px;
+}
+
+.csp-dir-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+
+.csp-dir-name{
+  font-size:12.5px;
+  font-weight:700;
+  letter-spacing:.02em;
+  color:var(--accent-ink);
+}
+
+.csp-dir-tag{
+  font-family:var(--mono);
+  font-size:9.5px;
+  font-weight:600;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+  border:1px solid var(--rule);
+  border-radius:999px;
+  padding:1px 8px;
+}
+
+.csp-dir-remove{
+  margin-left:auto;
+  flex:none;
+  width:24px;
+  height:24px;
+  border-radius:var(--radius-sm);
+  font-size:17px;
+  line-height:1;
+  color:var(--ink-3);
+  border:1px solid transparent;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.csp-dir-remove:hover{
+  color:var(--accent-ink);
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+
+.csp-dir-desc{
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--ink-2);
+  margin-bottom:9px;
+}
+
+.csp-dir-input{
+  width:100%;
+  font-size:12.5px;
+  color:var(--ink);
+  background:var(--surface);
+  border:1px solid var(--rule-2);
+  border-radius:var(--radius-sm);
+  padding:9px 10px;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.csp-dir-input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.csp-dir-input::placeholder{color:var(--ink-3)}
+
+.csp-add{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:auto;
+  padding-top:6px;
+  border-top:1px solid var(--rule);
+}
+.csp-add select{flex:1;min-width:150px;width:auto}
+
+.csp-empty{
+  font-size:13px;
+  line-height:1.55;
+  color:var(--ink-3);
+  border:1.5px dashed var(--rule-2);
+  border-radius:var(--radius-sm);
+  padding:22px 16px;
+  text-align:center;
+}
+.csp-empty code{
+  font-family:var(--mono);
+  font-size:.85em;
+  background:var(--surface-2);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:1px 5px;
+  color:var(--ink);
+}
+
+/* ---------- Import / export ---------- */
+.csp-outhead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:4px;
+  padding-top:14px;
+  border-top:1px solid var(--rule);
+}
+.csp-format{width:auto;min-width:150px}
+
+.csp-output{
+  font-size:12px;
+  line-height:1.75;
+  color:var(--ink);
+  background:var(--paper);
+  border:1px solid var(--rule-2);
+  border-radius:var(--radius-sm);
+  padding:14px;
+  overflow-x:auto;
+  white-space:pre-wrap;
+  word-break:break-word;
+  min-height:88px;
+  margin:0;
+}
+.csp-output:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.csp-msg{
+  font-family:var(--mono);
+  font-size:11.5px;
+  line-height:1.5;
+  color:var(--ink-2);
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  background:var(--surface-2);
+}
+.csp-msg.ok{color:var(--ok);background:rgba(46,125,78,.1)}
+.csp-msg.error{color:var(--accent-ink);background:var(--accent-soft)}
+.csp-msg.warn{color:var(--accent-ink);background:var(--accent-soft)}
+
+/* ---------- Analysis ---------- */
+.csp-analysis{padding-bottom:26px}
+
+.csp-grade-wrap{display:flex;align-items:baseline;gap:10px}
+.csp-grade{
+  font-family:var(--mono);
+  font-size:26px;
+  font-weight:700;
+  line-height:1;
+  width:42px;
+  height:42px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:var(--radius-sm);
+  border:2px solid var(--rule-2);
+  color:var(--ink-2);
+  background:var(--paper);
+}
+.csp-grade[data-grade="A"]{color:var(--ok);border-color:var(--ok);background:rgba(46,125,78,.1)}
+.csp-grade[data-grade="B"]{color:var(--ok);border-color:var(--ok);background:rgba(46,125,78,.07)}
+.csp-grade[data-grade="C"]{color:var(--accent-ink);border-color:var(--rule-2);background:var(--surface-2)}
+.csp-grade[data-grade="D"],
+.csp-grade[data-grade="F"]{color:var(--accent-ink);border-color:var(--accent);background:var(--accent-soft)}
+.csp-score{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.04em;
+  color:var(--ink-3);
+}
+
+.csp-findings{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:6px 18px;
+}
+.csp-finding{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--ink-2);
+}
+.csp-dot{
+  flex:none;
+  width:8px;
+  height:8px;
+  margin-top:6px;
+  border-radius:50%;
+  background:var(--ink-3);
+}
+.csp-finding-good .csp-dot{background:var(--ok)}
+.csp-finding-warn .csp-dot{background:var(--accent)}
+.csp-finding-bad .csp-dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.csp-finding-bad{color:var(--ink)}
+.csp-finding-info .csp-dot{background:var(--ink-3)}
+
+.csp-msgs{display:flex;flex-direction:column;gap:10px}
+.csp-msglist{display:flex;flex-direction:column;gap:5px}
+.csp-msgline{
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--ink-2);
+  padding:7px 11px;
+  border-radius:var(--radius-sm);
+  background:var(--surface-2);
+  border-left:3px solid var(--rule-2);
+}
+.csp-msglist-error .csp-msgline{
+  color:var(--accent-ink);
+  background:var(--accent-soft);
+  border-left-color:var(--accent);
+}
+.csp-msglist-warn .csp-msgline{
+  color:var(--accent-ink);
+  background:var(--accent-soft);
+  border-left-color:var(--accent);
+}
+.csp-msglist-info .csp-msgline{
+  color:var(--ink-2);
+  border-left-color:var(--ink-3);
+}
+
+.csp-details{
+  border-top:1px solid var(--rule);
+  padding-top:12px;
+  margin-top:2px;
+}
+.csp-details summary{
+  cursor:pointer;
+  font-family:var(--mono);
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+}
+.csp-details summary:hover{color:var(--accent)}
+.csp-detail-note{
+  font-weight:400;
+  text-transform:none;
+  letter-spacing:0;
+  color:var(--ink-3);
+}
+.csp-tablewrap{overflow-x:auto;margin-top:12px}
+.csp-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12.5px;
+}
+.csp-table th,
+.csp-table td{
+  text-align:left;
+  vertical-align:top;
+  padding:8px 10px;
+  border-bottom:1px solid var(--rule);
+}
+.csp-table thead th{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+  border-bottom:1px solid var(--rule-2);
+}
+.csp-table tbody th{
+  font-weight:700;
+  font-size:12px;
+  color:var(--accent-ink);
+  white-space:nowrap;
+}
+.csp-src{display:flex;flex-wrap:wrap;gap:4px}
+.csp-srcchip{
+  font-family:var(--mono);
+  font-size:11px;
+  background:var(--surface-2);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:1px 6px;
+  color:var(--ink);
+}
+.csp-note{color:var(--ink-2)}
+
+/* ---------- Help pane ---------- */
+.csp-help{padding-bottom:34px}
+.csp-help h2{
+  font-size:1.05rem;
+  font-weight:400;
+  letter-spacing:-.005em;
+  margin:18px 0 8px;
+}
+.csp-help h2:first-child{margin-top:0}
+.csp-help h2:after{
+  content:"";
+  display:block;
+  width:26px;
+  height:2px;
+  margin-top:7px;
+  background:var(--rule-2);
+}
+.csp-help p,
+.csp-help li{
+  font-size:13.5px;
+  line-height:1.6;
+  color:var(--ink-2);
+}
+.csp-help ul{margin:6px 0 0 18px}
+.csp-help li{margin-bottom:4px}
+.csp-help code{
+  font-family:var(--mono);
+  font-size:.85em;
+  background:var(--surface-2);
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:1px 5px;
+  color:var(--ink);
+}
+.csp-help em{font-style:italic}
+
+@media (max-width:520px){
+  .csp-findings{grid-template-columns:1fr}
+  .csp-dir-remove{width:28px;height:28px}
+}

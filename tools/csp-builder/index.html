@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Content Security Policy Builder — Toolshed</title>
+  <meta name="description" content="Build, validate, explain and export Content Security Policy headers in your browser. Score a policy, catch unsafe directives and copy it as a header, meta tag or server config. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+    <div class="wrap hd-in">
+      <a class="logo" href="../..">
+        <span class="logo-mark" aria-hidden="true"></span>
+        Toolshed
+      </a>
+      <nav>
+        <a href="../..#index">Tools</a>
+        <a href="../..">Home</a>
+        <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66-.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / csp-builder</div>
+      <h1>Content Security Policy Builder</h1>
+      <p class="lede">Build a Content Security Policy directive by directive, paste an existing one to decode it, then check it for weak sources and copy it out as a header, meta tag or server config. Everything runs locally in your tab.</p>
+    </section>
+
+    <section class="pane csp-controls">
+      <div class="pane-header">
+        <span class="pane-title">START</span>
+        <div class="row">
+          <label class="csp-toggle" for="report-only">
+            <input type="checkbox" id="report-only">
+            <span>Report-Only</span>
+          </label>
+        </div>
+      </div>
+      <div class="csp-start">
+        <div class="csp-field">
+          <label for="preset">Start from a preset</label>
+          <select id="preset">
+            <option value="strict">Strict (deny by default)</option>
+            <option value="baseline">Baseline (self + upgrades)</option>
+            <option value="google-analytics">Baseline + Google Analytics</option>
+            <option value="empty">Empty (start from scratch)</option>
+          </select>
+        </div>
+        <div class="row csp-start-actions">
+          <button type="button" class="btn" id="btn-apply-preset">Apply preset</button>
+          <button type="button" class="btn secondary" id="btn-sample">Load sample policy</button>
+          <button type="button" class="btn danger" id="btn-clear">Clear</button>
+        </div>
+      </div>
+      <p class="hint" id="start-hint">Presets are a starting point, not a finished policy — add the hosts your site actually loads from. Applying a preset replaces the current directives.</p>
+    </section>
+
+    <section class="toolbody csp-body">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">DIRECTIVES</span>
+          <span class="out-count" id="dir-count"></span>
+        </div>
+
+        <div id="builder" class="csp-builder" aria-live="polite"></div>
+        <p class="csp-empty" id="builder-empty" hidden>
+          No directives yet. Apply a preset above, or add one below. A good policy usually starts with <code>default-src 'self'</code>.
+        </p>
+
+        <div class="csp-add">
+          <label class="sr-only" for="add-directive">Add a directive</label>
+          <select id="add-directive"></select>
+          <button type="button" class="btn secondary" id="btn-add">Add directive</button>
+        </div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">IMPORT / EXPORT</span>
+        </div>
+
+        <div class="csp-field">
+          <label for="import">Paste a policy to import</label>
+          <textarea id="import" class="mono" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a Content-Security-Policy header, a bare policy, or a <meta> tag. Examples:&#10;&#10;Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.example.com&#10;default-src 'none'; img-src 'self' data:&#10;<meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src 'self'&quot;>"></textarea>
+        </div>
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-import">Import into builder</button>
+        </div>
+        <p class="csp-msg hidden" id="import-msg" role="status" aria-live="polite"></p>
+
+        <div class="csp-outhead">
+          <span class="pane-title">POLICY</span>
+          <div class="row">
+            <label class="sr-only" for="format">Export format</label>
+            <select id="format" class="csp-format">
+              <option value="header">HTTP header</option>
+              <option value="meta">HTML meta tag</option>
+              <option value="apache">Apache</option>
+              <option value="nginx">Nginx</option>
+              <option value="cloudflare">Cloudflare</option>
+              <option value="netlify">Netlify _headers</option>
+              <option value="report-only">Report-Only header</option>
+              <option value="json">JSON</option>
+            </select>
+            <button type="button" class="btn" id="btn-copy">Copy</button>
+          </div>
+        </div>
+        <pre class="csp-output mono" id="output" tabindex="0" aria-label="Generated policy"></pre>
+        <p class="csp-msg hidden" id="copy-msg" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="pane csp-analysis" id="analysis">
+      <div class="pane-header">
+        <span class="pane-title">ANALYSIS</span>
+        <span class="csp-grade-wrap" id="grade-wrap" hidden>
+          <span class="csp-grade" id="grade">–</span>
+          <span class="csp-score" id="score"></span>
+        </span>
+      </div>
+
+      <div class="csp-findings" id="findings"></div>
+
+      <div class="csp-msgs">
+        <div id="errors" class="csp-msglist" aria-live="polite"></div>
+        <div id="warnings" class="csp-msglist" aria-live="polite"></div>
+        <div id="infos" class="csp-msglist" aria-live="polite"></div>
+      </div>
+
+      <details class="csp-details" id="resolved-details">
+        <summary>Resolved directives <span class="csp-detail-note">(what the browser actually applies, including fallbacks)</span></summary>
+        <div class="csp-tablewrap">
+          <table class="csp-table" id="resolved">
+            <caption class="sr-only">Resolved policy directives</caption>
+            <thead>
+              <tr>
+                <th scope="col">Directive</th>
+                <th scope="col">Sources</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody id="resolved-body"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="pane csp-help">
+      <h2>How it works</h2>
+      <p>Each directive is a list of sources separated by spaces. <code>'self'</code> means your own origin, <code>'none'</code> blocks everything, and a bare host such as <code>https://cdn.example.com</code> allows that host. The builder keeps the directives in memory as you edit them and re-renders the policy, the resolved view and the analysis on every change.</p>
+      <ul>
+        <li><strong>Build</strong> — start from a preset, then add or remove directives and edit their sources.</li>
+        <li><strong>Import</strong> — paste an existing header, bare policy or meta tag to decode it into editable directives.</li>
+        <li><strong>Analyse</strong> — the policy is scored and checked for weak sources, missing directives and deprecated ones.</li>
+        <li><strong>Export</strong> — copy the policy as a header, meta tag, Apache/Nginx/Cloudflare/Netlify config or JSON.</li>
+      </ul>
+
+      <h2>Reading the score</h2>
+      <p>The score is a heuristic, not a security guarantee. It rewards the directives that reliably block the common attacks: a restrictive <code>default-src</code>, no <code>'unsafe-inline'</code> or <code>'unsafe-eval'</code> in <code>script-src</code>, <code>object-src 'none'</code>, a set <code>base-uri</code>, <code>frame-ancestors</code> and <code>form-action</code>, and no plaintext <code>http:</code> sources. Use it to spot obvious gaps, then test the policy against your real pages.</p>
+
+      <h2>Fallbacks matter</h2>
+      <p>A directive you do not set is not automatically blocked. Fetch directives fall back to <code>default-src</code>, and some fall back further: <code>script-src-elem</code> and <code>script-src-attr</code> to <code>script-src</code>, <code>frame-src</code> to <code>child-src</code>, and <code>worker-src</code> to <code>child-src</code> then <code>script-src</code>. The <em>Resolved directives</em> table shows the effective value and where it came from.</p>
+
+      <h2>Privacy</h2>
+      <p>Everything is computed in your browser from the text you type. The tool makes no network requests, uploads nothing, and writes nothing to storage — no <code>localStorage</code>, no cookies, no analytics. Copying uses the browser clipboard API; nothing leaves the page.</p>
+
+      <h2>Limitations</h2>
+      <ul>
+        <li>The score is a heuristic and cannot know which sources your site legitimately needs.</li>
+        <li>Import decodes the common header, bare-policy and meta-tag forms; HTML entities in a meta tag are decoded, but comments are not stripped.</li>
+        <li><code>frame-ancestors</code> is ignored in a <code>&lt;meta&gt;</code> tag by browsers — the export still includes it if you set it, so use a real header for clickjacking protection.</li>
+        <li>Nonces and hashes are validated for shape only; the tool cannot check that a nonce matches a real script.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-in">
+      <div class="cr">
+        Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+      </div>
+      <nav>
+        <a href="../..">Home</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.cspBuilder;
+
+      var els = {
+        preset: document.getElementById("preset"),
+        btnApplyPreset: document.getElementById("btn-apply-preset"),
+        btnSample: document.getElementById("btn-sample"),
+        btnClear: document.getElementById("btn-clear"),
+        reportOnly: document.getElementById("report-only"),
+        builder: document.getElementById("builder"),
+        builderEmpty: document.getElementById("builder-empty"),
+        dirCount: document.getElementById("dir-count"),
+        addDirective: document.getElementById("add-directive"),
+        btnAdd: document.getElementById("btn-add"),
+        importEl: document.getElementById("import"),
+        btnImport: document.getElementById("btn-import"),
+        importMsg: document.getElementById("import-msg"),
+        format: document.getElementById("format"),
+        btnCopy: document.getElementById("btn-copy"),
+        output: document.getElementById("output"),
+        copyMsg: document.getElementById("copy-msg"),
+        gradeWrap: document.getElementById("grade-wrap"),
+        grade: document.getElementById("grade"),
+        score: document.getElementById("score"),
+        findings: document.getElementById("findings"),
+        errors: document.getElementById("errors"),
+        warnings: document.getElementById("warnings"),
+        infos: document.getElementById("infos"),
+        resolvedBody: document.getElementById("resolved-body")
+      };
+
+      // Directives that are always offered first, in a sensible order.
+      var CORE = ["default-src", "script-src", "style-src", "img-src", "font-src", "connect-src", "object-src", "base-uri", "frame-ancestors", "form-action"];
+      var CATALOG = lib.catalog();
+      var BY_NAME = {};
+      CATALOG.forEach(function (d) { BY_NAME[d.name] = d; });
+
+      var SAMPLE = "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.example.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://images.example.com; connect-src 'self' https://api.example.com; font-src 'self'; object-src 'self'; report-uri /csp-report";
+
+      // state.directives maps a directive name to an array of source strings.
+      var state = {
+        directives: {},
+        reportOnly: false
+      };
+
+      // -------------------------------------------------------------------
+      // Small helpers
+      // -------------------------------------------------------------------
+
+      function setMessage(el, message, kind) {
+        if (!message) {
+          el.textContent = "";
+          el.className = el.className.replace(/\b(ok|error|warn)\b/g, "").trim();
+          el.classList.add("hidden");
+          return;
+        }
+        el.textContent = message;
+        el.classList.remove("hidden");
+        el.classList.remove("ok", "error", "warn");
+        if (kind) el.classList.add(kind);
+      }
+
+      function sourcesFromInput(value) {
+        return String(value).split(/\s+/).filter(Boolean);
+      }
+
+      function directiveNames() {
+        return Object.keys(state.directives).sort();
+      }
+
+      function knownDirective(name) {
+        return BY_NAME[name] || null;
+      }
+
+      // -------------------------------------------------------------------
+      // Builder rendering
+      // -------------------------------------------------------------------
+
+      function renderBuilder() {
+        els.builder.textContent = "";
+        var names = directiveNames();
+        els.dirCount.textContent = names.length ? names.length + (names.length === 1 ? " directive" : " directives") : "";
+
+        if (names.length === 0) {
+          els.builderEmpty.hidden = false;
+          renderAddOptions();
+          return;
+        }
+        els.builderEmpty.hidden = true;
+
+        names.forEach(function (name) {
+          var entry = knownDirective(name);
+          var row = document.createElement("div");
+          row.className = "csp-dir";
+
+          var head = document.createElement("div");
+          head.className = "csp-dir-head";
+
+          var label = document.createElement("label");
+          label.className = "csp-dir-name mono";
+          label.setAttribute("for", "dir-" + name);
+          label.textContent = name;
+          head.appendChild(label);
+
+          if (entry && entry.label && entry.label !== name) {
+            var tag = document.createElement("span");
+            tag.className = "csp-dir-tag";
+            tag.textContent = entry.label;
+            head.appendChild(tag);
+          }
+
+          var remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "csp-dir-remove";
+          remove.setAttribute("aria-label", "Remove " + name);
+          remove.textContent = "×";
+          remove.addEventListener("click", function () {
+            delete state.directives[name];
+            renderBuilder();
+            refresh();
+          });
+          head.appendChild(remove);
+
+          row.appendChild(head);
+
+          if (entry && entry.desc) {
+            var desc = document.createElement("p");
+            desc.className = "csp-dir-desc";
+            desc.textContent = entry.desc;
+            row.appendChild(desc);
+          }
+
+          var input = document.createElement("input");
+          input.type = "text";
+          input.id = "dir-" + name;
+          input.className = "csp-dir-input mono";
+          input.spellcheck = false;
+          input.autocomplete = "off";
+          input.autocapitalize = "off";
+          input.dataset.dir = name;
+          input.placeholder = "space-separated sources, e.g. 'self' https://cdn.example.com";
+          input.value = state.directives[name].join(" ");
+          input.addEventListener("input", function () {
+            state.directives[name] = sourcesFromInput(input.value);
+            refresh();
+          });
+          row.appendChild(input);
+
+          els.builder.appendChild(row);
+        });
+      }
+
+      function renderAddOptions() {
+        els.addDirective.textContent = "";
+        var placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Add another directive…";
+        els.addDirective.appendChild(placeholder);
+
+        var added = {};
+        directiveNames().forEach(function (n) { added[n] = true; });
+
+        var groups = {};
+        CATALOG.forEach(function (d) {
+          if (!groups[d.group]) groups[d.group] = [];
+          groups[d.group].push(d);
+        });
+
+        // Offer core directives first, then the rest by group.
+        var core = document.createElement("optgroup");
+        core.label = "Common";
+        CORE.forEach(function (name) {
+          if (added[name]) return;
+          var opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          core.appendChild(opt);
+        });
+        if (core.children.length) els.addDirective.appendChild(core);
+
+        Object.keys(groups).forEach(function (group) {
+          var optgroup = document.createElement("optgroup");
+          optgroup.label = group;
+          groups[group].forEach(function (d) {
+            if (added[d.name]) return;
+            var opt = document.createElement("option");
+            opt.value = d.name;
+            opt.textContent = d.name;
+            optgroup.appendChild(opt);
+          });
+          if (optgroup.children.length) els.addDirective.appendChild(optgroup);
+        });
+
+        // A free-text escape hatch for directives not in the catalogue.
+        var other = document.createElement("optgroup");
+        other.label = "Other";
+        var opt = document.createElement("option");
+        opt.value = "__custom__";
+        opt.textContent = "Custom directive…";
+        other.appendChild(opt);
+        els.addDirective.appendChild(other);
+      }
+
+      // -------------------------------------------------------------------
+      // Output + analysis
+      // -------------------------------------------------------------------
+
+      function currentPolicy() {
+        return { directives: state.directives, reportOnly: state.reportOnly };
+      }
+
+      function refresh() {
+        var policy = currentPolicy();
+        var parsed = {
+          directives: state.directives,
+          reportOnly: state.reportOnly
+        };
+
+        // Output
+        var format = els.format.value;
+        var text = lib.exportPolicy(format, policy);
+        els.output.textContent = text;
+
+        // Analysis
+        var audit = lib.auditPolicy(parsed);
+        renderGrade(audit);
+        renderFindings(audit.findings);
+
+        var v = lib.validatePolicy(parsed);
+        renderMessages(els.errors, v.errors, "error");
+        renderMessages(els.warnings, v.warnings, "warn");
+        renderMessages(els.infos, v.info, "info");
+
+        renderResolved(parsed);
+      }
+
+      function renderGrade(audit) {
+        if (directiveNames().length === 0) {
+          els.gradeWrap.hidden = true;
+          return;
+        }
+        els.gradeWrap.hidden = false;
+        els.grade.textContent = audit.grade;
+        els.grade.dataset.grade = audit.grade;
+        els.score.textContent = audit.score + " / 100";
+      }
+
+      function renderFindings(findings) {
+        els.findings.textContent = "";
+        if (directiveNames().length === 0) return;
+        findings.forEach(function (f) {
+          var item = document.createElement("div");
+          item.className = "csp-finding csp-finding-" + f.level;
+          var dot = document.createElement("span");
+          dot.className = "csp-dot";
+          dot.setAttribute("aria-hidden", "true");
+          var text = document.createElement("span");
+          text.textContent = f.message;
+          item.appendChild(dot);
+          item.appendChild(text);
+          els.findings.appendChild(item);
+        });
+      }
+
+      function renderMessages(container, messages, kind) {
+        container.textContent = "";
+        container.className = "csp-msglist";
+        if (!messages || messages.length === 0) return;
+        container.classList.add("csp-msglist-" + kind);
+        messages.forEach(function (m) {
+          var li = document.createElement("p");
+          li.className = "csp-msgline";
+          li.textContent = m;
+          container.appendChild(li);
+        });
+      }
+
+      function renderResolved(parsed) {
+        els.resolvedBody.textContent = "";
+        var rows = lib.explainPolicy(parsed);
+        var shown = 0;
+        rows.forEach(function (r) {
+          if (!r.set && !r.sources) return; // nothing applies and nothing inherits
+          shown++;
+          var tr = document.createElement("tr");
+
+          var th = document.createElement("th");
+          th.scope = "row";
+          th.className = "mono";
+          th.textContent = r.name;
+          tr.appendChild(th);
+
+          var tdSources = document.createElement("td");
+          tdSources.className = "mono csp-src";
+          if (r.sources && r.sources.length) {
+            r.sources.forEach(function (s) {
+              var chip = document.createElement("span");
+              chip.className = "csp-srcchip";
+              chip.textContent = s;
+              tdSources.appendChild(chip);
+            });
+          } else {
+            tdSources.textContent = r.set ? "(no sources)" : "—";
+          }
+          tr.appendChild(tdSources);
+
+          var tdNote = document.createElement("td");
+          tdNote.className = "csp-note";
+          if (r.inheritedFrom) {
+            tdNote.textContent = "inherited from " + r.inheritedFrom;
+          } else if (r.deprecated) {
+            tdNote.textContent = "deprecated";
+          } else if (r.description) {
+            tdNote.textContent = r.description;
+          }
+          tr.appendChild(tdNote);
+
+          els.resolvedBody.appendChild(tr);
+        });
+
+        document.getElementById("resolved-details").hidden = shown === 0;
+      }
+
+      // -------------------------------------------------------------------
+      // Actions
+      // -------------------------------------------------------------------
+
+      function setDirectives(map) {
+        state.directives = {};
+        Object.keys(map).forEach(function (name) {
+          state.directives[name] = map[name].slice();
+        });
+        renderBuilder();
+        refresh();
+      }
+
+      function applyPreset(name) {
+        if (name === "empty") {
+          setDirectives({});
+          return;
+        }
+        setDirectives(lib.applyPreset(name));
+      }
+
+      function importPolicy() {
+        var text = els.importEl.value;
+        if (text.trim() === "") {
+          setMessage(els.importMsg, "Paste a policy first, or use the sample.", "error");
+          return;
+        }
+        var parsed = lib.parseCSP(text);
+        if (!parsed.ok) {
+          setMessage(els.importMsg, "Could not read a policy from that input: " + parsed.errors.join("; "), "error");
+          return;
+        }
+        state.directives = {};
+        parsed.order.forEach(function (name) {
+          state.directives[name] = parsed.directives[name].slice();
+        });
+        state.reportOnly = parsed.reportOnly;
+        els.reportOnly.checked = parsed.reportOnly;
+        renderBuilder();
+        refresh();
+        var count = parsed.order.length;
+        var msg = "Imported " + count + " directive" + (count === 1 ? "" : "s") + ".";
+        if (parsed.warnings.length) msg += " " + parsed.warnings.length + " note" + (parsed.warnings.length === 1 ? "" : "s") + ".";
+        setMessage(els.importMsg, msg, "ok");
+      }
+
+      function loadSample() {
+        els.importEl.value = SAMPLE;
+        importPolicy();
+        els.preset.value = "baseline";
+        setMessage(els.importMsg, "Sample policy loaded — it has deliberate weaknesses for the analysis to find.", "ok");
+      }
+
+      function clearAll() {
+        state.directives = {};
+        state.reportOnly = false;
+        els.reportOnly.checked = false;
+        els.importEl.value = "";
+        els.preset.value = "strict";
+        renderBuilder();
+        refresh();
+        setMessage(els.importMsg, "", null);
+        setMessage(els.copyMsg, "", null);
+      }
+
+      function copyOutput() {
+        var text = els.output.textContent;
+        if (!text) {
+          setMessage(els.copyMsg, "There is nothing to copy yet.", "error");
+          return;
+        }
+        if (!navigator.clipboard) {
+          setMessage(els.copyMsg, "Clipboard API unavailable — select the text and copy manually.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = els.btnCopy.textContent;
+          els.btnCopy.textContent = "Copied ✓";
+          setMessage(els.copyMsg, "Copied the policy to the clipboard.", "ok");
+          setTimeout(function () { els.btnCopy.textContent = old; }, 1600);
+        }).catch(function () {
+          setMessage(els.copyMsg, "Copy was blocked by the browser — select the text and copy manually.", "error");
+        });
+      }
+
+      function addDirective() {
+        var value = els.addDirective.value;
+        if (!value) return;
+        var name;
+        if (value === "__custom__") {
+          var entered = window.prompt("Directive name (lowercase, e.g. media-src)");
+          if (!entered) return;
+          name = entered.trim().toLowerCase();
+          if (!/^[a-z][a-z0-9-]*$/.test(name)) {
+            setMessage(els.importMsg, "That is not a valid directive name.", "error");
+            return;
+          }
+        } else {
+          name = value;
+        }
+        if (state.directives[name]) {
+          setMessage(els.importMsg, name + " is already in the policy.", "warn");
+          return;
+        }
+        var entry = knownDirective(name);
+        state.directives[name] = entry && entry.default ? [entry.default] : [];
+        renderBuilder();
+        refresh();
+        els.addDirective.value = "";
+        var input = document.getElementById("dir-" + name);
+        if (input) input.focus();
+      }
+
+      // -------------------------------------------------------------------
+      // Wiring
+      // -------------------------------------------------------------------
+
+      els.btnApplyPreset.addEventListener("click", function () { applyPreset(els.preset.value); });
+      els.btnSample.addEventListener("click", loadSample);
+      els.btnClear.addEventListener("click", clearAll);
+      els.btnImport.addEventListener("click", importPolicy);
+      els.btnCopy.addEventListener("click", copyOutput);
+      els.btnAdd.addEventListener("click", addDirective);
+
+      els.reportOnly.addEventListener("change", function () {
+        state.reportOnly = els.reportOnly.checked;
+        refresh();
+      });
+
+      els.format.addEventListener("change", refresh);
+
+      els.importEl.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") importPolicy();
+      });
+
+      // Initial state: a baseline policy so the page never opens empty.
+      setDirectives(lib.applyPreset("baseline"));
+      els.preset.value = "baseline";
+    })();
+  </script>
+</body>
+</html>
