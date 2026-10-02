@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Markdown Workspace — Toolshed</title>
+  <meta name="description" content="Write Markdown with a live, safely-rendered preview, an outline you can jump through, document statistics and a health check for common mistakes. Everything runs locally in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / markdown-workspace</div>
+      <h1>Markdown Workspace</h1>
+      <p class="lede">Write or paste Markdown on the left. The right side keeps a live, safely-rendered preview plus an outline, word and reading-time statistics, and a health check for common mistakes. Everything stays in your browser.</p>
+    </section>
+
+    <section class="toolbody md-toolbody">
+      <div class="pane md-pane md-editor">
+        <div class="pane-header">
+          <label class="pane-title" for="md-input">MARKDOWN</label>
+          <span class="md-filemeta" id="file-meta">0 words · 0 lines</span>
+        </div>
+
+        <div class="md-toolbar">
+          <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+          <button type="button" class="btn secondary" id="btn-open">Open file</button>
+          <input type="file" id="file-input" accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain" hidden>
+          <button type="button" class="btn secondary" id="btn-save">Save .md</button>
+          <button type="button" class="btn secondary" id="btn-copy-src">Copy source</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn danger" id="btn-clear">Clear</button>
+        </div>
+
+        <textarea id="md-input" spellcheck="false" autocomplete="off" autocapitalize="off"
+          aria-label="Markdown source"
+          placeholder="# Start writing&#10;&#10;Type Markdown here and watch the preview update as you go. Try **bold**, *italic*, `code`, [links](https://example.com), lists, tables, quotes and fenced code blocks."></textarea>
+
+        <details class="md-cleanup">
+          <summary>Cleanup &amp; normalization</summary>
+          <div class="md-cleanup-body">
+            <label class="md-check" for="opt-trimTrailing"><input type="checkbox" id="opt-trimTrailing" checked> Trim trailing spaces</label>
+            <label class="md-check" for="opt-collapseBlankLines"><input type="checkbox" id="opt-collapseBlankLines" checked> Collapse blank lines</label>
+            <label class="md-check" for="opt-headings"><input type="checkbox" id="opt-headings"> Space after # in headings</label>
+            <label class="md-check" for="opt-listMarkers"><input type="checkbox" id="opt-listMarkers"> Unify list bullets to “-”</label>
+            <label class="md-check" for="opt-blankLinesAroundHeadings"><input type="checkbox" id="opt-blankLinesAroundHeadings"> Blank line around headings</label>
+            <label class="md-check" for="opt-ensureFinalNewline"><input type="checkbox" id="opt-ensureFinalNewline"> Ensure final newline</label>
+          </div>
+        </details>
+
+        <div class="row">
+          <button type="button" class="btn" id="btn-normalize">Clean up source</button>
+          <button type="button" class="btn secondary" id="btn-copy-normalized">Copy cleaned source</button>
+        </div>
+
+        <div class="status hidden" id="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="pane md-pane md-output">
+        <div class="pane-header">
+          <span class="pane-title">OUTPUT</span>
+          <button type="button" class="btn secondary" id="btn-copy-html">Copy HTML</button>
+        </div>
+
+        <div class="md-tabs" role="tablist" aria-label="Output views">
+          <button type="button" class="md-tab" role="tab" id="tab-preview" aria-controls="panel-preview" aria-selected="true">Preview</button>
+          <button type="button" class="md-tab" role="tab" id="tab-outline" aria-controls="panel-outline" aria-selected="false" tabindex="-1">Outline</button>
+          <button type="button" class="md-tab" role="tab" id="tab-stats" aria-controls="panel-stats" aria-selected="false" tabindex="-1">Stats</button>
+          <button type="button" class="md-tab" role="tab" id="tab-health" aria-controls="panel-health" aria-selected="false" tabindex="-1">
+            Health <span class="md-badge hidden" id="health-badge">0</span>
+          </button>
+        </div>
+
+        <div class="md-tabpanel" id="panel-preview" role="tabpanel" aria-labelledby="tab-preview" tabindex="0">
+          <div class="md-preview" id="preview"></div>
+        </div>
+
+        <div class="md-tabpanel" id="panel-outline" role="tabpanel" aria-labelledby="tab-outline" tabindex="0" hidden>
+          <div class="md-outline" id="outline"></div>
+        </div>
+
+        <div class="md-tabpanel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" tabindex="0" hidden>
+          <div class="md-stats" id="stats"></div>
+        </div>
+
+        <div class="md-tabpanel" id="panel-health" role="tabpanel" aria-labelledby="tab-health" tabindex="0" hidden>
+          <div class="md-health" id="health"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.markdownWorkspace;
+      if (!lib) return;
+
+      var $ = function (id) { return document.getElementById(id); };
+      var input = $("md-input");
+      var preview = $("preview");
+      var outlineEl = $("outline");
+      var statsEl = $("stats");
+      var healthEl = $("health");
+      var healthBadge = $("health-badge");
+      var status = $("status");
+      var fileMeta = $("file-meta");
+
+      var lastHtml = "";
+      var lastAnalysis = null;
+      var lastOutline = [];
+      var lastNormalized = "";
+      var renderTimer = null;
+
+      var CLEANUP_OPTIONS = [
+        "opt-trimTrailing",
+        "opt-collapseBlankLines",
+        "opt-headings",
+        "opt-listMarkers",
+        "opt-blankLinesAroundHeadings",
+        "opt-ensureFinalNewline"
+      ];
+
+      // -------------------------------------------------------------------
+      // Status + small DOM helpers
+      // -------------------------------------------------------------------
+      function setStatus(message, kind) {
+        status.textContent = message;
+        status.classList.remove("hidden", "error", "ok");
+        if (kind) status.classList.add(kind);
+      }
+      function clearStatus() { status.classList.add("hidden"); }
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+      }
+
+      function bytes(n) {
+        if (n < 1024) return n + " B";
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+        return (n / (1024 * 1024)).toFixed(2) + " MB";
+      }
+
+      // -------------------------------------------------------------------
+      // Tabs
+      // -------------------------------------------------------------------
+      var tabs = Array.prototype.slice.call(document.querySelectorAll(".md-tab"));
+
+      function selectTab(tab) {
+        tabs.forEach(function (t) {
+          var selected = t === tab;
+          t.setAttribute("aria-selected", selected ? "true" : "false");
+          t.tabIndex = selected ? 0 : -1;
+          var panel = document.getElementById(t.getAttribute("aria-controls"));
+          if (panel) panel.hidden = !selected;
+        });
+      }
+
+      tabs.forEach(function (tab, index) {
+        tab.addEventListener("click", function () { selectTab(tab); });
+        tab.addEventListener("keydown", function (event) {
+          var next = null;
+          if (event.key === "ArrowRight" || event.key === "ArrowDown") next = tabs[(index + 1) % tabs.length];
+          else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = tabs[(index - 1 + tabs.length) % tabs.length];
+          else if (event.key === "Home") next = tabs[0];
+          else if (event.key === "End") next = tabs[tabs.length - 1];
+          if (next) {
+            event.preventDefault();
+            selectTab(next);
+            next.focus();
+          }
+        });
+      });
+
+      // -------------------------------------------------------------------
+      // Rendering
+      // -------------------------------------------------------------------
+      function render() {
+        var source = input.value;
+        var result = lib.process(source);
+
+        fileMeta.textContent = lib.countWords(source) + " words · " +
+          source.replace(/\r\n?/g, "\n").split("\n").length + " lines";
+
+        if (!result.ok) {
+          lastHtml = "";
+          lastAnalysis = null;
+          lastOutline = [];
+          preview.textContent = "";
+          preview.appendChild(el("p", "md-preview-empty", result.error));
+          outlineEl.textContent = "";
+          outlineEl.appendChild(emptyNote("Outline appears once you add headings."));
+          statsEl.textContent = "";
+          statsEl.appendChild(emptyNote("Statistics appear as you type."));
+          healthEl.textContent = "";
+          healthEl.appendChild(emptyNote("The health check runs on your document."));
+          healthBadge.classList.add("hidden");
+          setStatus(result.error, "error");
+          return;
+        }
+
+        lastHtml = result.html;
+        lastAnalysis = result.analysis;
+        lastOutline = result.outline;
+
+        renderPreview(result.html, source);
+        renderOutline(result.outline);
+        renderStats(result.analysis);
+        renderHealth(result.health);
+        clearStatus();
+      }
+
+      function renderPreview(html, source) {
+        if (!source.trim()) {
+          preview.textContent = "";
+          preview.appendChild(el("p", "md-preview-empty",
+            "Nothing to preview yet — start typing on the left, or press “Load sample”."));
+          return;
+        }
+        // The renderer escapes every piece of user text and emits only a known
+        // set of safe tags, so the produced string is safe to display here.
+        preview.innerHTML = html;
+      }
+
+      function emptyNote(text) {
+        var p = el("p", "md-empty", text);
+        return p;
+      }
+
+      function renderOutline(headings) {
+        outlineEl.textContent = "";
+        if (!headings.length) {
+          outlineEl.appendChild(emptyNote("No headings yet. Add a line like “## Section” and it will appear here."));
+          return;
+        }
+
+        var root = { children: [] };
+        var stack = [{ level: 0, node: root }];
+        headings.forEach(function (h) {
+          var node = { heading: h, children: [] };
+          while (stack.length > 1 && stack[stack.length - 1].level >= h.level) stack.pop();
+          stack[stack.length - 1].node.children.push(node);
+          stack.push({ level: h.level, node: node });
+        });
+
+        function build(nodes) {
+          var ol = el("ol");
+          nodes.forEach(function (node) {
+            var li = el("li");
+            li.setAttribute("data-level", String(node.heading.level));
+            var button = el("button");
+            button.type = "button";
+            button.appendChild(el("span", "lv", "H" + node.heading.level));
+            button.appendChild(document.createTextNode(node.heading.text || "(untitled)"));
+            button.addEventListener("click", function () {
+              selectTab($("tab-preview"));
+              var target = document.getElementById(node.heading.id);
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+                preview.focus({ preventScroll: true });
+              }
+            });
+            li.appendChild(button);
+            if (node.children.length) li.appendChild(build(node.children));
+            ol.appendChild(li);
+          });
+          return ol;
+        }
+
+        outlineEl.appendChild(build(root.children));
+      }
+
+      function renderStats(a) {
+        statsEl.textContent = "";
+        if (!a) return;
+
+        function stat(key, value, wide) {
+          var box = el("div", "md-stat" + (wide ? " wide" : ""));
+          box.appendChild(el("span", "v", value));
+          box.appendChild(el("span", "k", key));
+          return box;
+        }
+
+        statsEl.appendChild(stat("Words", String(a.words)));
+        statsEl.appendChild(stat("Characters", String(a.characters)));
+        statsEl.appendChild(stat("No spaces", String(a.charactersNoSpaces)));
+        statsEl.appendChild(stat("Lines", String(a.lines)));
+        statsEl.appendChild(stat("Non-empty lines", String(a.nonEmptyLines)));
+        statsEl.appendChild(stat("Reading time", a.readingTime));
+        statsEl.appendChild(stat("Headings", String(a.headings)));
+        statsEl.appendChild(stat("Longest line", String(a.longestLine)));
+        statsEl.appendChild(stat("Links", String(a.links)));
+        statsEl.appendChild(stat("Images", String(a.images)));
+        statsEl.appendChild(stat("Code blocks", String(a.codeBlocks)));
+        statsEl.appendChild(stat("Code lines", String(a.codeLines)));
+        statsEl.appendChild(stat("Tables", String(a.tables)));
+        statsEl.appendChild(stat("Tasks", a.checkedTasks + " / " + a.taskItems));
+
+        var levels = [1, 2, 3, 4, 5, 6].filter(function (l) { return a.headingLevels[l]; });
+        if (levels.length) {
+          statsEl.appendChild(stat("Heading levels",
+            levels.map(function (l) { return "H" + l + "×" + a.headingLevels[l]; }).join("  "), true));
+        }
+
+        var langs = Object.keys(a.languages || {});
+        if (langs.length) {
+          var wrap = el("div", "md-langs wide");
+          wrap.appendChild(el("span", "k", "Code languages "));
+          langs.sort().forEach(function (lang) {
+            wrap.appendChild(el("span", "md-lang", lang + " ×" + a.languages[lang]));
+          });
+          statsEl.appendChild(wrap);
+        }
+      }
+
+      function renderHealth(health) {
+        healthEl.textContent = "";
+        var issues = health.issues || [];
+        var warnings = issues.filter(function (i) { return i.severity === "warning"; }).length;
+
+        if (!issues.length) {
+          healthBadge.classList.add("hidden");
+          var note = el("div", "md-clean-note");
+          note.appendChild(el("span", null, "✓"));
+          note.appendChild(el("span", null, "No issues found — the document looks clean."));
+          healthEl.appendChild(note);
+          return;
+        }
+
+        healthBadge.textContent = String(issues.length);
+        healthBadge.classList.remove("hidden");
+        healthBadge.title = issues.length + " issue" + (issues.length === 1 ? "" : "s") +
+          (warnings ? " (" + warnings + " warning" + (warnings === 1 ? "" : "s") + ")" : "");
+
+        var list = el("ul", "md-issues");
+        issues.forEach(function (issue) {
+          var li = el("li", "md-issue");
+          li.setAttribute("data-sev", issue.severity);
+          li.appendChild(el("span", "sev", issue.severity === "warning" ? "warn" : "info"));
+          var body = el("div");
+          body.appendChild(el("div", "msg", issue.message));
+          if (issue.line > 0) body.appendChild(el("span", "loc", "line " + issue.line));
+          li.appendChild(body);
+          list.appendChild(li);
+        });
+        healthEl.appendChild(list);
+      }
+
+      function scheduleRender() {
+        if (renderTimer) clearTimeout(renderTimer);
+        renderTimer = setTimeout(render, 120);
+      }
+
+      // -------------------------------------------------------------------
+      // Clipboard
+      // -------------------------------------------------------------------
+      function copyText(text, label, button) {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus("Clipboard API unavailable — select the text and copy manually.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          setStatus(label, "ok");
+          if (button) {
+            var old = button.textContent;
+            button.textContent = "Copied ✓";
+            setTimeout(function () { button.textContent = old; }, 1400);
+          }
+        }).catch(function () {
+          setStatus("Copy was blocked by the browser. Select the text and copy with Ctrl/Cmd+C.", "error");
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // File input / output
+      // -------------------------------------------------------------------
+      function openFile(file) {
+        if (!file) return;
+        if (file.size > lib.MAX_SOURCE) {
+          setStatus("That file is " + bytes(file.size) + " — larger than the " +
+            bytes(lib.MAX_SOURCE) + " limit this tool accepts.", "error");
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          input.value = String(reader.result == null ? "" : reader.result);
+          render();
+          setStatus("Loaded " + file.name + " (" + bytes(file.size) + ").", "ok");
+        };
+        reader.onerror = function () {
+          setStatus("Could not read that file. It may have moved or be unreadable.", "error");
+        };
+        reader.readAsText(file);
+      }
+
+      function saveMarkdown() {
+        if (!input.value) {
+          setStatus("There is nothing to save yet.", "error");
+          return;
+        }
+        var blob = new Blob([input.value], { type: "text/markdown;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "document.md";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setStatus("Saved document.md to your downloads.", "ok");
+      }
+
+      function cleanupOptions() {
+        var opts = {};
+        CLEANUP_OPTIONS.forEach(function (id) {
+          opts[id.replace(/^opt-/, "")] = $(id).checked;
+        });
+        return opts;
+      }
+
+      function normalizeSource(apply) {
+        var cleaned = lib.normalize(input.value, cleanupOptions());
+        lastNormalized = cleaned;
+        if (apply) {
+          input.value = cleaned;
+          render();
+          setStatus("Source cleaned up.", "ok");
+        }
+        return cleaned;
+      }
+
+      function clearAll() {
+        input.value = "";
+        lastHtml = "";
+        lastAnalysis = null;
+        lastOutline = [];
+        render();
+        clearStatus();
+        input.focus();
+      }
+
+      // -------------------------------------------------------------------
+      // Wiring
+      // -------------------------------------------------------------------
+      input.addEventListener("input", scheduleRender);
+
+      $("btn-sample").addEventListener("click", function () {
+        input.value = lib.sampleDocument();
+        render();
+        setStatus("Sample document loaded — edit it freely.", "ok");
+      });
+      $("btn-open").addEventListener("click", function () { $("file-input").click(); });
+      $("file-input").addEventListener("change", function (event) {
+        openFile(event.target.files && event.target.files[0]);
+        event.target.value = "";
+      });
+      $("btn-save").addEventListener("click", saveMarkdown);
+      $("btn-clear").addEventListener("click", clearAll);
+
+      $("btn-copy-src").addEventListener("click", function () {
+        copyText(input.value, "Source copied to clipboard.", this);
+      });
+      $("btn-copy-html").addEventListener("click", function () {
+        if (!lastHtml) { setStatus("Nothing to copy — the document is empty.", "error"); return; }
+        copyText(lastHtml, "Rendered HTML copied to clipboard.", this);
+      });
+      $("btn-normalize").addEventListener("click", function () { normalizeSource(true); });
+      $("btn-copy-normalized").addEventListener("click", function () {
+        copyText(normalizeSource(false), "Cleaned source copied to clipboard.", this);
+      });
+
+      // Drag a .md file onto the editor.
+      ["dragover", "drop"].forEach(function (type) {
+        input.addEventListener(type, function (event) {
+          if (type === "dragover") {
+            event.preventDefault();
+            return;
+          }
+          var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+          if (file) {
+            event.preventDefault();
+            openFile(file);
+          }
+        });
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

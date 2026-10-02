@@ -168,6 +168,27 @@
     }
   },
   {
+    "id": "markdown-workspace",
+    "name": "Markdown Workspace",
+    "description": "Write Markdown with a live, safely-rendered preview, an outline you can jump through, document statistics and a health check for common mistakes. Everything runs locally in your browser.",
+    "category": "Text",
+    "tags": [
+      "editor",
+      "markdown",
+      "outline",
+      "preview",
+      "text",
+      "writing"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "openapi-request-builder",
     "name": "OpenAPI Request Builder",
     "description": "Load an OpenAPI 3 or Swagger 2 document, pick an operation, fill in the parameters and get a runnable request with curl, fetch, Node, Python and raw HTTP snippets. Runs entirely in your browser.",
