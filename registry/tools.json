@@ -291,5 +291,30 @@
       "dataUploaded": false,
       "storage": "none"
     }
+  },
+  {
+    "id": "webhook-signature-lab",
+    "name": "Webhook Signature Lab",
+    "description": "Generate and verify HMAC webhook signatures for GitHub, Stripe, Slack, Shopify, Standard Webhooks and custom services. See the exact signed payload, check a received header and copy a verification recipe — all locally in your browser.",
+    "category": "Developer",
+    "tags": [
+      "developer",
+      "github",
+      "hmac",
+      "security",
+      "shopify",
+      "signature",
+      "slack",
+      "stripe",
+      "verify",
+      "webhook"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
   }
 ]
