@@ -1,0 +1,345 @@
+/* Webhook Signature Lab — widget styles layered on the shared Toolshed design
+   system. Only tool-specific pieces live here; the chrome, panes, buttons,
+   status and hints come from assets/toolshed.css. */
+
+/* ---------- Shared field primitives (used across the panes) ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.field-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.mono { font-family: var(--mono); }
+
+.pane input[type="password"] {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule-2);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.pane input[type="password"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.pill {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+
+/* ---------- Provider picker (stamp cards) ---------- */
+.ws-providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.ws-provider {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 11px 13px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  transition: border-color .15s, background .15s, transform .08s;
+}
+.ws-provider:hover { border-color: var(--rule-2); transform: translateY(-1px); }
+.ws-provider[aria-selected="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.ws-provider-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--ink);
+}
+.ws-provider[aria-selected="true"] .ws-provider-name { color: var(--accent-ink); }
+.ws-provider-tag {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* ---------- Provider facts strip ---------- */
+.ws-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.ws-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+.ws-fact-k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ws-fact-v {
+  font-size: 12.5px;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+/* ---------- Fields column ---------- */
+.ws-fields { display: flex; flex-direction: column; gap: 16px; }
+
+.ws-secret { display: flex; gap: 8px; align-items: stretch; }
+.ws-secret input { flex: 1 1 auto; }
+.ws-reveal { flex: none; }
+
+.pane textarea.ws-received { min-height: 84px; }
+
+/* ---------- Empty states ---------- */
+.ws-empty {
+  font-size: 13.5px;
+  color: var(--ink-3);
+  padding: 20px 16px;
+  border: 1.5px dashed var(--rule-2);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  text-align: center;
+}
+
+/* ---------- Signature output ---------- */
+.ws-outhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ws-header-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  word-break: break-word;
+}
+.ws-code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.ws-recipe {
+  white-space: pre;
+  word-break: normal;
+  min-height: 120px;
+}
+
+/* ---------- Signed payload disclosure ---------- */
+.ws-details {
+  margin-top: 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+.ws-details summary {
+  cursor: pointer;
+  padding: 10px 13px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  list-style: none;
+}
+.ws-details summary::-webkit-details-marker { display: none; }
+.ws-details summary::before { content: "▸ "; color: var(--accent); }
+.ws-details[open] summary::before { content: "▾ "; }
+.ws-details summary:hover { color: var(--ink); }
+.ws-details-note {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+.ws-payload {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  border-top: 1px solid var(--rule);
+  padding: 12px 14px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+}
+
+/* ---------- Verify verdict ---------- */
+.ws-verdict {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  word-break: break-word;
+}
+.ws-verdict.valid {
+  color: var(--ok);
+  background: rgba(46, 125, 78, .1);
+  border-color: rgba(46, 125, 78, .35);
+}
+.ws-verdict.invalid {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.ws-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+.ws-detail-k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ws-detail-v {
+  font-size: 12.5px;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+/* ---------- Recipe tabs ---------- */
+.ws-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule-2);
+  margin-bottom: 12px;
+}
+.ws-tab {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  position: relative;
+  top: 1px;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.ws-tab:hover { color: var(--ink); background: var(--surface-2); }
+.ws-tab[aria-selected="true"] {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--rule-2);
+  border-bottom: 1px solid var(--paper);
+}
+.ws-tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 2px 2px;
+}
+
+/* ---------- Notes ---------- */
+.ws-notes { display: flex; flex-direction: column; gap: 10px; }
+.ws-note {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  padding-left: 16px;
+  position: relative;
+}
+.ws-note::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: .7;
+}
+.ws-doc {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ws-doc:hover { color: var(--accent-ink); }
+
+@media (max-width: 520px) {
+  .ws-providers { grid-template-columns: 1fr 1fr; }
+  .ws-facts { grid-template-columns: 1fr; }
+  .ws-secret { flex-direction: column; }
+  .ws-reveal { align-self: flex-start; }
+}
+
+/* Long recipe / payload lines scroll inside their own box. Without min-width:0
+   the pre-formatted content widens the grid track and overflows the viewport
+   on narrow screens. */
+.toolbody.single .pane { min-width: 0; }
+.ws-code,
+.ws-payload { min-width: 0; max-width: 100%; }

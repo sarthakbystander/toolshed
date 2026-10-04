@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Webhook Signature Lab — Toolshed</title>
+  <meta name="description" content="Generate and verify HMAC webhook signatures for GitHub, Stripe, Slack, Shopify and Standard Webhooks. See the exact signed payload, check a received header, and copy a verification recipe. Runs entirely in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / webhook-signature-lab</div>
+      <h1>Webhook Signature Lab</h1>
+      <p class="lede">Work out exactly what a provider signs, generate the signature header, and check one you received — for GitHub, Stripe, Slack, Shopify, Standard Webhooks, or any plain HMAC. Your secret and payload never leave this tab.</p>
+    </section>
+
+    <!-- ============================ STEP 1 ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">1 · PROVIDER &amp; INPUT</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+            <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <div class="ws-providers" id="providers" role="tablist" aria-label="Webhook provider"></div>
+
+        <div class="ws-facts" id="facts" aria-live="polite"></div>
+
+        <div class="ws-fields">
+          <div class="field">
+            <label class="field-label" for="secret">Signing secret</label>
+            <div class="ws-secret">
+              <input type="password" id="secret" class="mono" autocomplete="off" spellcheck="false"
+                placeholder="Paste the webhook signing secret">
+              <button type="button" class="btn secondary ws-reveal" id="btn-reveal" aria-pressed="false">Show</button>
+            </div>
+            <p class="hint">Read from this field only. It is never sent anywhere or saved.</p>
+          </div>
+
+          <div id="extra-fields"></div>
+
+          <div class="field">
+            <label class="field-label" for="body">Raw request body</label>
+            <textarea id="body" class="mono" spellcheck="false" autocomplete="off"
+              placeholder='Paste the exact raw body bytes the provider sent, for example:&#10;{"action":"opened","number":42}'></textarea>
+            <p class="hint">Use the raw bytes, not a re-serialized object — whitespace and key order are part of the signature.</p>
+          </div>
+        </div>
+
+        <div class="status hidden" id="input-status" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ======================= STEP 2 + STEP 3 ======================= -->
+    <section class="toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">2 · SIGNATURE</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-sig" disabled>Copy value</button>
+          </div>
+        </div>
+
+        <p class="ws-empty" id="sign-empty">Pick a provider and fill in the fields to generate a signature.</p>
+
+        <div id="sign-body" hidden>
+          <div class="ws-outhead">
+            <span class="ws-header-name" id="sig-header-name"></span>
+            <span class="pill" id="sig-algo"></span>
+          </div>
+          <pre class="ws-code" id="sig-header" tabindex="0" aria-label="Generated signature header value"></pre>
+
+          <details class="ws-details" id="payload-details">
+            <summary>Signed payload <span class="ws-details-note">(the exact bytes hashed)</span></summary>
+            <pre class="ws-payload" id="sig-payload" tabindex="0" aria-label="Signed payload"></pre>
+          </details>
+
+          <div class="status hidden" id="sign-status" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">3 · VERIFY</span>
+        </div>
+
+        <p class="ws-empty" id="verify-empty">Generate a signature, or paste one you received, to check it.</p>
+
+        <div id="verify-body" hidden>
+          <div class="field">
+            <label class="field-label" for="received">Received signature header value</label>
+            <textarea id="received" class="mono ws-received" spellcheck="false" autocomplete="off"
+              placeholder="Paste the value of the signature header here"></textarea>
+          </div>
+          <div class="row">
+            <button type="button" class="btn" id="btn-verify">Verify</button>
+            <button type="button" class="btn secondary" id="btn-use-generated" disabled>Use generated value</button>
+          </div>
+
+          <div class="ws-verdict hidden" id="verdict" role="status" aria-live="assertive"></div>
+          <div id="verify-detail"></div>
+          <div class="status hidden" id="verify-status" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ STEP 4 ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">4 · SERVER-SIDE RECIPE</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-recipe" disabled>Copy recipe</button>
+          </div>
+        </div>
+
+        <div class="ws-tabs" id="recipe-tabs" role="tablist" aria-label="Recipe language">
+          <button type="button" class="ws-tab" role="tab" data-lang="curl" aria-selected="true">curl</button>
+          <button type="button" class="ws-tab" role="tab" data-lang="node" aria-selected="false">Node</button>
+          <button type="button" class="ws-tab" role="tab" data-lang="python" aria-selected="false">Python</button>
+        </div>
+
+        <pre class="ws-code ws-recipe" id="recipe" tabindex="0" aria-live="polite">Pick a provider to see a verification recipe.</pre>
+        <p class="hint">Reference code for your server — this tool does not run it. Read the secret from the environment and always compare with a constant-time check.</p>
+      </div>
+    </section>
+
+    <!-- ============================ NOTES ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">HOW IT WORKS</span>
+        </div>
+        <div class="ws-notes" id="provider-notes"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var lib = window.Toolshed.webhookSignatureLab;
+
+      function $(id) { return document.getElementById(id); }
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+
+      function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+      function setStatus(node, message, kind) {
+        node.textContent = message || "";
+        node.classList.remove("hidden", "error", "ok");
+        if (!message) { node.classList.add("hidden"); return; }
+        if (kind) node.classList.add(kind);
+      }
+
+      // ---- state ---------------------------------------------------------
+      var PROVIDERS = lib.listProviders();
+      var provider = PROVIDERS[0];
+      var customAlgorithm = "sha256";
+      var customEncoding = "hex";
+      var recipeLang = "curl";
+      var signToken = 0;
+      var lastHeaderValue = "";
+
+      // ---- provider tabs -------------------------------------------------
+      var providersEl = $("providers");
+
+      function renderProviderTabs() {
+        clear(providersEl);
+        PROVIDERS.forEach(function (p) {
+          var b = el("button", "ws-provider");
+          b.type = "button";
+          b.setAttribute("role", "tab");
+          b.setAttribute("aria-selected", String(p.id === provider.id));
+          b.dataset.id = p.id;
+          b.appendChild(el("span", "ws-provider-name", p.name));
+          b.appendChild(el("span", "ws-provider-tag", p.tagline));
+          b.addEventListener("click", function () { selectProvider(p.id); });
+          providersEl.appendChild(b);
+        });
+      }
+
+      function selectProvider(id) {
+        var found = lib.getProvider(id);
+        if (!found) return;
+        provider = found;
+        Array.prototype.forEach.call(providersEl.children, function (b) {
+          b.setAttribute("aria-selected", String(b.dataset.id === id));
+        });
+        renderFacts();
+        renderExtraFields();
+        renderNotes();
+        renderRecipe();
+        update();
+      }
+
+      // ---- provider facts -------------------------------------------------
+      var factsEl = $("facts");
+
+      function renderFacts() {
+        clear(factsEl);
+        var facts = [
+          ["Header", provider.signatureHeader],
+          ["Algorithm", lib.ALGORITHMS[provider.algorithm].label],
+          ["Encoding", provider.encoding],
+          ["Header value", provider.headerFormat]
+        ];
+        facts.forEach(function (pair) {
+          var wrap = el("div", "ws-fact");
+          wrap.appendChild(el("span", "ws-fact-k", pair[0]));
+          wrap.appendChild(el("span", "ws-fact-v mono", pair[1]));
+          factsEl.appendChild(wrap);
+        });
+      }
+
+      // ---- dynamic fields -------------------------------------------------
+      var extraEl = $("extra-fields");
+
+      function fieldRow(id, label, placeholder, hint) {
+        var wrap = el("div", "field");
+        var lab = el("label", "field-label", label);
+        lab.setAttribute("for", id);
+        var input = el("input", "mono");
+        input.type = "text";
+        input.id = id;
+        input.autocomplete = "off";
+        input.spellcheck = false;
+        input.placeholder = placeholder;
+        wrap.appendChild(lab);
+        wrap.appendChild(input);
+        if (hint) wrap.appendChild(el("p", "hint", hint));
+        return wrap;
+      }
+
+      function selectRow(id, label, options, value) {
+        var wrap = el("div", "field");
+        var lab = el("label", "field-label", label);
+        lab.setAttribute("for", id);
+        var sel = el("select", "mono");
+        sel.id = id;
+        options.forEach(function (opt) {
+          var o = el("option", null, opt.label);
+          o.value = opt.value;
+          sel.appendChild(o);
+        });
+        sel.value = value;
+        wrap.appendChild(lab);
+        wrap.appendChild(sel);
+        return wrap;
+      }
+
+      function renderExtraFields() {
+        clear(extraEl);
+
+        if (provider.id === "stripe") {
+          extraEl.appendChild(fieldRow("timestamp", "Timestamp (t=)",
+            "Unix seconds, e.g. 1712345678",
+            "Stripe signs \"<timestamp>.<raw body>\". Verification reads t= from the header you paste."));
+        } else if (provider.id === "slack") {
+          extraEl.appendChild(fieldRow("timestamp", "Request timestamp",
+            "Unix seconds, e.g. 1712345678",
+            "Slack signs \"v0:<timestamp>:<raw body>\"."));
+        } else if (provider.id === "standard-webhooks") {
+          extraEl.appendChild(fieldRow("webhook-id", "webhook-id",
+            "e.g. msg_2abc123",
+            "The message id is part of the signed payload."));
+          extraEl.appendChild(fieldRow("timestamp", "webhook-timestamp",
+            "Unix seconds, e.g. 1712345678",
+            "Standard Webhooks signs \"<id>.<timestamp>.<raw body>\"."));
+        } else if (provider.id === "custom") {
+          var algos = lib.listAlgorithms().map(function (a) { return { value: a.id, label: a.label }; });
+          extraEl.appendChild(selectRow("algorithm", "Algorithm", algos, customAlgorithm));
+          extraEl.appendChild(selectRow("encoding", "Encoding",
+            [{ value: "hex", label: "Hex" }, { value: "base64", label: "Base64" }], customEncoding));
+          extraEl.appendChild(fieldRow("header-name", "Signature header name",
+            "X-Signature", "The header your service sends the digest in."));
+          $("algorithm").addEventListener("change", function () { customAlgorithm = this.value; update(); });
+          $("encoding").addEventListener("change", function () { customEncoding = this.value; update(); });
+        }
+
+        ["timestamp", "webhook-id", "header-name"].forEach(function (id) {
+          var input = $(id);
+          if (input) input.addEventListener("input", update);
+        });
+      }
+
+      // ---- notes ----------------------------------------------------------
+      var notesEl = $("provider-notes");
+
+      function renderNotes() {
+        clear(notesEl);
+        provider.notes.forEach(function (note) {
+          notesEl.appendChild(el("p", "ws-note", note));
+        });
+        if (provider.docs) {
+          var p = el("p", "ws-note");
+          var a = el("a", "ws-doc", "Provider documentation ↗");
+          a.href = provider.docs;
+          a.target = "_blank";
+          a.rel = "noopener";
+          p.appendChild(a);
+          notesEl.appendChild(p);
+        }
+      }
+
+      // ---- collecting current values --------------------------------------
+      function currentValues() {
+        var values = {
+          body: $("body").value,
+          secret: $("secret").value,
+          timestamp: "",
+          headers: {},
+          headerName: ""
+        };
+        if (provider.id === "stripe" || provider.id === "slack") {
+          values.timestamp = $("timestamp").value.trim();
+        } else if (provider.id === "standard-webhooks") {
+          values.timestamp = $("timestamp").value.trim();
+          values.headers["webhook-id"] = $("webhook-id").value.trim();
+        } else if (provider.id === "custom") {
+          values.headerName = $("header-name").value.trim() || provider.signatureHeader;
+        }
+        return values;
+      }
+
+      // ---- signing --------------------------------------------------------
+      function update() {
+        var token = ++signToken;
+        var values = currentValues();
+        var options = provider.id === "custom"
+          ? { algorithm: customAlgorithm, encoding: customEncoding }
+          : {};
+
+        lib.generateSignature(provider, values, options).then(function (result) {
+          if (token !== signToken) return; // a newer keystroke already won
+          renderSignature(result);
+        });
+      }
+
+      function renderSignature(result) {
+        var signEmpty = $("sign-empty");
+        var signBody = $("sign-body");
+
+        if (!result.ok) {
+          signEmpty.hidden = false;
+          signBody.hidden = true;
+          setStatus($("input-status"), result.error, "error");
+          $("btn-copy-sig").disabled = true;
+          lastHeaderValue = "";
+          renderVerify();
+          return;
+        }
+
+        setStatus($("input-status"), "");
+        signEmpty.hidden = true;
+        signBody.hidden = false;
+        lastHeaderValue = result.headerValue;
+
+        $("sig-header-name").textContent = result.headerName;
+        $("sig-algo").textContent = lib.ALGORITHMS[result.algorithm].label + " · " + result.encoding;
+        $("sig-header").textContent = result.headerValue;
+        $("sig-payload").textContent = result.payload === "" ? "(empty)" : result.payload;
+        $("btn-copy-sig").disabled = false;
+
+        setStatus($("sign-status"), "Signature generated locally.", "ok");
+        renderVerify();
+      }
+
+      // ---- verifying ------------------------------------------------------
+      function renderVerify() {
+        var verifyEmpty = $("verify-empty");
+        var verifyBody = $("verify-body");
+        var ready = lastHeaderValue !== "" || $("received").value.trim() !== "";
+        verifyEmpty.hidden = ready;
+        verifyBody.hidden = !ready;
+        $("btn-use-generated").disabled = lastHeaderValue === "";
+      }
+
+      function doVerify() {
+        var values = currentValues();
+        var options = {
+          headerValue: $("received").value
+        };
+        if (provider.id === "custom") {
+          options.algorithm = customAlgorithm;
+          options.encoding = customEncoding;
+        }
+
+        lib.verifySignature(provider, values, options).then(function (result) {
+          var verdict = $("verdict");
+          var detail = $("verify-detail");
+          clear(detail);
+          verdict.classList.remove("hidden", "valid", "invalid");
+
+          if (!result.ok) {
+            verdict.classList.add("invalid");
+            verdict.textContent = result.error;
+            setStatus($("verify-status"), "");
+            return;
+          }
+
+          if (result.valid) {
+            verdict.classList.add("valid");
+            verdict.textContent = "✓ Signature is valid — it matches the generated digest.";
+            setStatus($("verify-status"), "Compared with a constant-time check.", "ok");
+          } else {
+            verdict.classList.add("invalid");
+            verdict.textContent = "✕ Signature does not match.";
+            setStatus($("verify-status"), "Check the secret, the raw body, and the timestamp.", "error");
+          }
+
+          detail.appendChild(detailRow("Computed", result.generated.signature));
+          if (result.candidates.length > 1) {
+            detail.appendChild(detailRow("Candidates found", result.candidates.length + " (" + result.candidates.join(", ") + ")"));
+          }
+          if (result.matched) {
+            detail.appendChild(detailRow("Matched", result.matched));
+          }
+        });
+      }
+
+      function detailRow(label, value) {
+        var wrap = el("div", "ws-detail");
+        wrap.appendChild(el("span", "ws-detail-k", label));
+        wrap.appendChild(el("span", "ws-detail-v mono", value));
+        return wrap;
+      }
+
+      // ---- recipe ---------------------------------------------------------
+      var recipeEl = $("recipe");
+      var recipeTabs = $("recipe-tabs");
+
+      function renderRecipe() {
+        var text = lib.verificationRecipe(provider.id, recipeLang);
+        recipeEl.textContent = text || "No recipe for this provider.";
+        $("btn-copy-recipe").disabled = !text;
+      }
+
+      function setRecipeLang(lang) {
+        recipeLang = lang;
+        Array.prototype.forEach.call(recipeTabs.children, function (tab) {
+          tab.setAttribute("aria-selected", String(tab.dataset.lang === lang));
+        });
+        renderRecipe();
+      }
+
+      // ---- clipboard ------------------------------------------------------
+      function copyText(text, button) {
+        if (!text) return;
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus($("input-status"), "Clipboard API unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = button.textContent;
+          button.textContent = "Copied ✓";
+          setTimeout(function () { button.textContent = old; }, 1400);
+        }).catch(function () {
+          setStatus($("input-status"), "Copy was blocked by the browser.", "error");
+        });
+      }
+
+      // ---- sample / clear -------------------------------------------------
+      function loadSample() {
+        var sample = lib.getSample(provider.id);
+        if (!sample) return;
+        $("secret").value = sample.secret;
+        $("body").value = sample.body;
+        if ($("timestamp")) $("timestamp").value = sample.timestamp;
+        if ($("webhook-id")) $("webhook-id").value = sample.headers["webhook-id"] || "";
+        if ($("received")) $("received").value = "";
+        clear($("verify-detail"));
+        $("verdict").classList.add("hidden");
+        setStatus($("verify-status"), "");
+        update();
+        setStatus($("input-status"), "Sample loaded.", "ok");
+      }
+
+      function clearAll() {
+        $("secret").value = "";
+        $("body").value = "";
+        ["timestamp", "webhook-id", "header-name"].forEach(function (id) {
+          if ($(id)) $(id).value = "";
+        });
+        $("received").value = "";
+        clear($("verify-detail"));
+        $("verdict").classList.add("hidden");
+        setStatus($("verify-status"), "");
+        update();
+        $("secret").focus();
+      }
+
+      // ---- wiring ---------------------------------------------------------
+      $("body").addEventListener("input", update);
+      $("secret").addEventListener("input", update);
+      $("received").addEventListener("input", renderVerify);
+
+      $("btn-sample").addEventListener("click", loadSample);
+      $("btn-clear").addEventListener("click", clearAll);
+      $("btn-copy-sig").addEventListener("click", function () { copyText(lastHeaderValue, $("btn-copy-sig")); });
+      $("btn-copy-recipe").addEventListener("click", function () { copyText(lib.verificationRecipe(provider.id, recipeLang), $("btn-copy-recipe")); });
+      $("btn-verify").addEventListener("click", doVerify);
+      $("btn-use-generated").addEventListener("click", function () {
+        $("received").value = lastHeaderValue;
+        renderVerify();
+        doVerify();
+      });
+
+      $("btn-reveal").addEventListener("click", function () {
+        var input = $("secret");
+        var showing = input.type === "text";
+        input.type = showing ? "password" : "text";
+        this.textContent = showing ? "Show" : "Hide";
+        this.setAttribute("aria-pressed", String(!showing));
+      });
+
+      Array.prototype.forEach.call(recipeTabs.children, function (tab) {
+        tab.addEventListener("click", function () { setRecipeLang(tab.dataset.lang); });
+      });
+
+      // Keyboard: Ctrl/Cmd+Enter verifies from anywhere.
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          doVerify();
+        }
+      });
+
+      // ---- boot -----------------------------------------------------------
+      renderProviderTabs();
+      renderFacts();
+      renderExtraFields();
+      renderNotes();
+      renderRecipe();
+      renderVerify();
+      loadSample();
+    })();
+  </script>
+</body>
+</html>
