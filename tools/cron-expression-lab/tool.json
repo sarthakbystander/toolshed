@@ -1,0 +1,14 @@
+{
+  "id": "cron-expression-lab",
+  "name": "Cron Expression Lab",
+  "description": "Explain, build and schedule cron expressions in your browser. Get a plain-language description, a per-field breakdown, and the next run times in any time zone with daylight-saving handled. Nothing is uploaded.",
+  "category": "Developer",
+  "tags": ["cron", "crontab", "scheduler", "schedule", "parser", "timezone", "developer"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
