@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Cron Expression Lab — Toolshed</title>
+  <meta name="description" content="Explain, build and schedule cron expressions in your browser. Get a plain-language description, a per-field breakdown and the next run times in any time zone, with DST handled. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / cron-expression-lab</div>
+      <h1>Cron Expression Lab</h1>
+      <p>Paste a cron expression to see what it actually means, which fields match what, and exactly when it fires next — in any time zone, with daylight-saving changes taken into account. Or build one field by field. Everything runs locally in your tab.</p>
+    </section>
+
+    <!-- ============================ EXPLAIN ============================ -->
+    <section class="toolbody cron-toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">1 · EXPRESSION</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+            <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <div class="cron-input">
+          <label class="cron-label" for="expr">Cron expression</label>
+          <input type="text" id="expr" class="cron-expr mono" spellcheck="false" autocomplete="off" autocapitalize="off"
+            placeholder="*/15 * * * *" aria-describedby="expr-hint">
+          <p class="hint" id="expr-hint">Fields are separated by spaces. Accepted forms include <code>*</code>, <code>5</code>, <code>1-5</code>, <code>*/10</code>, <code>9-17/2</code>, <code>1,3,5</code>, names like <code>JAN</code> or <code>MON-FRI</code>, and macros like <code>@daily</code>.</p>
+
+          <div class="cron-presets" id="presets" aria-label="Example expressions"></div>
+
+          <div class="cron-controls">
+            <div class="cron-field">
+              <label for="layout">Field layout</label>
+              <select id="layout"></select>
+            </div>
+            <div class="cron-field">
+              <label for="tz">Time zone</label>
+              <select id="tz"></select>
+            </div>
+            <div class="cron-field wide">
+              <label for="mode">Day matching</label>
+              <select id="mode"></select>
+            </div>
+          </div>
+
+          <div class="status hidden" id="status" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">2 · MEANING</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-desc" disabled>Copy description</button>
+          </div>
+        </div>
+
+        <div class="cron-desc muted" id="desc">Enter an expression to see it explained in plain language.</div>
+
+        <div class="cron-section-title">Field breakdown</div>
+        <div class="cron-tablewrap">
+          <table class="cron-table">
+            <caption class="hidden">What each cron field matches</caption>
+            <thead>
+              <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Input</th>
+                <th scope="col">Matches</th>
+              </tr>
+            </thead>
+            <tbody id="breakdown">
+              <tr><td colspan="3" class="cron-any">No expression parsed yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="cron-section-title">Next run times <span id="next-zone" class="cron-any"></span></div>
+        <ul class="cron-next-list" id="next-list" aria-live="polite">
+          <li><span class="when cron-any">No schedule to show.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================ BUILD ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">3 · BUILD AN EXPRESSION</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-built" disabled>Copy expression</button>
+            <button type="button" class="btn" id="btn-use-built" disabled>Explain this</button>
+          </div>
+        </div>
+
+        <div class="cron-builder" id="builder"></div>
+
+        <div class="cron-code" id="built" tabindex="0" aria-label="Generated cron expression">—</div>
+        <p class="hint" id="built-hint">Fill in the fields and the expression appears here. Leave a field blank to use its default (<code>*</code>, or <code>0</code> for seconds).</p>
+        <div class="status hidden" id="build-status" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ============================ REFERENCE ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">CRON REFERENCE</span>
+        </div>
+        <div class="cron-ref">
+          <dl>
+            <dt>minute</dt><dd>0–59</dd>
+            <dt>hour</dt><dd>0–23 (24-hour clock)</dd>
+            <dt>day of month</dt><dd>1–31, or <code>?</code> for “no specific day”</dd>
+            <dt>month</dt><dd>1–12 or <code>JAN</code>–<code>DEC</code></dd>
+            <dt>day of week</dt><dd>0–7 where both <code>0</code> and <code>7</code> mean Sunday, or <code>SUN</code>–<code>SAT</code></dd>
+            <dt>second</dt><dd>0–59, only in six- or seven-field expressions</dd>
+            <dt>year</dt><dd>1970–2099, only in six- or seven-field expressions</dd>
+          </dl>
+
+          <div class="cron-section-title">Macros</div>
+          <div class="cron-macros" id="macros"></div>
+          <p class="cron-note"><code>@reboot</code> is recognised but has no fixed schedule — it runs once when the machine starts, so no next run times can be computed.</p>
+
+          <div class="cron-section-title">Notes and gotchas</div>
+          <p class="cron-note">By default, when <strong>both</strong> day-of-month and day-of-week are restricted, a day matches if <strong>either</strong> one agrees (the classic <code>cron</code> rule). Use the <em>Day matching</em> selector above to switch to the Quartz-style AND rule, or to ignore one of the two fields.</p>
+          <p class="cron-note">Next run times are computed from real wall-clock values in the chosen zone, so clocks that shift for daylight saving are handled: a wall time skipped by a spring-forward is not reported, and a time that occurs twice in autumn resolves to a valid instant.</p>
+          <p class="cron-note">Runs are capped at 50 results and a 20-year horizon; a self-contradictory schedule such as <code>0 0 31 2 *</code> (31 February) reports no occurrences rather than looping.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var lib = window.Toolshed.cronExpressionLab;
+
+      function $(id) { return document.getElementById(id); }
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+      function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+      function setStatus(node, message, kind) {
+        node.textContent = message || "";
+        node.classList.remove("hidden", "error", "ok");
+        if (!message) { node.classList.add("hidden"); return; }
+        if (kind) node.classList.add(kind);
+      }
+
+      var FIELD_LABELS = {
+        second: "Second", minute: "Minute", hour: "Hour",
+        dom: "Day of month", month: "Month", dow: "Day of week", year: "Year"
+      };
+
+      var PRESETS = [
+        { label: "Every 15 min", expr: "*/15 * * * *" },
+        { label: "Weekdays at 9", expr: "0 9 * * 1-5" },
+        { label: "First of month", expr: "0 0 1 * *" },
+        { label: "Every 6 hours", expr: "0 */6 * * *" },
+        { label: "Midnight daily", expr: "@daily" },
+        { label: "Every 30 sec", expr: "*/30 * * * * *" }
+      ];
+
+      // ---- populate selects ------------------------------------------------
+      var layoutEl = $("layout");
+      var autoOpt = el("option", null, "Auto-detect (5, 6 or 7 fields)");
+      autoOpt.value = "auto";
+      layoutEl.appendChild(autoOpt);
+      lib.listLayouts().forEach(function (l) {
+        var o = el("option", null, l.label);
+        o.value = l.id;
+        layoutEl.appendChild(o);
+      });
+      layoutEl.value = "auto";
+
+      var tzEl = $("tz");
+      var zones = lib.listTimeZones();
+      var localZone = "";
+      try { localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { localZone = ""; }
+      if (localZone && zones.indexOf(localZone) === -1) zones.unshift(localZone);
+      zones.forEach(function (z) {
+        var o = el("option", null, z + (z === localZone ? "  (local)" : ""));
+        o.value = z;
+        tzEl.appendChild(o);
+      });
+      tzEl.value = localZone && lib.isValidTimeZone(localZone) ? localZone : "UTC";
+
+      var modeEl = $("mode");
+      lib.listDomDowModes().forEach(function (m) {
+        var o = el("option", null, m.label);
+        o.value = m.id;
+        modeEl.appendChild(o);
+      });
+      modeEl.value = "or";
+
+      // ---- presets ---------------------------------------------------------
+      var presetsEl = $("presets");
+      PRESETS.forEach(function (p) {
+        var b = el("button", "cron-preset", p.label);
+        b.type = "button";
+        b.addEventListener("click", function () { $("expr").value = p.expr; refresh(); });
+        presetsEl.appendChild(b);
+      });
+
+      // ---- macros ----------------------------------------------------------
+      var macrosEl = $("macros");
+      Object.keys(lib.MACROS).forEach(function (name) {
+        var b = el("button", null, name);
+        b.type = "button";
+        b.title = "Expands to: " + lib.MACROS[name];
+        b.addEventListener("click", function () { $("expr").value = name; refresh(); });
+        macrosEl.appendChild(b);
+      });
+
+      // ---- explainer -------------------------------------------------------
+      var lastDesc = "";
+      var debounce = null;
+
+      function scheduleRefresh() {
+        clearTimeout(debounce);
+        debounce = setTimeout(refresh, 120);
+      }
+
+      function refresh() {
+        var exprEl = $("expr");
+        var text = exprEl.value.trim();
+        var options = {
+          layout: layoutEl.value,
+          domDowMode: modeEl.value
+        };
+
+        if (text === "") {
+          exprEl.classList.remove("field-error");
+          setStatus($("status"), "");
+          renderEmpty("Enter an expression to see it explained in plain language.");
+          return;
+        }
+
+        var parsed = lib.parseCron(text, options);
+        if (!parsed.ok) {
+          exprEl.classList.add("field-error");
+          setStatus($("status"), parsed.error, "error");
+          renderEmpty("That expression could not be read — see the message above.");
+          return;
+        }
+
+        exprEl.classList.remove("field-error");
+        setStatus($("status"), "");
+        renderParsed(parsed);
+      }
+
+      function renderEmpty(message) {
+        var desc = $("desc");
+        desc.className = "cron-desc muted";
+        clear(desc);
+        desc.appendChild(document.createTextNode(message));
+        $("btn-copy-desc").disabled = true;
+        lastDesc = "";
+
+        clear($("breakdown"));
+        var tr = el("tr");
+        var td = el("td", "cron-any", "No expression parsed yet.");
+        td.colSpan = 3;
+        tr.appendChild(td);
+        $("breakdown").appendChild(tr);
+
+        clear($("next-list"));
+        var li = el("li");
+        li.appendChild(el("span", "when cron-any", "No schedule to show."));
+        $("next-list").appendChild(li);
+        $("next-zone").textContent = "";
+      }
+
+      function renderParsed(parsed) {
+        // Description
+        var desc = $("desc");
+        desc.className = "cron-desc";
+        clear(desc);
+        desc.appendChild(document.createTextNode(lib.describeCron(parsed)));
+        var zoneSpan = el("span", "cron-zone", "Time zone: " + tzEl.value);
+        desc.appendChild(zoneSpan);
+        lastDesc = lib.describeCron(parsed);
+        $("btn-copy-desc").disabled = false;
+
+        renderBreakdown(parsed);
+        renderNext(parsed);
+      }
+
+      function renderBreakdown(parsed) {
+        var body = $("breakdown");
+        clear(body);
+        var order = ["second", "minute", "hour", "dom", "month", "dow", "year"];
+        var anyShown = false;
+        order.forEach(function (name) {
+          var field = parsed.fields[name];
+          // Only show implicit fields (seconds/year) when the layout actually uses them.
+          if (name === "second" && !parsed.hasSeconds) return;
+          if (name === "year" && !parsed.hasYear) return;
+          anyShown = true;
+
+          var tr = el("tr");
+          tr.appendChild(el("td", "cron-field-name", FIELD_LABELS[name]));
+          tr.appendChild(el("td", "mono", field.raw));
+          var matches = el("td", "mono" + (field.restricted ? "" : " cron-any"));
+          matches.textContent = field.restricted ? lib.summarizeRanges(field.values) : "any " + FIELD_LABELS[name].toLowerCase();
+          tr.appendChild(matches);
+          body.appendChild(tr);
+        });
+        if (!anyShown) {
+          var tr = el("tr");
+          var td = el("td", "cron-any", "No fields to show.");
+          td.colSpan = 3;
+          tr.appendChild(td);
+          body.appendChild(tr);
+        }
+      }
+
+      function renderNext(parsed) {
+        var list = $("next-list");
+        clear(list);
+        $("next-zone").textContent = "· " + tzEl.value;
+
+        var result = lib.nextOccurrences(parsed, {
+          tz: tzEl.value,
+          count: 5,
+          domDowMode: modeEl.value
+        });
+
+        if (!result.ok) {
+          var li = el("li");
+          li.appendChild(el("span", "when cron-any", result.error));
+          list.appendChild(li);
+          return;
+        }
+        if (result.occurrences.length === 0) {
+          var empty = el("li");
+          empty.appendChild(el("span", "when cron-any", "This schedule never fires (check for a contradictory date such as 31 February)."));
+          list.appendChild(empty);
+          return;
+        }
+
+        var now = Date.now();
+        result.occurrences.forEach(function (occ, i) {
+          var li = el("li");
+          li.appendChild(el("span", "idx", String(i + 1)));
+          li.appendChild(el("span", "when", occ.formatted));
+          li.appendChild(el("span", "rel", relative(occ.date.getTime() - now)));
+          list.appendChild(li);
+        });
+      }
+
+      function relative(ms) {
+        if (ms <= 0) return "now";
+        var s = Math.round(ms / 1000);
+        var m = Math.round(s / 60);
+        var h = Math.round(m / 60);
+        var d = Math.round(h / 24);
+        if (s < 90) return "in " + s + "s";
+        if (m <= 60) return "in " + m + " min";
+        if (h < 48) return "in " + h + " h";
+        if (d < 30) return "in " + d + " days";
+        return "in " + Math.round(d / 30) + " months";
+      }
+
+      // ---- builder ---------------------------------------------------------
+      var BUILDER_FIELDS = {
+        standard: ["minute", "hour", "dom", "month", "dow"],
+        "with-seconds": ["second", "minute", "hour", "dom", "month", "dow"],
+        "with-year": ["minute", "hour", "dom", "month", "dow", "year"],
+        full: ["second", "minute", "hour", "dom", "month", "dow", "year"]
+      };
+      var builderEl = $("builder");
+      var builderInputs = {};
+      var builderLayout = "standard";
+
+      function renderBuilder() {
+        clear(builderEl);
+        builderInputs = {};
+        BUILDER_FIELDS[builderLayout].forEach(function (name) {
+          var field = el("div", "cron-field");
+          var label = el("label", null, FIELD_LABELS[name]);
+          var id = "build-" + name;
+          label.setAttribute("for", id);
+          var input = el("input", "mono");
+          input.type = "text";
+          input.id = id;
+          input.autocomplete = "off";
+          input.spellcheck = false;
+          input.placeholder = (name === "second" || name === "minute" || name === "hour") ? "*" : "*";
+          input.addEventListener("input", updateBuilt);
+          field.appendChild(label);
+          field.appendChild(input);
+          builderEl.appendChild(field);
+          builderInputs[name] = input;
+        });
+      }
+
+      var lastBuilt = "";
+
+      function updateBuilt() {
+        var values = {};
+        Object.keys(builderInputs).forEach(function (name) {
+          values[name] = builderInputs[name].value;
+        });
+        var built = lib.buildCron({ layout: builderLayout, fields: values });
+        var out = $("built");
+        if (!built.ok) {
+          out.textContent = "—";
+          lastBuilt = "";
+          $("btn-copy-built").disabled = true;
+          $("btn-use-built").disabled = true;
+          setStatus($("build-status"), built.error, "error");
+          return;
+        }
+        out.textContent = built.expression;
+        lastBuilt = built.expression;
+        $("btn-copy-built").disabled = false;
+        $("btn-use-built").disabled = false;
+        setStatus($("build-status"), "Ready.", "ok");
+      }
+
+      // Builder layout is the same select as the explainer layout, but the
+      // builder needs a concrete layout — "auto" maps to standard.
+      function syncBuilderLayout() {
+        var chosen = layoutEl.value === "auto" ? "standard" : layoutEl.value;
+        if (chosen !== builderLayout) {
+          builderLayout = chosen;
+          renderBuilder();
+          updateBuilt();
+        }
+      }
+
+      // ---- clipboard -------------------------------------------------------
+      function copyText(text, button) {
+        if (!text) return;
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus($("status"), "Clipboard API unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = button.textContent;
+          button.textContent = "Copied ✓";
+          setTimeout(function () { button.textContent = old; }, 1400);
+        }).catch(function () {
+          setStatus($("status"), "Copy was blocked by the browser.", "error");
+        });
+      }
+
+      // ---- wiring ----------------------------------------------------------
+      $("expr").addEventListener("input", scheduleRefresh);
+      layoutEl.addEventListener("change", function () { refresh(); syncBuilderLayout(); });
+      tzEl.addEventListener("change", refresh);
+      modeEl.addEventListener("change", refresh);
+
+      $("btn-sample").addEventListener("click", function () {
+        $("expr").value = "0 9 * * 1-5";
+        layoutEl.value = "auto";
+        modeEl.value = "or";
+        refresh();
+      });
+      $("btn-clear").addEventListener("click", function () {
+        $("expr").value = "";
+        refresh();
+        $("expr").focus();
+      });
+      $("btn-copy-desc").addEventListener("click", function () { copyText(lastDesc, $("btn-copy-desc")); });
+      $("btn-copy-built").addEventListener("click", function () { copyText(lastBuilt, $("btn-copy-built")); });
+      $("btn-use-built").addEventListener("click", function () {
+        if (!lastBuilt) return;
+        $("expr").value = lastBuilt;
+        layoutEl.value = "auto";
+        refresh();
+        $("expr").scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+
+      // Ctrl/Cmd+Enter re-runs the explanation from anywhere.
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          refresh();
+        }
+      });
+
+      // ---- boot ------------------------------------------------------------
+      renderBuilder();
+      updateBuilt();
+      $("expr").value = "*/15 * * * *";
+      refresh();
+    })();
+  </script>
+</body>
+</html>

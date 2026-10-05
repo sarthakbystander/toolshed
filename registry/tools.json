@@ -21,6 +21,28 @@
     }
   },
   {
+    "id": "cron-expression-lab",
+    "name": "Cron Expression Lab",
+    "description": "Explain, build and schedule cron expressions in your browser. Get a plain-language description, a per-field breakdown, and the next run times in any time zone with daylight-saving handled. Nothing is uploaded.",
+    "category": "Developer",
+    "tags": [
+      "cron",
+      "crontab",
+      "developer",
+      "parser",
+      "schedule",
+      "scheduler",
+      "timezone"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "csp-builder",
     "name": "Content Security Policy Builder",
     "description": "Build, validate, explain and export Content Security Policy headers in your browser. Score a policy, catch unsafe directives and copy it as a header, meta tag or server config. Nothing is uploaded.",
