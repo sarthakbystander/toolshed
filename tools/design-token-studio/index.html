@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Design Token Studio — Toolshed</title>
+  <meta name="description" content="Parse, normalize, inspect and convert design tokens between DTCG JSON, CSS variables, SCSS, Less, Tailwind, Swift and Android. Resolve aliases, catch broken or circular references, and check WCAG contrast — all locally in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / design-token-studio</div>
+      <h1>Design Token Studio</h1>
+      <p class="lede">Turn a pile of design tokens into something you can trust. Paste DTCG JSON, CSS variables, SCSS or Less; the studio normalizes every value, resolves aliases, flags broken and circular references, checks contrast, and exports to eight formats. Your tokens never leave this tab.</p>
+    </section>
+
+    <!-- ============================ INPUT + ANALYSIS ============================ -->
+    <section class="toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">1 · TOKENS</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+            <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="dts-format">Input format</label>
+          <select id="dts-format">
+            <option value="auto" selected>Auto-detect</option>
+            <option value="json">JSON (DTCG or flat)</option>
+            <option value="css">CSS variables</option>
+            <option value="scss">SCSS variables</option>
+            <option value="less">Less variables</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="dts-input">Token source</label>
+          <textarea id="dts-input" class="mono" spellcheck="false" autocomplete="off"
+            aria-describedby="dts-input-hint"
+            placeholder="Paste DTCG JSON, flat JSON, a :root { --token: value } block, SCSS $vars or Less @vars."></textarea>
+          <p class="hint" id="dts-input-hint">Everything is parsed in memory. Nothing is uploaded or saved.</p>
+        </div>
+
+        <div class="status hidden" id="dts-input-status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">2 · ANALYSIS</span>
+        </div>
+
+        <p class="dts-empty" id="dts-analysis-empty">Paste or load tokens to see a summary, reference issues and contrast checks.</p>
+
+        <div id="dts-analysis" hidden>
+          <div class="dts-stats" id="dts-stats"></div>
+
+          <div class="dts-issues" id="dts-issues" aria-live="polite"></div>
+
+          <div class="dts-note" id="dts-format-note"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ TOKEN LIST ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">3 · TOKENS</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-all" disabled>Copy all values</button>
+          </div>
+        </div>
+
+        <div class="dts-toolbar">
+          <div class="field dts-grow">
+            <label class="field-label" for="dts-search">Filter</label>
+            <input type="search" id="dts-search" class="mono" autocomplete="off" spellcheck="false"
+              placeholder="Search name, group, value or type">
+          </div>
+          <div class="field">
+            <label class="field-label" for="dts-kind">Type</label>
+            <select id="dts-kind">
+              <option value="all" selected>All types</option>
+              <option value="color">Color</option>
+              <option value="dimension">Dimension</option>
+              <option value="number">Number</option>
+              <option value="other">Other</option>
+              <option value="empty">Empty</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="dts-empty" id="dts-tokens-empty">No tokens to show yet.</p>
+        <div class="dts-tokens" id="dts-tokens"></div>
+      </div>
+    </section>
+
+    <!-- ============================ CONTRAST ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">4 · CONTRAST CHECKER</span>
+        </div>
+
+        <div class="dts-contrast-controls">
+          <div class="field">
+            <label class="field-label" for="dts-fg">Text color</label>
+            <select id="dts-fg"></select>
+          </div>
+          <div class="field">
+            <label class="field-label" for="dts-bg">Background</label>
+            <select id="dts-bg"></select>
+          </div>
+        </div>
+
+        <div class="dts-contrast-preview" id="dts-contrast-preview">
+          <span class="dts-contrast-sample" id="dts-contrast-sample">The quick brown fox</span>
+        </div>
+
+        <div class="dts-contrast-result" id="dts-contrast-result" role="status" aria-live="polite"></div>
+        <p class="hint">Ratios use the WCAG 2.1 relative-luminance formula. Translucent colors are composited over the background before measuring.</p>
+      </div>
+    </section>
+
+    <!-- ============================ EXPORT ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">5 · EXPORT</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-export" disabled>Copy</button>
+            <button type="button" class="btn" id="btn-download" disabled>Download</button>
+          </div>
+        </div>
+
+        <div class="dts-tabs" id="dts-tabs" role="tablist" aria-label="Export format"></div>
+
+        <div class="dts-export-options">
+          <div class="field">
+            <label class="field-label" for="dts-namecase">JSON key style</label>
+            <select id="dts-namecase">
+              <option value="kebab" selected>kebab-case</option>
+              <option value="snake">snake_case</option>
+              <option value="camel">camelCase</option>
+              <option value="pascal">PascalCase</option>
+            </select>
+          </div>
+          <label class="dts-check">
+            <input type="checkbox" id="dts-nested" checked>
+            <span>Nest JSON by name segments</span>
+          </label>
+        </div>
+
+        <pre class="dts-code" id="dts-output" tabindex="0" aria-label="Exported tokens" aria-live="polite"></pre>
+        <div class="status hidden" id="dts-export-status" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ============================ NOTES ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">HOW IT WORKS</span>
+        </div>
+        <div class="dts-notes" id="dts-notes"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var lib = window.Toolshed.designTokenStudio;
+
+      function $(id) { return document.getElementById(id); }
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+      function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+      function setStatus(node, message, kind) {
+        node.textContent = message || "";
+        node.classList.remove("hidden", "error", "ok");
+        if (!message) { node.classList.add("hidden"); return; }
+        if (kind) node.classList.add(kind);
+      }
+      function debounce(fn, ms) {
+        var handle = null;
+        return function () {
+          var args = arguments, self = this;
+          clearTimeout(handle);
+          handle = setTimeout(function () { fn.apply(self, args); }, ms);
+        };
+      }
+
+      // ---- state ---------------------------------------------------------
+      var state = {
+        parsed: null,       // { format, tokens, groups }
+        analysis: null,     // analyzeTokens() result
+        format: "css",      // export format
+        resolver: null,     // alias resolver for the current export format
+        exportOutput: "",
+        exportName: "tokens"
+      };
+
+      var EXPORT_META = {
+        json: { file: "tokens.json", mime: "application/json" },
+        dtcg: { file: "tokens.dtcg.json", mime: "application/json" },
+        css: { file: "tokens.css", mime: "text/css" },
+        scss: { file: "_tokens.scss", mime: "text/x-scss" },
+        less: { file: "tokens.less", mime: "text/x-less" },
+        tailwind: { file: "tailwind.config.js", mime: "text/javascript" },
+        swift: { file: "DesignTokens.swift", mime: "text/plain" },
+        android: { file: "tokens.xml", mime: "application/xml" }
+      };
+
+      // ---- parse + analyze ----------------------------------------------
+      var analyze = debounce(function () {
+        var text = $("dts-input").value;
+        var result = lib.parseTokens(text, { format: $("dts-format").value });
+
+        if (!result.ok) {
+          state.parsed = null;
+          state.analysis = null;
+          $("dts-analysis-empty").hidden = false;
+          $("dts-analysis").hidden = true;
+          $("dts-tokens-empty").hidden = false;
+          clear($("dts-tokens"));
+          setStatus($("dts-input-status"), result.error, "error");
+          $("btn-copy-all").disabled = true;
+          setExportState(false);
+          return;
+        }
+
+        setStatus($("dts-input-status"), "Parsed " + result.tokens.length + " token" +
+          (result.tokens.length === 1 ? "" : "s") + " from " + result.format.toUpperCase() + ".", "ok");
+
+        state.parsed = result;
+        state.analysis = lib.analyzeTokens(result.tokens);
+        $("dts-analysis-empty").hidden = true;
+        $("dts-analysis").hidden = false;
+
+        renderStats();
+        renderIssues();
+        renderFormatNote();
+        renderTokens();
+        renderContrastOptions();
+        renderExport();
+        $("btn-copy-all").disabled = result.tokens.length === 0;
+      }, 180);
+
+      // ---- analysis summary ---------------------------------------------
+      function statChip(label, value) {
+        var wrap = el("div", "dts-stat");
+        wrap.appendChild(el("span", "dts-stat-v", value));
+        wrap.appendChild(el("span", "dts-stat-k", label));
+        return wrap;
+      }
+
+      function renderStats() {
+        var a = state.analysis;
+        var box = $("dts-stats");
+        clear(box);
+        box.appendChild(statChip("tokens", a.tokens.length));
+        box.appendChild(statChip("groups", a.groups.length));
+        box.appendChild(statChip("colors", a.counts.color));
+        box.appendChild(statChip("dimensions", a.counts.dimension));
+        box.appendChild(statChip("numbers", a.counts.number));
+        var aliases = a.tokens.filter(function (t) { return t.refs.length > 0; }).length;
+        box.appendChild(statChip("aliases", aliases));
+      }
+
+      function issueBlock(kind, title, names, detail) {
+        var wrap = el("div", "dts-issue " + kind);
+        wrap.appendChild(el("span", "dts-issue-title", title));
+        wrap.appendChild(el("span", "dts-issue-detail", detail));
+        var list = el("div", "dts-issue-list");
+        names.slice(0, 12).forEach(function (n) {
+          list.appendChild(el("code", "dts-issue-name", n));
+        });
+        if (names.length > 12) list.appendChild(el("span", "dts-issue-more", "+" + (names.length - 12) + " more"));
+        wrap.appendChild(list);
+        return wrap;
+      }
+
+      function renderIssues() {
+        var box = $("dts-issues");
+        clear(box);
+        var issues = state.analysis.issues;
+
+        if (issues.cycles.length) {
+          box.appendChild(issueBlock("error", "Circular references", issues.cycles,
+            "These tokens eventually reference themselves, so they cannot resolve to a literal value."));
+        }
+        if (issues.broken.length) {
+          box.appendChild(issueBlock("error", "Broken references", issues.broken,
+            "These tokens reference a name that does not exist in the set. The raw value is kept as-is."));
+        }
+        if (issues.duplicates.length) {
+          box.appendChild(issueBlock("warn", "Duplicate names", issues.duplicates,
+            "Later definitions of the same name were ignored. Rename them so every token is distinct."));
+        }
+        if (!issues.cycles.length && !issues.broken.length && !issues.duplicates.length) {
+          box.appendChild(el("div", "dts-ok", "✓ No broken or circular references detected."));
+        }
+      }
+
+      function renderFormatNote() {
+        var note = $("dts-format-note");
+        clear(note);
+        var a = state.analysis;
+        var aliases = a.tokens.filter(function (t) { return t.refs.length > 0; });
+        if (!aliases.length) return;
+        var resolved = aliases.filter(function (t) { return t.resolved; }).length;
+        note.appendChild(el("span", "dts-note-k", "References"));
+        note.appendChild(el("span", "dts-note-v",
+          resolved + " of " + aliases.length + " aliases resolve to a literal value."));
+      }
+
+      // ---- token list ----------------------------------------------------
+      function renderTokens() {
+        var container = $("dts-tokens");
+        clear(container);
+        if (!state.analysis) return;
+
+        var filtered = lib.filterTokens(state.analysis.tokens, {
+          query: $("dts-search").value,
+          kind: $("dts-kind").value
+        });
+
+        if (!filtered.length) {
+          $("dts-tokens-empty").hidden = false;
+          $("dts-tokens-empty").textContent = state.analysis.tokens.length
+            ? "No tokens match that filter."
+            : "No tokens to show yet.";
+          return;
+        }
+        $("dts-tokens-empty").hidden = true;
+
+        lib.groupTokens(filtered).forEach(function (section) {
+          var block = el("div", "dts-group");
+          var head = el("div", "dts-group-head");
+          head.appendChild(el("span", "dts-group-name", section.group));
+          head.appendChild(el("span", "dts-group-count", section.tokens.length + " token" + (section.tokens.length === 1 ? "" : "s")));
+          block.appendChild(head);
+
+          section.tokens.forEach(function (t) {
+            block.appendChild(tokenRow(t));
+          });
+          container.appendChild(block);
+        });
+      }
+
+      function tokenRow(t) {
+        var row = el("div", "dts-token");
+
+        if (t.kind === "color" && t.color) {
+          var swatch = el("span", "dts-swatch");
+          swatch.style.backgroundColor = t.color.hex;
+          swatch.setAttribute("aria-hidden", "true");
+          row.appendChild(swatch);
+        } else {
+          row.appendChild(el("span", "dts-swatch dts-swatch-empty", kindGlyph(t.kind)));
+        }
+
+        var main = el("div", "dts-token-main");
+        main.appendChild(el("code", "dts-token-name", t.name));
+
+        var value = el("span", "dts-token-value");
+        value.appendChild(el("code", "mono", t.value));
+        if (t.color) value.appendChild(el("span", "dts-token-hex", t.color.hex));
+        main.appendChild(value);
+
+        var meta = el("div", "dts-token-meta");
+        meta.appendChild(el("span", "dts-tag", t.kind));
+        if (t.refs.length) {
+          meta.appendChild(el("span", "dts-tag dts-tag-ref", "→ " + t.refs.join(", ")));
+        }
+        if (!t.resolved && t.error) {
+          meta.appendChild(el("span", "dts-tag dts-tag-error", t.error));
+        }
+        if (t.usedBy > 0) {
+          meta.appendChild(el("span", "dts-tag", "used " + t.usedBy + "×"));
+        }
+        if (t.description) meta.appendChild(el("span", "dts-token-desc", t.description));
+        main.appendChild(meta);
+        row.appendChild(main);
+
+        var actions = el("div", "dts-token-actions");
+        var copyBtn = el("button", "btn secondary dts-copy", "Copy");
+        copyBtn.type = "button";
+        copyBtn.setAttribute("aria-label", "Copy value of " + t.name);
+        copyBtn.addEventListener("click", function () {
+          copyText(t.value, copyBtn, $("dts-input-status"));
+        });
+        actions.appendChild(copyBtn);
+        row.appendChild(actions);
+
+        return row;
+      }
+
+      function kindGlyph(kind) {
+        return kind === "dimension" ? "↔" : kind === "number" ? "#" : kind === "empty" ? "–" : "•";
+      }
+
+      // ---- contrast ------------------------------------------------------
+      function renderContrastOptions() {
+        var colors = state.analysis.tokens.filter(function (t) { return t.kind === "color" && t.color; });
+        var fg = $("dts-fg");
+        var bg = $("dts-bg");
+        var fgPrev = fg.value;
+        var bgPrev = bg.value;
+        clear(fg);
+        clear(bg);
+
+        colors.forEach(function (t) {
+          fg.appendChild(optionFor(t.name + "  " + t.color.hex, t.name));
+        });
+
+        bg.appendChild(optionFor("White  #ffffff", "__white"));
+        bg.appendChild(optionFor("Black  #000000", "__black"));
+        colors.forEach(function (t) {
+          bg.appendChild(optionFor(t.name + "  " + t.color.hex, t.name));
+        });
+
+        if (colors.length === 0) {
+          fg.appendChild(optionFor("No color tokens found", "__none"));
+          fg.disabled = true;
+        } else {
+          fg.disabled = false;
+          fg.value = colors.some(function (t) { return t.name === fgPrev; }) ? fgPrev : colors[0].name;
+        }
+
+        var bgNames = ["__white", "__black"].concat(colors.map(function (t) { return t.name; }));
+        bg.value = bgNames.indexOf(bgPrev) !== -1 ? bgPrev : "__white";
+
+        renderContrast();
+      }
+
+      function optionFor(label, value) {
+        var o = el("option", null, label);
+        o.value = value;
+        return o;
+      }
+
+      function colorFor(id) {
+        if (id === "__white") return lib.parseColor("#ffffff");
+        if (id === "__black") return lib.parseColor("#000000");
+        var t = state.analysis.tokens.filter(function (x) { return x.name === id; })[0];
+        return t && t.color ? t.color : null;
+      }
+
+      function renderContrast() {
+        var result = $("dts-contrast-result");
+        var sample = $("dts-contrast-sample");
+        clear(result);
+
+        var fg = colorFor($("dts-fg").value);
+        var bg = colorFor($("dts-bg").value);
+        if (!fg || !bg) {
+          result.appendChild(el("span", "dts-contrast-none", "Add color tokens to run a contrast check."));
+          return;
+        }
+
+        var solidFg = fg.a < 1 ? lib.blend(fg, bg) : fg;
+        var ratio = lib.contrastRatio(solidFg, bg);
+        var rating = lib.wcagRating(ratio);
+
+        sample.style.color = solidFg.hex || lib.rgbToHex(solidFg.r, solidFg.g, solidFg.b);
+        sample.style.backgroundColor = bg.hex || lib.rgbToHex(bg.r, bg.g, bg.b);
+
+        var big = el("div", "dts-contrast-ratio");
+        big.appendChild(el("span", "dts-contrast-num", ratio.toFixed(2) + ":1"));
+        big.appendChild(el("span", "dts-contrast-level " + ratingClass(rating), rating.level));
+        result.appendChild(big);
+
+        var badges = el("div", "dts-badges");
+        badges.appendChild(badge("AA text (4.5:1)", rating.aa));
+        badges.appendChild(badge("AAA text (7:1)", rating.aaa));
+        badges.appendChild(badge("AA large (3:1)", rating.aaLarge));
+        result.appendChild(badges);
+
+        if (fg.a < 1) {
+          result.appendChild(el("p", "hint",
+            "Foreground is translucent (alpha " + fg.a + "), composited over the background to " + solidFg.hex + " before measuring."));
+        }
+      }
+
+      function ratingClass(rating) {
+        if (rating.aaa) return "pass";
+        if (rating.aa) return "pass";
+        if (rating.aaLarge) return "warn";
+        return "fail";
+      }
+
+      function badge(label, ok) {
+        var b = el("span", "dts-badge " + (ok ? "pass" : "fail"));
+        b.appendChild(el("span", "dts-badge-mark", ok ? "✓" : "✕"));
+        b.appendChild(el("span", null, label));
+        return b;
+      }
+
+      // ---- export --------------------------------------------------------
+      var FORMAT_NOTES = {
+        json: "Plain JSON object of resolved values, useful as a base for other tools.",
+        dtcg: "W3C Design Tokens Community Group draft format with $value, $type and $description.",
+        css: "CSS custom properties in a :root block. Aliases export as var(--token).",
+        scss: "SCSS variables. Aliases export as $token references.",
+        less: "Less variables. Aliases export as @token references.",
+        tailwind: "A Tailwind theme.extend object, namespaced by the first name segment.",
+        swift: "A UIKit enum of UIColor constants and string values.",
+        android: "Android res/values resources split into color, dimen and string entries."
+      };
+
+      function renderTabs() {
+        var tabs = $("dts-tabs");
+        clear(tabs);
+        lib.listFormats().forEach(function (f) {
+          var b = el("button", "dts-tab", f.label);
+          b.type = "button";
+          b.setAttribute("role", "tab");
+          b.setAttribute("aria-selected", String(f.id === state.format));
+          b.dataset.id = f.id;
+          b.title = f.hint;
+          b.addEventListener("click", function () { setFormat(f.id); });
+          tabs.appendChild(b);
+        });
+      }
+
+      function setFormat(id) {
+        state.format = id;
+        Array.prototype.forEach.call($("dts-tabs").children, function (b) {
+          b.setAttribute("aria-selected", String(b.dataset.id === id));
+        });
+        renderExport();
+      }
+
+      function buildResolver(format, tokens) {
+        var byKey = Object.create(null);
+        tokens.forEach(function (t) { byKey[lib.normalizeName(t.name)] = t; });
+        return function (t) {
+          if (!t.refs || t.refs.length !== 1 || !t.resolved) return null;
+          var ref = byKey[lib.normalizeName(t.refs[0])];
+          if (!ref) return null;
+          if (format === "css") return "var(--" + ref.name + ")";
+          if (format === "scss") return "$" + ref.name;
+          if (format === "less") return "@" + ref.name;
+          return null;
+        };
+      }
+
+      function renderExport() {
+        var out = $("dts-output");
+        if (!state.analysis || !state.analysis.tokens.length) {
+          out.textContent = "Export appears here once tokens are parsed.";
+          setExportState(false);
+          return;
+        }
+        state.resolver = buildResolver(state.format, state.analysis.tokens);
+        var result = lib.serialize(state.format, state.analysis.tokens, {
+          resolver: state.resolver,
+          nested: $("dts-nested").checked,
+          nameCase: $("dts-namecase").value
+        });
+        if (!result.ok) {
+          out.textContent = result.error;
+          setExportState(false);
+          return;
+        }
+        state.exportOutput = result.output;
+        out.textContent = result.output;
+        setExportState(true);
+      }
+
+      function setExportState(enabled) {
+        $("btn-copy-export").disabled = !enabled;
+        $("btn-download").disabled = !enabled;
+        if (!enabled) state.exportOutput = "";
+      }
+
+      // ---- clipboard + download ------------------------------------------
+      function copyText(text, button, statusNode) {
+        if (!text) return;
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus(statusNode, "Clipboard API unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = button.textContent;
+          button.textContent = "Copied ✓";
+          setTimeout(function () { button.textContent = old; }, 1400);
+        }).catch(function () {
+          setStatus(statusNode, "Copy was blocked by the browser.", "error");
+        });
+      }
+
+      function download() {
+        if (!state.exportOutput) return;
+        var meta = EXPORT_META[state.format] || { file: "tokens.txt", mime: "text/plain" };
+        var blob = new Blob([state.exportOutput], { type: meta.mime + ";charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = meta.file;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setStatus($("dts-export-status"), "Downloaded " + meta.file + ".", "ok");
+      }
+
+      // ---- samples / clear ------------------------------------------------
+      function loadSample() {
+        var text = lib.getSample("dtcg-json");
+        if (!text) return;
+        $("dts-input").value = text;
+        $("dts-format").value = "json";
+        analyze();
+      }
+
+      function clearAll() {
+        $("dts-input").value = "";
+        $("dts-search").value = "";
+        $("dts-kind").value = "all";
+        analyze();
+        $("dts-input").focus();
+      }
+
+      // ---- notes ----------------------------------------------------------
+      var NOTES = [
+        "Input is auto-detected from the first meaningful characters: a leading { or [ is JSON, :root or --name: is CSS, $name: is SCSS and @name: is Less. Override the format any time.",
+        "Aliases resolve transitively. {color.brand} and var(--color-brand) both point at the same token, so a chain like color-accent → color-brand → #b3402a collapses to the literal value.",
+        "Circular references and unknown targets are reported as issues rather than thrown errors; the raw value is preserved so you can still export and fix it.",
+        "When a name like color-brand and a group color-brand-strong collide, the leaf value is kept under a _value key so nothing is silently dropped.",
+        "Colors are normalized through #rgb, #rgba, #rrggbb, #rrggbbaa, rgb()/rgba() and hsl()/hsla() (comma or space syntax)."
+      ];
+
+      function renderNotes() {
+        var box = $("dts-notes");
+        clear(box);
+        NOTES.forEach(function (n) { box.appendChild(el("p", "dts-note", n)); });
+      }
+
+      // ---- wiring ---------------------------------------------------------
+      $("dts-input").addEventListener("input", analyze);
+      $("dts-format").addEventListener("change", analyze);
+      $("dts-search").addEventListener("input", debounce(renderTokens, 120));
+      $("dts-kind").addEventListener("change", renderTokens);
+      $("dts-nested").addEventListener("change", renderExport);
+      $("dts-namecase").addEventListener("change", renderExport);
+      $("dts-fg").addEventListener("change", renderContrast);
+      $("dts-bg").addEventListener("change", renderContrast);
+      $("btn-sample").addEventListener("click", loadSample);
+      $("btn-clear").addEventListener("click", clearAll);
+      $("btn-copy-export").addEventListener("click", function () {
+        copyText(state.exportOutput, $("btn-copy-export"), $("dts-export-status"));
+      });
+      $("btn-download").addEventListener("click", download);
+      $("btn-copy-all").addEventListener("click", function () {
+        if (!state.analysis) return;
+        var text = state.analysis.tokens.map(function (t) { return t.name + ": " + t.value; }).join("\n");
+        copyText(text, $("btn-copy-all"), $("dts-input-status"));
+      });
+
+      // ---- boot -----------------------------------------------------------
+      renderTabs();
+      renderNotes();
+      loadSample();
+    })();
+  </script>
+</body>
+</html>
