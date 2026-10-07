@@ -1,0 +1,14 @@
+{
+  "id": "jwt-inspector",
+  "name": "JWT Inspector",
+  "description": "Decode, analyse, verify and create JSON Web Tokens in your browser. Inspect the header and claims, check expiry, review security issues, and verify or produce HMAC, RSA, ECDSA and EdDSA signatures. Nothing is uploaded.",
+  "category": "Developer",
+  "tags": ["claims", "developer", "jose", "jws", "jwt", "security", "sign", "token", "verify"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
