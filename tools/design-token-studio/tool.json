@@ -1,0 +1,14 @@
+{
+  "id": "design-token-studio",
+  "name": "Design Token Studio",
+  "description": "Parse, normalize, inspect and convert design tokens between DTCG JSON, CSS variables, SCSS, Less, Tailwind, Swift and Android. Resolve aliases, catch broken or circular references and check WCAG contrast — all locally in your browser.",
+  "category": "Design",
+  "tags": ["color", "css", "design", "design-tokens", "dtcg", "scss", "tailwind", "theme", "wcag"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
