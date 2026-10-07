@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>JWT Inspector — Toolshed</title>
+  <meta name="description" content="Decode, analyse, verify and create JSON Web Tokens in your browser. See the header and claims, check exp/nbf, review security issues, verify HMAC, RSA, ECDSA and EdDSA signatures, and sign your own tokens. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / jwt-inspector</div>
+      <h1>JWT Inspector</h1>
+      <p class="lede">Paste a JSON Web Token to read its header and claims, see when it expires, review the security issues it carries, and verify its signature against a secret, a PEM key or a JWKS. Or build and sign a token of your own. Everything runs locally in your tab — tokens and keys never leave the page.</p>
+    </section>
+
+    <!-- ============================ DECODE ============================ -->
+    <section class="toolbody jwt-toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">1 · TOKEN</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-sample">HS256 sample</button>
+            <button type="button" class="btn secondary" id="btn-sample-rs256">RS256 sample</button>
+            <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <label class="jwt-label" for="token">Paste a JWT</label>
+        <textarea id="token" class="jwt-token" spellcheck="false" autocomplete="off" autocapitalize="off"
+          placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.…"
+          aria-describedby="token-hint"></textarea>
+        <p class="hint" id="token-hint">The <code>Bearer</code> prefix and surrounding quotes are stripped automatically. Decoding is read-only and works on any three-part token, valid signature or not.</p>
+
+        <div class="jwt-meta" id="meta" aria-live="polite"></div>
+        <div class="status hidden" id="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">2 · SECURITY REVIEW</span>
+          <span class="jwt-count" id="sec-count"></span>
+        </div>
+        <ul class="jwt-issues" id="issues" aria-live="polite">
+          <li class="jwt-empty">Decode a token to see its security review.</li>
+        </ul>
+        <p class="hint">This review flags well-known JWT pitfalls (missing expiry, <code>alg: none</code>, algorithm confusion, oversized lifetimes, sensitive-looking claims). It is guidance, not a substitute for validating tokens against your own policy.</p>
+      </div>
+    </section>
+
+    <!-- ============================ HEADER + CLAIMS ============================ -->
+    <section class="toolbody jwt-toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">3 · HEADER</span>
+          <button type="button" class="btn secondary" id="btn-copy-header" disabled>Copy JSON</button>
+        </div>
+        <div class="jwt-code" id="header-view"><span class="jwt-empty">No header decoded yet.</span></div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">4 · PAYLOAD (CLAIMS)</span>
+          <button type="button" class="btn secondary" id="btn-copy-payload" disabled>Copy JSON</button>
+        </div>
+        <div class="jwt-code" id="payload-view"><span class="jwt-empty">No payload decoded yet.</span></div>
+      </div>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">5 · CLAIM BREAKDOWN</span>
+        </div>
+        <div class="jwt-tablewrap">
+          <table class="jwt-table">
+            <caption class="hidden">Registered and custom claims with their values and status</caption>
+            <thead>
+              <tr>
+                <th scope="col">Claim</th>
+                <th scope="col">Name</th>
+                <th scope="col">Value</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody id="claims">
+              <tr><td colspan="4" class="jwt-empty">No claims to show.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ VERIFY ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">6 · VERIFY SIGNATURE</span>
+          <button type="button" class="btn" id="btn-verify" disabled>Verify signature</button>
+        </div>
+
+        <p class="hint">The algorithm is taken from the token header. For <strong>HS256/384/512</strong> paste the shared secret (or an <code>oct</code> JWK). For <strong>RS*, PS*, ES*, EdDSA</strong> paste the public key as PEM or a JWK. The signature is checked against the exact original segments, never a re-serialised copy.</p>
+
+        <label class="jwt-label" for="verify-key">Key material</label>
+        <textarea id="verify-key" class="jwt-key" spellcheck="false" autocomplete="off" autocapitalize="off"
+          placeholder="Paste a secret, a -----BEGIN PUBLIC KEY----- PEM block, or a JWK JSON object"></textarea>
+
+        <div class="jwt-verdict hidden" id="verify-verdict" role="status" aria-live="polite"></div>
+
+        <details class="jwt-details">
+          <summary>Verify against a JWKS</summary>
+          <p class="hint">Paste a JWKS (the JSON with a <code>keys</code> array) as served by your identity provider. Keys whose <code>kid</code> or <code>alg</code> do not match the token are skipped.</p>
+          <textarea id="jwks" class="jwt-key" spellcheck="false" autocomplete="off" autocapitalize="off"
+            placeholder='{"keys":[{"kty":"RSA","kid":"…","n":"…","e":"AQAB"}]}'></textarea>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-verify-jwks" disabled>Verify with JWKS</button>
+          </div>
+          <div class="jwt-verdict hidden" id="jwks-verdict" role="status" aria-live="polite"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============================ CREATE ============================ -->
+    <section class="toolbody jwt-toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">7 · BUILD A TOKEN</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-sample-payload">Sample payload</button>
+            <button type="button" class="btn" id="btn-sign">Sign</button>
+          </div>
+        </div>
+
+        <div class="jwt-controls">
+          <div class="jwt-field">
+            <label class="jwt-label" for="sign-alg">Algorithm</label>
+            <select id="sign-alg"></select>
+          </div>
+          <div class="jwt-field">
+            <label class="jwt-label" for="sign-kid">Key ID (kid, optional)</label>
+            <input type="text" id="sign-kid" class="mono" autocomplete="off" spellcheck="false" placeholder="e.g. 2024-06">
+          </div>
+        </div>
+
+        <label class="jwt-label" for="sign-payload">Payload (JSON)</label>
+        <textarea id="sign-payload" class="jwt-key" spellcheck="false" autocomplete="off"></textarea>
+
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-add-times">Add iat / exp (1 h)</button>
+        </div>
+
+        <label class="jwt-label" for="sign-key">Key material</label>
+        <textarea id="sign-key" class="jwt-key" spellcheck="false" autocomplete="off"
+          placeholder="For HS*: a shared secret. For RS*/PS*/ES*/EdDSA: a private key as PEM or JWK."></textarea>
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-gen-secret">Generate random secret</button>
+        </div>
+        <div class="status hidden" id="sign-status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">8 · SIGNED TOKEN</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-signed" disabled>Copy</button>
+            <button type="button" class="btn secondary" id="btn-inspect-signed" disabled>Inspect this token</button>
+          </div>
+        </div>
+        <div class="jwt-code jwt-signed" id="signed-view"><span class="jwt-empty">Signed tokens appear here.</span></div>
+        <p class="hint">Signing happens in your browser with the Web Crypto API. Nothing is sent anywhere, and the key you type is used only for this operation.</p>
+      </div>
+    </section>
+
+    <!-- ============================ REFERENCE ============================ -->
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">JWT REFERENCE</span>
+        </div>
+        <div class="jwt-ref">
+          <dl>
+            <dt>Structure</dt><dd><code>base64url(header).base64url(payload).base64url(signature)</code> — three dot-separated segments.</dd>
+            <dt>Signing input</dt><dd>Exactly <code>header.payload</code> (the first two segments). Any re-serialisation changes the signature.</dd>
+            <dt>exp / nbf / iat</dt><dd>NumericDate values in <strong>seconds</strong> since the Unix epoch, not milliseconds.</dd>
+            <dt>aud</dt><dd>A single string or an array of strings.</dd>
+            <dt>alg</dt><dd>Must be pinned by the verifier. Trusting the token's own <code>alg</code> enables algorithm-confusion and <code>none</code> attacks.</dd>
+          </dl>
+
+          <div class="jwt-section-title">Registered claims</div>
+          <p class="jwt-note">The tool labels the standard claims: <code>iss</code> (issuer), <code>sub</code> (subject), <code>aud</code> (audience), <code>exp</code> (expiration), <code>nbf</code> (not before), <code>iat</code> (issued at), <code>jti</code> (id), and OpenID Connect extras such as <code>auth_time</code>, <code>nonce</code>, <code>acr</code>, <code>amr</code> and <code>azp</code>.</p>
+
+          <div class="jwt-section-title">Supported algorithms</div>
+          <p class="jwt-note"><code>HS256/384/512</code> (HMAC), <code>RS256/384/512</code> (RSA PKCS#1 v1.5), <code>PS256/384/512</code> (RSA-PSS), <code>ES256/384/512</code> (ECDSA) and <code>EdDSA</code> (Ed25519). Verification uses the Web Crypto API; ECDSA signatures must be in the raw <code>r‖s</code> form used by JWS.</p>
+
+          <div class="jwt-section-title">A note on trust</div>
+          <p class="jwt-note">Decoding proves nothing. A readable payload only means it was Base64url-encoded — anyone can produce one. Always verify the signature, and pin the expected algorithm on the server.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var lib = window.Toolshed.jwtInspector;
+
+      function $(id) { return document.getElementById(id); }
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+      function span(cls, text) { return el("span", cls, text); }
+      function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+      function setStatus(node, message, kind) {
+        node.textContent = message || "";
+        node.classList.remove("hidden", "error", "ok");
+        if (!message) { node.classList.add("hidden"); return; }
+        if (kind) node.classList.add(kind);
+      }
+
+      // ---------------------------------------------------------------
+      // Samples
+      // ---------------------------------------------------------------
+
+      var SAMPLE_HS256 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VyXzQ4MjEiLCJhdWQiOiJhcGkuZXhhbXBsZS5jb20iLCJpYXQiOjE3MzU2ODk2MDAsIm5iZiI6MTczNTY4OTYwMCwiZXhwIjo0MTAyNDQ0ODAwLCJqdGkiOiI4ZjNhMWMyZSIsInNjb3BlIjoicmVhZDpwcm9maWxlIHdyaXRlOm9yZGVycyJ9.WpWKKkIOb-SclDQTZCvXRA1bLMDb7YwHtuLWoUOn24I";
+      var SAMPLE_HS256_SECRET = "demo-secret-not-a-real-key";
+
+      var SAMPLE_RS256 = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNhbXBsZS1yc2EtMSJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5leGFtcGxlLm9yZyIsInN1YiI6InN2Y185ZjIxIiwiYXVkIjpbImh0dHBzOi8vYXBpLmV4YW1wbGUub3JnIiwiaHR0cHM6Ly9hZG1pbi5leGFtcGxlLm9yZyJdLCJpYXQiOjE3OTEzNDQ2OTQsIm5iZiI6MTc5MTM0NDY5NCwiZXhwIjo0MTAyNDQ0ODAwLCJqdGkiOiJhMWIyYzNkNCIsInJvbGUiOiJlZGl0b3IifQ.JHTHCE6uN_URgxsypfwr8wmllOad8axx-uPa6ymf3gxFpr4bPjljQdPxlgwVoYIMWyDtOCscCSdvV1CkBJkHiqVvuqNIEfHrYyxtWOG4VJ8HVgdhZNdtGXvyDpCj8ti-q8w4B0kd6VjBHNiDj7FnCs1oWAymrCCflje0MLrdr-fYLxayNv2LUf_cfT-L1-hZSVmHiCGYCgIRPBzTHL1_45Hb-cYO6GEbT-rmx6c4Hyo_Nx2E6_kfqyjUI67lJl0fJGR9vb9Rhxnd257nPtnlbsDHPTeC909po03JMq03HtCbExFMzrqTt2rLLVIP_gYk7ol046OsHTX5-gBXqEKQzA";
+      var SAMPLE_RS256_PEM = [
+        "-----BEGIN PUBLIC KEY-----",
+        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwNHK1Zsj/hNoV/IjtwH4",
+        "LfLybtz2gep5Bgt3LDwdwEA5ydgGTTV/mJQiZK1eIV3iG0Jz2/9b46h8igY7A0XT",
+        "tBivLhqflHjR2zehsZYkWWQuYT0i6MQ0HF62KPrSMUXFqX0k3y/hRoGg6h8v5G5d",
+        "U5PUCH8jauCPl0dpopgJMAlG1l5ZA6K+wh8nNu7YJ42aS4+M/mcp6U5cSemQKdCv",
+        "/za6G1LP1X1ViCVRRigiNPSmjX+AunQbKCPAUVpD1XAqNEAWABtj/91bWKXRqGpW",
+        "T6mQoMkk8ejToGmgFa/i7wSGGoYJo4sK5wecCm8tXORPN2QSuUXGQFJch2hcCqUW",
+        "xQIDAQAB",
+        "-----END PUBLIC KEY-----"
+      ].join("\n");
+      var SAMPLE_RS256_JWKS = JSON.stringify({ keys: [{
+        kty: "RSA",
+        n: "wNHK1Zsj_hNoV_IjtwH4LfLybtz2gep5Bgt3LDwdwEA5ydgGTTV_mJQiZK1eIV3iG0Jz2_9b46h8igY7A0XTtBivLhqflHjR2zehsZYkWWQuYT0i6MQ0HF62KPrSMUXFqX0k3y_hRoGg6h8v5G5dU5PUCH8jauCPl0dpopgJMAlG1l5ZA6K-wh8nNu7YJ42aS4-M_mcp6U5cSemQKdCv_za6G1LP1X1ViCVRRigiNPSmjX-AunQbKCPAUVpD1XAqNEAWABtj_91bWKXRqGpWT6mQoMkk8ejToGmgFa_i7wSGGoYJo4sK5wecCm8tXORPN2QSuUXGQFJch2hcCqUWxQ",
+        e: "AQAB", kid: "sample-rsa-1", alg: "RS256", use: "sig"
+      }] });
+
+      // ---------------------------------------------------------------
+      // JSON rendering (DOM nodes only — never innerHTML)
+      // ---------------------------------------------------------------
+
+      function pad(n) { var s = ""; for (var i = 0; i < n; i++) s += "  "; return s; }
+
+      function jsonNodes(value, depth) {
+        var frag = document.createDocumentFragment();
+        var inner = pad(depth + 1);
+        var outer = pad(depth);
+
+        if (value === null) { frag.appendChild(span("j-null", "null")); return frag; }
+        if (Array.isArray(value)) {
+          if (value.length === 0) { frag.appendChild(span("j-brace", "[]")); return frag; }
+          frag.appendChild(span("j-brace", "[\n"));
+          value.forEach(function (v, i) {
+            frag.appendChild(document.createTextNode(inner));
+            frag.appendChild(jsonNodes(v, depth + 1));
+            frag.appendChild(document.createTextNode(i < value.length - 1 ? ",\n" : "\n"));
+          });
+          frag.appendChild(document.createTextNode(outer));
+          frag.appendChild(span("j-brace", "]"));
+          return frag;
+        }
+        if (typeof value === "object") {
+          var keys = Object.keys(value);
+          if (keys.length === 0) { frag.appendChild(span("j-brace", "{}")); return frag; }
+          frag.appendChild(span("j-brace", "{\n"));
+          keys.forEach(function (k, i) {
+            frag.appendChild(document.createTextNode(inner));
+            frag.appendChild(span("j-key", JSON.stringify(k)));
+            frag.appendChild(span("j-brace", ": "));
+            frag.appendChild(jsonNodes(value[k], depth + 1));
+            frag.appendChild(document.createTextNode(i < keys.length - 1 ? ",\n" : "\n"));
+          });
+          frag.appendChild(document.createTextNode(outer));
+          frag.appendChild(span("j-brace", "}"));
+          return frag;
+        }
+        if (typeof value === "string") frag.appendChild(span("j-str", JSON.stringify(value)));
+        else if (typeof value === "number") frag.appendChild(span("j-num", String(value)));
+        else if (typeof value === "boolean") frag.appendChild(span("j-bool", String(value)));
+        else frag.appendChild(span("j-null", String(value)));
+        return frag;
+      }
+
+      function renderJson(container, value) {
+        clear(container);
+        var pre = el("pre", "jwt-json");
+        pre.appendChild(jsonNodes(value, 0));
+        container.appendChild(pre);
+      }
+
+      // ---------------------------------------------------------------
+      // State
+      // ---------------------------------------------------------------
+
+      var current = null;
+
+      function renderEmpty() {
+        current = null;
+        clear($("meta"));
+        setStatus($("status"), "");
+        clear($("issues"));
+        $("issues").appendChild(el("li", "jwt-empty", "Decode a token to see its security review."));
+        $("sec-count").textContent = "";
+        clear($("header-view"));
+        $("header-view").appendChild(el("span", "jwt-empty", "No header decoded yet."));
+        clear($("payload-view"));
+        $("payload-view").appendChild(el("span", "jwt-empty", "No payload decoded yet."));
+        clear($("claims"));
+        var tr = el("tr");
+        var td = el("td", "jwt-empty", "No claims to show.");
+        td.colSpan = 4;
+        tr.appendChild(td);
+        $("claims").appendChild(tr);
+        ["btn-copy-header", "btn-copy-payload", "btn-verify", "btn-verify-jwks"].forEach(function (id) { $(id).disabled = true; });
+      }
+
+      function chip(k, v, cls) {
+        var c = el("span", "jwt-chip" + (cls ? " " + cls : ""));
+        c.appendChild(span("jwt-chip-k", k));
+        c.appendChild(span("jwt-chip-v", v));
+        return c;
+      }
+
+      function inspect() {
+        var raw = $("token").value;
+        if (raw.trim() === "") { renderEmpty(); return; }
+
+        var res = lib.analyzeToken(raw);
+        if (!res.ok) {
+          renderEmpty();
+          setStatus($("status"), res.error, "error");
+          return;
+        }
+        current = res;
+        setStatus($("status"), "");
+
+        var header = res.parsed.header;
+        var alg = header.alg || "—";
+        var meta = $("meta");
+        clear(meta);
+        meta.appendChild(chip("alg", String(alg), res.expired ? "danger" : ""));
+        if (header.typ) meta.appendChild(chip("typ", String(header.typ)));
+        if (header.kid) meta.appendChild(chip("kid", String(header.kid)));
+        if (typeof res.parsed.payload.exp === "number") {
+          meta.appendChild(chip("exp", lib.formatDate(res.parsed.payload.exp), res.expired ? "danger" : "ok"));
+        }
+        meta.appendChild(chip("size", res.sizeLabel));
+
+        renderJson($("header-view"), res.parsed.header);
+        renderJson($("payload-view"), res.parsed.payload);
+        renderClaims(res.claims);
+        renderSecurity(res.security);
+        $("btn-copy-header").disabled = false;
+        $("btn-copy-payload").disabled = false;
+        $("btn-verify").disabled = false;
+        $("btn-verify-jwks").disabled = false;
+
+        // Keep the verify panel's verdict honest when the token changes.
+        hideVerdict($("verify-verdict"));
+        hideVerdict($("jwks-verdict"));
+      }
+
+      function renderClaims(claims) {
+        var body = $("claims");
+        clear(body);
+        if (!claims.length) {
+          var tr = el("tr");
+          var td = el("td", "jwt-empty", "The payload has no claims.");
+          td.colSpan = 4;
+          tr.appendChild(td);
+          body.appendChild(tr);
+          return;
+        }
+        claims.forEach(function (c) {
+          var tr = el("tr");
+          tr.appendChild(el("td", "jwt-claim mono", c.key));
+          tr.appendChild(el("td", "jwt-claim-name", c.label || "—"));
+          tr.appendChild(el("td", "jwt-claim-value mono", c.display));
+          var note = el("td", "jwt-claim-note");
+          if (c.note) note.appendChild(document.createTextNode(c.note));
+          if (c.status) {
+            var badge = span("jwt-badge " + c.status, c.status === "danger" ? "invalid" : c.status === "warn" ? "caution" : "ok");
+            note.appendChild(badge);
+          }
+          tr.appendChild(note);
+          body.appendChild(tr);
+        });
+      }
+
+      function renderSecurity(issues) {
+        var list = $("issues");
+        clear(list);
+        var dangers = issues.filter(function (i) { return i.level === "danger"; }).length;
+        var warns = issues.filter(function (i) { return i.level === "warn"; }).length;
+        $("sec-count").textContent = issues.length === 0
+          ? "no issues found"
+          : (dangers + warns === 0 ? issues.length + " note(s)" : dangers + " critical · " + warns + " warning");
+
+        if (!issues.length) {
+          list.appendChild(el("li", "jwt-issue ok", "No issues found in this token."));
+          return;
+        }
+        issues.forEach(function (issue) {
+          var li = el("li", "jwt-issue " + issue.level);
+          li.appendChild(span("jwt-badge " + issue.level, issue.level));
+          li.appendChild(span("jwt-issue-text", issue.text));
+          list.appendChild(li);
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Verify
+      // ---------------------------------------------------------------
+
+      function showVerdict(node, ok, text, detail) {
+        clear(node);
+        node.classList.remove("hidden");
+        node.classList.toggle("ok", !!ok);
+        node.classList.toggle("error", !ok);
+        node.appendChild(span("jwt-verdict-icon", ok ? "✓" : "✕"));
+        var body = el("div", "jwt-verdict-body");
+        body.appendChild(span("jwt-verdict-text", text));
+        if (detail) body.appendChild(span("jwt-verdict-detail", detail));
+        node.appendChild(body);
+      }
+      function hideVerdict(node) { node.classList.add("hidden"); clear(node); }
+
+      function doVerify() {
+        if (!current) { setStatus($("status"), "Decode a token first.", "error"); return; }
+        var material = $("verify-key").value;
+        if (material.trim() === "") { showVerdict($("verify-verdict"), false, "No key material provided.", "Paste a secret, a public key PEM, or a JWK."); return; }
+        var btn = $("btn-verify");
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = "Verifying…";
+        lib.verifyJwt($("token").value, material).then(function (r) {
+          btn.disabled = false;
+          btn.textContent = original;
+          if (r.ok && r.valid) {
+            showVerdict($("verify-verdict"), true, "Signature is valid.", "Verified with " + r.algorithm + ".");
+          } else if (r.ok && !r.valid) {
+            showVerdict($("verify-verdict"), false, "Signature does not match.", (r.hint ? r.hint + " " : "") + "The key is wrong or the token was altered.");
+          } else {
+            showVerdict($("verify-verdict"), false, "Could not verify.", r.error || "Unknown error.");
+          }
+        });
+      }
+
+      function doVerifyJwks() {
+        if (!current) { setStatus($("status"), "Decode a token first.", "error"); return; }
+        var parsed = lib.parseJwks($("jwks").value);
+        if (!parsed.ok) { showVerdict($("jwks-verdict"), false, "Invalid JWKS.", parsed.error); return; }
+        var btn = $("btn-verify-jwks");
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = "Verifying…";
+        lib.verifyJwtWithJwks($("token").value, parsed).then(function (r) {
+          btn.disabled = false;
+          btn.textContent = original;
+          if (r.ok && r.valid) {
+            var k = r.key || {};
+            showVerdict($("jwks-verdict"), true, "Signature is valid.",
+              "Matched key " + (k.kid ? "\"" + k.kid + "\"" : "(no kid)") + (k.alg ? " (" + k.alg + ")" : "") + " after trying " + r.tried + " key(s).");
+          } else if (r.ok && !r.valid) {
+            showVerdict($("jwks-verdict"), false, "No key matched.", r.error);
+          } else {
+            showVerdict($("jwks-verdict"), false, "Could not verify.", r.error || "Unknown error.");
+          }
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Create / sign
+      // ---------------------------------------------------------------
+
+      var algSelect = $("sign-alg");
+      Object.keys(lib.JWS_ALGORITHMS).forEach(function (name) {
+        var o = el("option", null, name);
+        o.value = name;
+        algSelect.appendChild(o);
+      });
+      algSelect.value = "HS256";
+
+      function samplePayload() {
+        var now = Math.floor(Date.now() / 1000);
+        return {
+          iss: "https://auth.example.com",
+          sub: "user_4821",
+          aud: "api.example.com",
+          iat: now,
+          nbf: now,
+          exp: now + 3600,
+          jti: "8f3a1c2e-6b1d-4f2a-9c3e-1a2b3c4d5e6f",
+          scope: "read:profile write:orders"
+        };
+      }
+
+      function setSamplePayload() {
+        $("sign-payload").value = JSON.stringify(samplePayload(), null, 2);
+        setStatus($("sign-status"), "");
+      }
+
+      function addTimes() {
+        var text = $("sign-payload").value.trim();
+        var obj;
+        try { obj = text === "" ? {} : JSON.parse(text); }
+        catch (e) { setStatus($("sign-status"), "Payload is not valid JSON: " + e.message, "error"); return; }
+        if (obj === null || typeof obj !== "object" || Array.isArray(obj)) { setStatus($("sign-status"), "Payload must be a JSON object.", "error"); return; }
+        var now = Math.floor(Date.now() / 1000);
+        obj.iat = now;
+        obj.nbf = now;
+        obj.exp = now + 3600;
+        $("sign-payload").value = JSON.stringify(obj, null, 2);
+        setStatus($("sign-status"), "Added iat, nbf and exp (valid for one hour).", "ok");
+      }
+
+      function generateSecret() {
+        if (!window.crypto || !window.crypto.getRandomValues) {
+          setStatus($("sign-status"), "crypto.getRandomValues is unavailable in this browser.", "error");
+          return;
+        }
+        var bytes = new Uint8Array(32);
+        window.crypto.getRandomValues(bytes);
+        $("sign-key").value = lib.bytesToBase64Url(bytes);
+        setStatus($("sign-status"), "Generated a 32-byte secret (Base64url).", "ok");
+      }
+
+      function doSign() {
+        var alg = algSelect.value;
+        var header = { alg: alg };
+        var kid = $("sign-kid").value.trim();
+        if (kid) header.kid = kid;
+
+        var payloadText = $("sign-payload").value.trim();
+        if (payloadText === "") { setStatus($("sign-status"), "Enter a payload object first.", "error"); return; }
+        var payload;
+        try { payload = JSON.parse(payloadText); }
+        catch (e) { setStatus($("sign-status"), "Payload is not valid JSON: " + e.message, "error"); return; }
+        if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+          setStatus($("sign-status"), "Payload must be a JSON object.", "error");
+          return;
+        }
+        var material = $("sign-key").value;
+        if (material.trim() === "") { setStatus($("sign-status"), "Enter key material first.", "error"); return; }
+
+        var btn = $("btn-sign");
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = "Signing…";
+        lib.signJwt(header, payload, material).then(function (r) {
+          btn.disabled = false;
+          btn.textContent = original;
+          if (!r.ok) {
+            setStatus($("sign-status"), r.error || "Signing failed.", "error");
+            $("signed-view").dataset.token = "";
+            $("btn-copy-signed").disabled = true;
+            $("btn-inspect-signed").disabled = true;
+            return;
+          }
+          setStatus($("sign-status"), "Signed with " + alg + ".", "ok");
+          renderSigned(r.token);
+        });
+      }
+
+      function renderSigned(token) {
+        var view = $("signed-view");
+        clear(view);
+        view.dataset.token = token;
+        // Wrap the three segments so each is visually distinct.
+        var parts = token.split(".");
+        var pre = el("pre", "jwt-json");
+        pre.appendChild(span("jwt-seg-h", parts[0]));
+        pre.appendChild(span("jwt-dot", "."));
+        pre.appendChild(span("jwt-seg-p", parts[1]));
+        pre.appendChild(span("jwt-dot", "."));
+        pre.appendChild(span("jwt-seg-s", parts[2]));
+        view.appendChild(pre);
+        $("btn-copy-signed").disabled = false;
+        $("btn-inspect-signed").disabled = false;
+      }
+
+      // ---------------------------------------------------------------
+      // Clipboard
+      // ---------------------------------------------------------------
+
+      function copyText(text, button, statusNode) {
+        if (!text) return;
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus(statusNode || $("status"), "Clipboard API unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = button.textContent;
+          button.textContent = "Copied ✓";
+          setTimeout(function () { button.textContent = old; }, 1400);
+        }).catch(function () {
+          setStatus(statusNode || $("status"), "Copy was blocked by the browser.", "error");
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Wiring
+      // ---------------------------------------------------------------
+
+      var debounce = null;
+      $("token").addEventListener("input", function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(inspect, 120);
+      });
+
+      $("btn-sample").addEventListener("click", function () {
+        $("token").value = SAMPLE_HS256;
+        $("verify-key").value = SAMPLE_HS256_SECRET;
+        $("jwks").value = "";
+        inspect();
+      });
+      $("btn-sample-rs256").addEventListener("click", function () {
+        $("token").value = SAMPLE_RS256;
+        $("verify-key").value = SAMPLE_RS256_PEM;
+        $("jwks").value = SAMPLE_RS256_JWKS;
+        inspect();
+      });
+      $("btn-clear").addEventListener("click", function () {
+        $("token").value = "";
+        $("verify-key").value = "";
+        inspect();
+        $("token").focus();
+      });
+      $("btn-copy-header").addEventListener("click", function () {
+        if (current) copyText(JSON.stringify(current.parsed.header, null, 2), $("btn-copy-header"));
+      });
+      $("btn-copy-payload").addEventListener("click", function () {
+        if (current) copyText(JSON.stringify(current.parsed.payload, null, 2), $("btn-copy-payload"));
+      });
+      $("btn-verify").addEventListener("click", doVerify);
+      $("btn-verify-jwks").addEventListener("click", doVerifyJwks);
+
+      $("btn-sample-payload").addEventListener("click", setSamplePayload);
+      $("btn-add-times").addEventListener("click", addTimes);
+      $("btn-gen-secret").addEventListener("click", generateSecret);
+      $("btn-sign").addEventListener("click", doSign);
+      $("btn-copy-signed").addEventListener("click", function () {
+        copyText($("signed-view").dataset.token || "", $("btn-copy-signed"), $("sign-status"));
+      });
+      $("btn-inspect-signed").addEventListener("click", function () {
+        var token = $("signed-view").dataset.token;
+        if (!token) return;
+        $("token").value = token;
+        inspect();
+        $("token").scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          inspect();
+        }
+      });
+
+      // ---------------------------------------------------------------
+      // Boot
+      // ---------------------------------------------------------------
+
+      renderEmpty();
+      setSamplePayload();
+      $("token").value = SAMPLE_HS256;
+      $("verify-key").value = SAMPLE_HS256_SECRET;
+      inspect();
+    })();
+  </script>
+</body>
+</html>
