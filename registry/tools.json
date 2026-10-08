@@ -238,6 +238,28 @@
     }
   },
   {
+    "id": "log-analyzer",
+    "name": "Log Analyzer",
+    "description": "Analyze server, application and structured logs in your browser. Get severity counts, a throughput timeline, grouped messages, top errors and exception types, and search a large log in a virtualized view. Nothing is uploaded.",
+    "category": "Developer",
+    "tags": [
+      "analysis",
+      "debugging",
+      "log",
+      "observability",
+      "parser",
+      "structured",
+      "troubleshooting"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "markdown-workspace",
     "name": "Markdown Workspace",
     "description": "Write Markdown with a live, safely-rendered preview, an outline you can jump through, document statistics and a health check for common mistakes. Everything runs locally in your browser.",

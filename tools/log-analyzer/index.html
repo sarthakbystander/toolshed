@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Log Analyzer — Toolshed</title>
+  <meta name="description" content="Paste or open a server, application or structured log and get severity counts, a throughput timeline, grouped messages, top errors, exception types and a searchable log view. Everything runs locally in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / log-analyzer</div>
+      <h1>Log Analyzer</h1>
+      <p class="lede">Drop in a server, application or structured log. Get severity counts, a throughput timeline, grouped messages, top errors and exception types, and a searchable log view — all parsed line by line in your browser. Nothing is uploaded.</p>
+    </section>
+
+    <section class="toolbody la-toolbody">
+      <div class="pane la-source">
+        <div class="pane-header">
+          <label class="pane-title" for="la-input">LOG INPUT</label>
+          <span class="la-meta" id="la-input-meta">0 lines</span>
+        </div>
+
+        <div class="la-toolbar">
+          <button type="button" class="btn secondary" id="la-sample">Load sample</button>
+          <button type="button" class="btn secondary" id="la-open">Open file</button>
+          <input type="file" id="la-file" accept=".log,.txt,.jsonl,.ndjson,.json,text/plain,application/json" hidden>
+          <span class="la-toolbar-spacer"></span>
+          <button type="button" class="btn danger" id="la-clear">Clear</button>
+        </div>
+
+        <textarea id="la-input" spellcheck="false" autocomplete="off" autocapitalize="off"
+          aria-label="Log input"
+          placeholder="Paste log lines here, or click “Open file” for a .log, .txt, .jsonl or .json file.&#10;&#10;Formats recognized automatically:&#10;2024-05-01T10:00:00Z ERROR api.handler: request failed&#10;2024-05-01 10:00:00,250 WARN db.pool: pool near capacity&#10;May  1 10:00:04 host sshd[123]: Accepted password&#10;{&quot;time&quot;:&quot;2024-05-01T10:00:03Z&quot;,&quot;level&quot;:&quot;error&quot;,&quot;logger&quot;:&quot;api&quot;,&quot;message&quot;:&quot;boom&quot;}&#10;level=info msg=&quot;cache warmed&quot; service=cache"></textarea>
+
+        <div class="row">
+          <button type="button" class="btn" id="la-analyze">Analyze</button>
+          <span class="la-hint-inline">or press Ctrl/⌘ + Enter</span>
+        </div>
+
+        <div class="status hidden" id="la-status" role="status" aria-live="polite"></div>
+      </div>
+
+      <section class="la-results" id="la-results" hidden>
+        <div class="la-kpis" id="la-kpis" aria-label="Summary"></div>
+
+        <div class="pane la-output">
+          <div class="pane-header">
+            <span class="pane-title">ANALYSIS</span>
+            <div class="row">
+              <button type="button" class="btn secondary" id="la-export-csv">Copy CSV</button>
+              <button type="button" class="btn secondary" id="la-export-jsonl">Copy JSONL</button>
+            </div>
+          </div>
+
+          <div class="la-tabs" role="tablist" aria-label="Analysis views">
+            <button type="button" class="la-tab" role="tab" id="la-tab-overview" aria-controls="la-panel-overview" aria-selected="true">Overview</button>
+            <button type="button" class="la-tab" role="tab" id="la-tab-messages" aria-controls="la-panel-messages" aria-selected="false" tabindex="-1">
+              Messages <span class="la-badge" id="la-badge-messages">0</span>
+            </button>
+            <button type="button" class="la-tab" role="tab" id="la-tab-errors" aria-controls="la-panel-errors" aria-selected="false" tabindex="-1">
+              Errors <span class="la-badge" id="la-badge-errors">0</span>
+            </button>
+            <button type="button" class="la-tab" role="tab" id="la-tab-sources" aria-controls="la-panel-sources" aria-selected="false" tabindex="-1">Sources</button>
+            <button type="button" class="la-tab" role="tab" id="la-tab-timeline" aria-controls="la-panel-timeline" aria-selected="false" tabindex="-1">Timeline</button>
+            <button type="button" class="la-tab" role="tab" id="la-tab-log" aria-controls="la-panel-log" aria-selected="false" tabindex="-1">
+              Log <span class="la-badge" id="la-badge-log">0</span>
+            </button>
+          </div>
+
+          <div class="la-panel" id="la-panel-overview" role="tabpanel" aria-labelledby="la-tab-overview" tabindex="0"></div>
+          <div class="la-panel" id="la-panel-messages" role="tabpanel" aria-labelledby="la-tab-messages" tabindex="0" hidden></div>
+          <div class="la-panel" id="la-panel-errors" role="tabpanel" aria-labelledby="la-tab-errors" tabindex="0" hidden></div>
+          <div class="la-panel" id="la-panel-sources" role="tabpanel" aria-labelledby="la-tab-sources" tabindex="0" hidden></div>
+          <div class="la-panel" id="la-panel-timeline" role="tabpanel" aria-labelledby="la-tab-timeline" tabindex="0" hidden></div>
+
+          <div class="la-panel" id="la-panel-log" role="tabpanel" aria-labelledby="la-tab-log" tabindex="0" hidden>
+            <div class="la-filters">
+              <label class="la-field">
+                <span class="la-field-label">Search</span>
+                <input type="text" id="la-filter-text" placeholder="substring or regex…" spellcheck="false" autocomplete="off">
+              </label>
+              <label class="la-check" for="la-filter-regex"><input type="checkbox" id="la-filter-regex"> Regex</label>
+              <label class="la-check" for="la-filter-case"><input type="checkbox" id="la-filter-case"> Aa</label>
+              <label class="la-field">
+                <span class="la-field-label">Source</span>
+                <select id="la-filter-source"><option value="">All sources</option></select>
+              </label>
+            </div>
+            <div class="la-levels" id="la-levels" role="group" aria-label="Filter by severity"></div>
+            <div class="la-log-head">
+              <span id="la-match-count">0 lines</span>
+              <span class="la-log-head-hint">scroll to browse · matches highlighted</span>
+            </div>
+            <div class="la-log-view" id="la-log-view" tabindex="0" role="region" aria-label="Log lines">
+              <div class="la-log-spacer" id="la-log-spacer"></div>
+              <div class="la-log-rows" id="la-log-rows"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed && window.Toolshed.logAnalyzer;
+      if (!lib) return;
+
+      var $ = function (id) { return document.getElementById(id); };
+      var els = {
+        input: $("la-input"),
+        inputMeta: $("la-input-meta"),
+        sample: $("la-sample"),
+        open: $("la-open"),
+        file: $("la-file"),
+        clear: $("la-clear"),
+        analyze: $("la-analyze"),
+        status: $("la-status"),
+        results: $("la-results"),
+        kpis: $("la-kpis"),
+        exportCsv: $("la-export-csv"),
+        exportJsonl: $("la-export-jsonl"),
+        tabs: document.querySelector(".la-tabs"),
+        levels: $("la-levels"),
+        filterText: $("la-filter-text"),
+        filterRegex: $("la-filter-regex"),
+        filterCase: $("la-filter-case"),
+        filterSource: $("la-filter-source"),
+        matchCount: $("la-match-count"),
+        logView: $("la-log-view"),
+        logSpacer: $("la-log-spacer"),
+        logRows: $("la-log-rows"),
+        badgeMessages: $("la-badge-messages"),
+        badgeErrors: $("la-badge-errors"),
+        badgeLog: $("la-badge-log")
+      };
+
+      var LEVELS = ["fatal", "error", "warning", "notice", "info", "debug", "trace"];
+
+      // The row height lives in CSS so the responsive breakpoint can raise it;
+      // the virtualizer reads it back to keep offsets exact.
+      function rowHeight() {
+        var raw = getComputedStyle(els.logView).getPropertyValue("--la-row-h");
+        var n = parseFloat(raw);
+        return n > 0 ? n : 22;
+      }
+
+      var state = {
+        analysis: null,
+        stats: null,
+        filtered: [],
+        tab: "overview",
+        activeLevels: [],
+        lastLogStart: -1,
+        lastLogEnd: -1,
+        renderPending: false,
+        // Highlighting is computed when the filter changes, not on every
+        // scroll frame; large result sets would otherwise re-run the matcher
+        // for every newly visible row.
+        highlight: { text: "", regex: "", caseSensitive: false }
+      };
+
+      // ---------------------------------------------------------------
+      // Status helpers
+      // ---------------------------------------------------------------
+
+      function setStatus(message, kind) {
+        els.status.textContent = message;
+        els.status.classList.remove("hidden", "ok", "error");
+        if (kind) els.status.classList.add(kind);
+      }
+
+      function clearStatus() {
+        els.status.classList.add("hidden");
+        els.status.textContent = "";
+      }
+
+      function updateInputMeta() {
+        var n = lib.splitLines(els.input.value).length;
+        els.inputMeta.textContent = n + (n === 1 ? " line" : " lines");
+      }
+
+      // ---------------------------------------------------------------
+      // Analysis
+      // ---------------------------------------------------------------
+
+      function analyzeNow() {
+        var text = els.input.value;
+        if (!text.trim()) {
+          setStatus("Nothing to analyze. Paste some log lines or open a file first.", "error");
+          els.results.hidden = true;
+          state.analysis = null;
+          state.stats = null;
+          return;
+        }
+
+        var started = Date.now();
+        var analysis = lib.analyze(text, {});
+        var stats = lib.summarize(analysis.entries, { top: 15 });
+        state.analysis = analysis;
+        state.stats = stats;
+
+        buildLevelFilters();
+        buildSourceFilter();
+        renderKpis(stats);
+        renderOverview(stats);
+        renderMessages(stats);
+        renderErrors(stats);
+        renderSources(stats);
+        renderTimeline(stats);
+        applyFilter(true);
+
+        els.results.hidden = false;
+
+        var ms = Date.now() - started;
+        var parts = ["Analyzed " + analysis.processedLines.toLocaleString() + " lines in " + ms + "ms"];
+        if (analysis.truncated) {
+          parts.push("showing the first " + lib.MAX_LINES.toLocaleString() + " of " + analysis.totalLines.toLocaleString() + " lines");
+        }
+        setStatus(parts.join(" · "), analysis.truncated ? "error" : "ok");
+      }
+
+      // ---------------------------------------------------------------
+      // KPI cards
+      // ---------------------------------------------------------------
+
+      function kpi(label, value, tone, sub) {
+        var card = document.createElement("div");
+        card.className = "la-kpi" + (tone ? " la-kpi-" + tone : "");
+        var v = document.createElement("div");
+        v.className = "la-kpi-value";
+        v.textContent = value;
+        var l = document.createElement("div");
+        l.className = "la-kpi-label";
+        l.textContent = label;
+        card.appendChild(v);
+        card.appendChild(l);
+        if (sub) {
+          var s = document.createElement("div");
+          s.className = "la-kpi-sub";
+          s.textContent = sub;
+          card.appendChild(s);
+        }
+        return card;
+      }
+
+      function renderKpis(stats) {
+        els.kpis.textContent = "";
+        var errors = stats.levels.error + stats.levels.fatal;
+        var errorPct = stats.total ? Math.round(stats.errorRate * 1000) / 10 : 0;
+
+        els.kpis.appendChild(kpi("Lines", stats.total.toLocaleString()));
+        els.kpis.appendChild(kpi("Errors + fatal", errors.toLocaleString(), errors ? "bad" : "good", errorPct + "% of lines"));
+        els.kpis.appendChild(kpi("Warnings", stats.levels.warning.toLocaleString(), stats.levels.warning ? "warn" : ""));
+        els.kpis.appendChild(kpi(
+          "Time span",
+          stats.timeRange ? lib.formatDuration(stats.timeRange.durationMs) : "—",
+          "",
+          stats.timeRange ? stats.withTimestamp.toLocaleString() + " timestamped lines" : "no timestamps detected"
+        ));
+        els.kpis.appendChild(kpi("Sources", String(stats.sources.length), "", stats.sources.length ? "distinct loggers" : "none detected"));
+        els.kpis.appendChild(kpi("Unparsed", stats.malformed.toLocaleString(), stats.malformed ? "warn" : ""));
+      }
+
+      // ---------------------------------------------------------------
+      // Overview
+      // ---------------------------------------------------------------
+
+      function renderOverview(stats) {
+        var panel = $("la-panel-overview");
+        panel.textContent = "";
+
+        panel.appendChild(sectionTitle("Severity distribution"));
+        var maxLevel = 1;
+        LEVELS.forEach(function (lv) { if (stats.levels[lv] > maxLevel) maxLevel = stats.levels[lv]; });
+
+        var dist = document.createElement("div");
+        dist.className = "la-dist";
+        LEVELS.forEach(function (lv) {
+          var count = stats.levels[lv];
+          var row = document.createElement("div");
+          row.className = "la-dist-row";
+
+          var name = document.createElement("span");
+          name.className = "la-dist-name";
+          name.appendChild(levelBadge(lv));
+
+          var track = document.createElement("span");
+          track.className = "la-dist-track";
+          var fill = document.createElement("span");
+          fill.className = "la-dist-fill la-fill-" + lv;
+          fill.style.width = (count ? Math.max(2, Math.round((count / maxLevel) * 100)) : 0) + "%";
+          track.appendChild(fill);
+
+          var num = document.createElement("span");
+          num.className = "la-dist-count";
+          num.textContent = count.toLocaleString();
+
+          row.appendChild(name);
+          row.appendChild(track);
+          row.appendChild(num);
+          dist.appendChild(row);
+        });
+        panel.appendChild(dist);
+
+        if (stats.timeRange) {
+          panel.appendChild(sectionTitle("Time range (UTC)"));
+          var range = document.createElement("p");
+          range.className = "la-note";
+          range.textContent =
+            lib.formatEpoch(stats.timeRange.start) + "  →  " + lib.formatEpoch(stats.timeRange.end) +
+            "   (" + lib.formatDuration(stats.timeRange.durationMs) + ")";
+          panel.appendChild(range);
+        }
+
+        panel.appendChild(sectionTitle("Top messages"));
+        panel.appendChild(groupTable(stats.groups.slice(0, 10), false));
+      }
+
+      function sectionTitle(text) {
+        var h = document.createElement("h3");
+        h.className = "la-section-title";
+        h.textContent = text;
+        return h;
+      }
+
+      // ---------------------------------------------------------------
+      // Messages / Errors tables
+      // ---------------------------------------------------------------
+
+      function renderMessages(stats) {
+        var panel = $("la-panel-messages");
+        panel.textContent = "";
+        els.badgeMessages.textContent = String(stats.groups.length);
+        panel.appendChild(sectionTitle("Message templates (similar lines grouped)"));
+        panel.appendChild(groupTable(stats.groups, true));
+      }
+
+      function renderErrors(stats) {
+        var panel = $("la-panel-errors");
+        panel.textContent = "";
+        els.badgeErrors.textContent = String(stats.errors.length);
+
+        panel.appendChild(sectionTitle("Top error messages"));
+        if (stats.errors.length) {
+          panel.appendChild(groupTable(stats.errors, true));
+        } else {
+          panel.appendChild(emptyNote("No error or fatal lines were detected."));
+        }
+
+        panel.appendChild(sectionTitle("Exception types"));
+        if (stats.exceptions.length) {
+          panel.appendChild(countTable(stats.exceptions, "Exception"));
+        } else {
+          panel.appendChild(emptyNote("No exception class names were found in error messages."));
+        }
+      }
+
+      function groupTable(groups, withLine) {
+        if (!groups.length) return emptyNote("No lines to group.");
+        var table = document.createElement("table");
+        table.className = "la-table";
+        var thead = document.createElement("thead");
+        var hrow = document.createElement("tr");
+        ["Count", "Level", "Message", withLine ? "Lines" : ""].forEach(function (label) {
+          if (label === "" ) return;
+          var th = document.createElement("th");
+          th.textContent = label;
+          hrow.appendChild(th);
+        });
+        thead.appendChild(hrow);
+        table.appendChild(thead);
+
+        var tbody = document.createElement("tbody");
+        groups.forEach(function (g) {
+          var tr = document.createElement("tr");
+          var cCount = document.createElement("td");
+          cCount.className = "la-num";
+          cCount.textContent = g.count.toLocaleString();
+          tr.appendChild(cCount);
+
+          var cLevel = document.createElement("td");
+          cLevel.appendChild(levelBadge(g.level || "unknown"));
+          tr.appendChild(cLevel);
+
+          var cMsg = document.createElement("td");
+          cMsg.className = "la-msg-cell";
+          var sample = document.createElement("span");
+          sample.className = "la-msg-sample";
+          sample.textContent = g.sample;
+          sample.title = g.sample;
+          cMsg.appendChild(sample);
+          tr.appendChild(cMsg);
+
+          if (withLine) {
+            var cLines = document.createElement("td");
+            cLines.className = "la-num la-dim";
+            cLines.textContent = g.firstLine === g.lastLine ? String(g.firstLine) : (g.firstLine + "–" + g.lastLine);
+            tr.appendChild(cLines);
+          }
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        return table;
+      }
+
+      function countTable(rows, label) {
+        var table = document.createElement("table");
+        table.className = "la-table";
+        var thead = document.createElement("thead");
+        var hrow = document.createElement("tr");
+        ["Count", label].forEach(function (t) {
+          var th = document.createElement("th");
+          th.textContent = t;
+          hrow.appendChild(th);
+        });
+        thead.appendChild(hrow);
+        table.appendChild(thead);
+        var tbody = document.createElement("tbody");
+        rows.forEach(function (r) {
+          var tr = document.createElement("tr");
+          var c1 = document.createElement("td");
+          c1.className = "la-num";
+          c1.textContent = r.count.toLocaleString();
+          var c2 = document.createElement("td");
+          c2.textContent = r.name;
+          tr.appendChild(c1);
+          tr.appendChild(c2);
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        return table;
+      }
+
+      function emptyNote(text) {
+        var p = document.createElement("p");
+        p.className = "la-empty-note";
+        p.textContent = text;
+        return p;
+      }
+
+      // ---------------------------------------------------------------
+      // Sources
+      // ---------------------------------------------------------------
+
+      function renderSources(stats) {
+        var panel = $("la-panel-sources");
+        panel.textContent = "";
+        panel.appendChild(sectionTitle("Loggers / sources"));
+        if (stats.sources.length) {
+          panel.appendChild(countTable(stats.sources, "Source"));
+        } else {
+          panel.appendChild(emptyNote("No logger or source names were detected in this log."));
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Timeline
+      // ---------------------------------------------------------------
+
+      function renderTimeline(stats) {
+        var panel = $("la-panel-timeline");
+        panel.textContent = "";
+        panel.appendChild(sectionTitle("Throughput over time"));
+
+        if (!stats.timeRange || !stats.buckets.length) {
+          panel.appendChild(emptyNote("No timestamps were detected, so there is no timeline to draw."));
+          return;
+        }
+
+        var max = 1;
+        var total = 0;
+        stats.buckets.forEach(function (b) { if (b.count > max) max = b.count; total += b.count; });
+
+        var chart = document.createElement("div");
+        chart.className = "la-hist";
+        chart.setAttribute("role", "img");
+        chart.setAttribute("aria-label", "Log volume histogram, " + stats.buckets.length + " buckets, peak " + max + " lines");
+
+        stats.buckets.forEach(function (b) {
+          var bar = document.createElement("div");
+          bar.className = "la-hist-bar";
+          var inner = document.createElement("div");
+          inner.className = "la-hist-inner";
+          inner.style.height = Math.round((b.count / max) * 100) + "%";
+          bar.appendChild(inner);
+          bar.title = lib.formatEpoch(b.start) + " · " + b.count + " lines";
+          chart.appendChild(bar);
+        });
+        panel.appendChild(chart);
+
+        var legend = document.createElement("div");
+        legend.className = "la-hist-legend";
+        var span = stats.buckets[0].spanMs;
+        legend.textContent =
+          "Bucket: " + lib.formatDuration(span) +
+          " · Peak: " + max.toLocaleString() + " lines/bucket" +
+          " · Total: " + total.toLocaleString() + " lines";
+        panel.appendChild(legend);
+
+        var axis = document.createElement("div");
+        axis.className = "la-hist-axis";
+        var a = document.createElement("span");
+        a.textContent = lib.formatEpoch(stats.timeRange.start);
+        var b2 = document.createElement("span");
+        b2.textContent = lib.formatEpoch(stats.timeRange.end);
+        axis.appendChild(a);
+        axis.appendChild(b2);
+        panel.appendChild(axis);
+      }
+
+      // ---------------------------------------------------------------
+      // Level badges
+      // ---------------------------------------------------------------
+
+      function levelBadge(level) {
+        var span = document.createElement("span");
+        span.className = "la-lv la-lv-" + level;
+        span.textContent = level;
+        return span;
+      }
+
+      // ---------------------------------------------------------------
+      // Filters
+      // ---------------------------------------------------------------
+
+      function buildLevelFilters() {
+        els.levels.textContent = "";
+        var counts = state.stats.levels;
+        LEVELS.forEach(function (lv) {
+          if (!counts[lv]) return;
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "la-chip";
+          btn.dataset.level = lv;
+          btn.setAttribute("aria-pressed", "false");
+          btn.appendChild(levelBadge(lv));
+          var n = document.createElement("span");
+          n.className = "la-chip-n";
+          n.textContent = counts[lv].toLocaleString();
+          btn.appendChild(n);
+          btn.addEventListener("click", function () {
+            var active = state.activeLevels.indexOf(lv);
+            if (active === -1) state.activeLevels.push(lv);
+            else state.activeLevels.splice(active, 1);
+            btn.setAttribute("aria-pressed", String(state.activeLevels.indexOf(lv) !== -1));
+            applyFilter();
+          });
+          els.levels.appendChild(btn);
+        });
+      }
+
+      function buildSourceFilter() {
+        var current = els.filterSource.value;
+        els.filterSource.textContent = "";
+        var all = document.createElement("option");
+        all.value = "";
+        all.textContent = "All sources";
+        els.filterSource.appendChild(all);
+        state.stats.sources.forEach(function (s) {
+          var opt = document.createElement("option");
+          opt.value = s.name;
+          opt.textContent = s.name + " (" + s.count + ")";
+          els.filterSource.appendChild(opt);
+        });
+        els.filterSource.value = current;
+      }
+
+      function currentFilter() {
+        return {
+          text: els.filterText.value.trim(),
+          regex: els.filterRegex.checked,
+          caseSensitive: els.filterCase.checked,
+          levels: state.activeLevels.slice(),
+          source: els.filterSource.value
+        };
+      }
+
+      function applyFilter(skipScrollReset) {
+        if (!state.analysis) return;
+        var filter = currentFilter();
+
+        var result = lib.query(state.analysis.entries, filter);
+        if (filter.regex && filter.text && !result.regexValid) {
+          setStatus("Invalid regular expression — check the pattern.", "error");
+        }
+
+        state.filtered = result.entries;
+        state.highlight = result.highlight;
+        els.matchCount.textContent = state.filtered.length.toLocaleString() + " of " + state.analysis.processedLines.toLocaleString() + " lines";
+        els.badgeLog.textContent = state.filtered.length.toLocaleString();
+
+        if (!skipScrollReset) els.logView.scrollTop = 0;
+        state.lastLogStart = -1;
+        state.lastLogEnd = -1;
+        renderLogRows();
+      }
+
+      // ---------------------------------------------------------------
+      // Virtualized log view
+      // ---------------------------------------------------------------
+
+      function renderLogRows() {
+        if (state.renderPending) return;
+        state.renderPending = true;
+        requestAnimationFrame(function () {
+          state.renderPending = false;
+          drawLogRows();
+        });
+      }
+
+      function drawLogRows() {
+        var rows = state.filtered;
+        var total = rows.length;
+        var rh = rowHeight();
+        els.logSpacer.style.height = (total * rh) + "px";
+
+        var scrollTop = els.logView.scrollTop;
+        var viewport = els.logView.clientHeight || 420;
+        var visible = Math.ceil(viewport / rh);
+        var start = Math.max(0, Math.floor(scrollTop / rh) - 4);
+        var end = Math.min(total, start + visible + 8);
+
+        if (start === state.lastLogStart && end === state.lastLogEnd) return;
+        state.lastLogStart = start;
+        state.lastLogEnd = end;
+
+        els.logRows.textContent = "";
+        var frag = document.createDocumentFragment();
+
+        for (var i = start; i < end; i++) {
+          frag.appendChild(logRow(rows[i], i, state.highlight, rh));
+        }
+        els.logRows.appendChild(frag);
+      }
+
+      function logRow(entry, index, filter, rh) {
+        var row = document.createElement("div");
+        row.className = "la-row" + (entry.severity >= lib.SEVERITY_RANK.error ? " la-row-error" : "");
+        row.style.top = (index * rh) + "px";
+        row.style.height = rh + "px";
+
+        var n = document.createElement("span");
+        n.className = "la-row-n";
+        n.textContent = String(entry.n);
+        row.appendChild(n);
+
+        var ts = document.createElement("span");
+        ts.className = "la-row-ts";
+        ts.textContent = entry.timestamp ? entry.timestamp.iso.replace("T", " ") : "—";
+        row.appendChild(ts);
+
+        var lv = document.createElement("span");
+        lv.className = "la-row-lv" + (entry.level ? " la-lv-" + entry.level : "");
+        lv.textContent = entry.level || "";
+        row.appendChild(lv);
+
+        var src = document.createElement("span");
+        src.className = "la-row-src";
+        src.textContent = entry.source || "";
+        row.appendChild(src);
+
+        var msg = document.createElement("span");
+        msg.className = "la-row-msg";
+        appendHighlighted(msg, entry.message, filter);
+        row.appendChild(msg);
+
+        return row;
+      }
+
+      // Build a message span with <mark> around matched ranges, using text
+      // nodes only — no HTML string is ever parsed from log content.
+      function appendHighlighted(parent, text, filter) {
+        if (!filter.text && !filter.regex) {
+          parent.textContent = text;
+          return;
+        }
+        // `filter` is already the highlight config produced by lib.query:
+        // `text` is the literal needle and `regex` is the pattern string.
+        var ranges = lib.highlightRanges(text, filter);
+        if (!ranges.length) {
+          parent.textContent = text;
+          return;
+        }
+        var cursor = 0;
+        ranges.forEach(function (range) {
+          if (range[0] > cursor) {
+            parent.appendChild(document.createTextNode(text.slice(cursor, range[0])));
+          }
+          var mark = document.createElement("mark");
+          mark.textContent = text.slice(range[0], range[1]);
+          parent.appendChild(mark);
+          cursor = range[1];
+        });
+        if (cursor < text.length) {
+          parent.appendChild(document.createTextNode(text.slice(cursor)));
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Tabs
+      // ---------------------------------------------------------------
+
+      function selectTab(name) {
+        state.tab = name;
+        var tabs = els.tabs.querySelectorAll(".la-tab");
+        for (var i = 0; i < tabs.length; i++) {
+          var tab = tabs[i];
+          var id = tab.id.replace("la-tab-", "");
+          var selected = id === name;
+          tab.setAttribute("aria-selected", String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+          var panel = $("la-panel-" + id);
+          if (panel) panel.hidden = !selected;
+        }
+        if (name === "log") {
+          state.lastLogStart = -1;
+          state.lastLogEnd = -1;
+          renderLogRows();
+        }
+      }
+
+      function bindTabs() {
+        var tabs = els.tabs.querySelectorAll(".la-tab");
+        for (var i = 0; i < tabs.length; i++) {
+          tabs[i].addEventListener("click", function () {
+            selectTab(this.id.replace("la-tab-", ""));
+          });
+          tabs[i].addEventListener("keydown", function (e) {
+            var keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
+            if (keys.indexOf(e.key) === -1) return;
+            e.preventDefault();
+            var list = Array.prototype.slice.call(els.tabs.querySelectorAll(".la-tab"));
+            var idx = list.indexOf(this);
+            if (e.key === "ArrowLeft") idx = (idx - 1 + list.length) % list.length;
+            if (e.key === "ArrowRight") idx = (idx + 1) % list.length;
+            if (e.key === "Home") idx = 0;
+            if (e.key === "End") idx = list.length - 1;
+            list[idx].focus();
+            selectTab(list[idx].id.replace("la-tab-", ""));
+          });
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Sample log
+      // ---------------------------------------------------------------
+
+      function sampleLog() {
+        var lines = [];
+        var base = Date.UTC(2024, 4, 1, 10, 0, 0);
+        var services = ["api.handler", "db.pool", "cache", "auth.service", "worker.queue"];
+        var i;
+        for (i = 0; i < 240; i++) {
+          var t = new Date(base + i * 1200).toISOString().replace(".000Z", "Z");
+          if (i % 37 === 0) {
+            lines.push(t + " ERROR db.pool: connection to 10.0.0." + (i % 20) + " timed out after 3000ms");
+          } else if (i % 23 === 0) {
+            lines.push(t + " ERROR api.handler: java.lang.NullPointerException at /users/" + i);
+          } else if (i % 17 === 0) {
+            lines.push(t + " WARN  cache: hit ratio " + (0.4 + (i % 30) / 100).toFixed(2));
+          } else if (i % 11 === 0) {
+            lines.push('{"time":"' + t + '","level":"info","logger":"' + services[i % services.length] + '","message":"request completed in ' + (10 + i % 400) + 'ms","status":200}');
+          } else if (i % 7 === 0) {
+            lines.push(t + " INFO  worker.queue: processed " + (i % 50) + " jobs from queue-3");
+          } else {
+            lines.push(t + " INFO  " + services[i % services.length] + ": heartbeat ok");
+          }
+        }
+        lines.push("May  1 10:04:48 host sshd[4821]: Accepted publickey for deploy from 10.0.0.7 port 52344");
+        lines.push("level=error msg=\"disk usage critical\" service=storage pct=97");
+        lines.push("2024-05-01 10:04:49,500 FATAL app: out of memory, shutting down");
+        return lines.join("\n");
+      }
+
+      // ---------------------------------------------------------------
+      // Wire up
+      // ---------------------------------------------------------------
+
+      function loadText(text, statusMessage) {
+        els.input.value = text;
+        updateInputMeta();
+        analyzeNow();
+        if (statusMessage) setStatus(statusMessage, "ok");
+      }
+
+      els.sample.addEventListener("click", function () {
+        loadText(sampleLog(), "Loaded a sample log with mixed formats and severities.");
+      });
+
+      els.open.addEventListener("click", function () { els.file.click(); });
+
+      els.file.addEventListener("change", function () {
+        var file = els.file.files && els.file.files[0];
+        if (!file) return;
+        if (file.size > 60 * 1024 * 1024) {
+          setStatus("That file is " + Math.round(file.size / 1048576) + " MB — files over 60 MB may exhaust browser memory. Analysis cancelled.", "error");
+          els.file.value = "";
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          loadText(String(reader.result || ""), "Loaded " + file.name + " (" + Math.round(file.size / 1024) + " KB).");
+        };
+        reader.onerror = function () {
+          setStatus("Could not read that file in this browser.", "error");
+        };
+        reader.readAsText(file);
+        els.file.value = "";
+      });
+
+      els.clear.addEventListener("click", function () {
+        els.input.value = "";
+        state.analysis = null;
+        state.stats = null;
+        state.filtered = [];
+        els.results.hidden = true;
+        els.filterText.value = "";
+        els.filterRegex.checked = false;
+        els.filterCase.checked = false;
+        els.filterSource.textContent = "";
+        state.activeLevels = [];
+        clearStatus();
+        updateInputMeta();
+        els.input.focus();
+      });
+
+      els.analyze.addEventListener("click", analyzeNow);
+
+      els.input.addEventListener("input", updateInputMeta);
+      els.input.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          analyzeNow();
+        }
+      });
+
+      els.filterText.addEventListener("input", debounce(function () { applyFilter(); }, 160));
+      els.filterRegex.addEventListener("change", function () { applyFilter(); });
+      els.filterCase.addEventListener("change", function () { applyFilter(); });
+      els.filterSource.addEventListener("change", function () { applyFilter(); });
+
+      els.logView.addEventListener("scroll", renderLogRows);
+      window.addEventListener("resize", debounce(function () {
+        state.lastLogStart = -1;
+        state.lastLogEnd = -1;
+        renderLogRows();
+      }, 120));
+
+      els.exportCsv.addEventListener("click", function () { copyExport("csv"); });
+      els.exportJsonl.addEventListener("click", function () { copyExport("jsonl"); });
+
+      function copyExport(kind) {
+        var entries = state.filtered;
+        if (!entries || !entries.length) {
+          setStatus("Nothing to export — no lines match the current filter.", "error");
+          return;
+        }
+        var text = kind === "csv" ? lib.exportCSV(entries) : lib.exportJSONL(entries);
+        copyText(text, "Copied " + entries.length.toLocaleString() + " lines as " + kind.toUpperCase() + ".");
+      }
+
+      function copyText(text, okMessage) {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus("Clipboard API unavailable in this browser. Select the text manually instead.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          setStatus(okMessage, "ok");
+        }).catch(function () {
+          setStatus("Copy was blocked by the browser. Try again or select the text manually.", "error");
+        });
+      }
+
+      function debounce(fn, wait) {
+        var t;
+        return function () {
+          var args = arguments;
+          clearTimeout(t);
+          t = setTimeout(function () { fn.apply(null, args); }, wait);
+        };
+      }
+
+      bindTabs();
+      updateInputMeta();
+    })();
+  </script>
+</body>
+</html>
