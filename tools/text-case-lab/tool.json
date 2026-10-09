@@ -1,0 +1,14 @@
+{
+  "id": "text-case-lab",
+  "name": "Text Case Lab",
+  "description": "Convert text and identifiers between camelCase, snake_case, kebab-case, Title Case and more, detect the current style, and run cleanup transforms on whitespace, accents and curly punctuation. Everything runs locally in your browser.",
+  "category": "Text",
+  "tags": ["case", "camelcase", "converter", "identifier", "kebab-case", "snake-case", "text", "title-case"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

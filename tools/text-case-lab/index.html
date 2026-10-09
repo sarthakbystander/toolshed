@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Text Case Lab — Toolshed</title>
+  <meta name="description" content="Convert text and identifiers between camelCase, snake_case, kebab-case, Title Case and more. Detect the current style, clean up whitespace, accents and curly punctuation, and export the results — all locally in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / text-case-lab</div>
+      <h1>Text Case Lab</h1>
+      <p class="lede">Paste an identifier or a block of prose and convert it between camelCase, snake_case, kebab-case, Title Case and more. Detect the current style, run cleanup transforms on whitespace, accents and curly punctuation, and copy or export each result. Everything runs locally in your tab.</p>
+    </section>
+
+    <section class="toolbody tcl-toolbody">
+      <!-- ========================= INPUT ========================= -->
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">INPUT</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+            <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <div class="tcl-input">
+          <label class="field-label" for="data">Your text</label>
+          <textarea id="data" class="mono tcl-textarea" spellcheck="false" autocomplete="off"
+            aria-describedby="input-hint"
+            placeholder="user_profile_id&#10;&#10;or a phrase like&#10;&#10;The quick brown fox jumps"></textarea>
+          <p class="hint" id="input-hint">Conversions update as you type. Results appear on the right; keyboard: Ctrl/Cmd+Enter re-runs.</p>
+        </div>
+
+        <div class="tcl-stats" id="stats" aria-live="polite" hidden>
+          <div class="tcl-stat"><span class="k">Characters</span><span class="v" id="stat-chars">0</span></div>
+          <div class="tcl-stat"><span class="k">No spaces</span><span class="v" id="stat-chars-ns">0</span></div>
+          <div class="tcl-stat"><span class="k">Words</span><span class="v" id="stat-words">0</span></div>
+          <div class="tcl-stat"><span class="k">Unique</span><span class="v" id="stat-unique">0</span></div>
+          <div class="tcl-stat"><span class="k">Sentences</span><span class="v" id="stat-sentences">0</span></div>
+          <div class="tcl-stat"><span class="k">Lines</span><span class="v" id="stat-lines">0</span></div>
+        </div>
+
+        <div class="status hidden" id="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <!-- ========================= RESULTS ========================= -->
+      <div class="pane tcl-results" id="results" hidden>
+        <div class="pane-header">
+          <span class="pane-title">CONVERSIONS</span>
+          <div class="row">
+            <span class="tcl-detected" id="detected" title="Detected case style"></span>
+            <button type="button" class="btn secondary" id="btn-markdown" disabled>Copy Markdown</button>
+            <button type="button" class="btn secondary" id="btn-json" disabled>Download JSON</button>
+          </div>
+        </div>
+
+        <div class="tcl-cases" id="cases"></div>
+
+        <div class="tcl-section">
+          <div class="tcl-section-title">Cleanup transforms</div>
+          <p class="tcl-section-note">Transforms act on the original text and are independent of the case conversions above.</p>
+          <div class="tcl-transforms" id="transforms"></div>
+        </div>
+      </div>
+
+      <div class="pane tcl-empty" id="empty">
+        <div class="tcl-empty-inner">
+          <div class="tcl-empty-mark" aria-hidden="true">Aa</div>
+          <h2>Nothing to convert yet</h2>
+          <p>Type or paste text on the left, drop in a snippet from your code, or press <strong>Load sample</strong> to see every conversion at once.</p>
+          <button type="button" class="btn" id="btn-sample-2">Load sample</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.textCaseLab;
+
+      var dataEl = document.getElementById("data");
+      var statusEl = document.getElementById("status");
+      var statsEl = document.getElementById("stats");
+      var resultsEl = document.getElementById("results");
+      var emptyEl = document.getElementById("empty");
+      var casesEl = document.getElementById("cases");
+      var transformsEl = document.getElementById("transforms");
+      var detectedEl = document.getElementById("detected");
+      var btnSample = document.getElementById("btn-sample");
+      var btnSample2 = document.getElementById("btn-sample-2");
+      var btnClear = document.getElementById("btn-clear");
+      var btnMarkdown = document.getElementById("btn-markdown");
+      var btnJson = document.getElementById("btn-json");
+
+      var statChars = document.getElementById("stat-chars");
+      var statCharsNs = document.getElementById("stat-chars-ns");
+      var statWords = document.getElementById("stat-words");
+      var statUnique = document.getElementById("stat-unique");
+      var statSentences = document.getElementById("stat-sentences");
+      var statLines = document.getElementById("stat-lines");
+
+      var current = null;
+      var statusTimer = null;
+
+      var SAMPLE = [
+        "user_profile_id",
+        "",
+        "And a sentence: The Quick Brown Fox",
+        "But  a  naive  café  has   extra   spaces..."
+      ].join("\n");
+
+      function setStatus(message, kind) {
+        if (statusTimer) { clearTimeout(statusTimer); statusTimer = null; }
+        if (!message) {
+          statusEl.classList.add("hidden");
+          return;
+        }
+        statusEl.textContent = message;
+        statusEl.classList.remove("hidden", "error", "ok");
+        if (kind) statusEl.classList.add(kind);
+        if (kind === "ok") {
+          statusTimer = setTimeout(function () { statusEl.classList.add("hidden"); }, 2600);
+        }
+      }
+
+      function copy(text, button) {
+        if (!navigator.clipboard) {
+          setStatus("Clipboard API is unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var original = button.dataset.label || button.textContent;
+          button.dataset.label = original;
+          button.textContent = "Copied ✓";
+          button.classList.add("copied");
+          setTimeout(function () {
+            button.textContent = original;
+            button.classList.remove("copied");
+          }, 1400);
+          setStatus("Copied to the clipboard.", "ok");
+        }).catch(function () {
+          setStatus("Copy was blocked by the browser.", "error");
+        });
+      }
+
+      function makeRow(labelText, value, mono) {
+        var row = document.createElement("div");
+        row.className = "tcl-row";
+
+        var label = document.createElement("span");
+        label.className = "tcl-row-label";
+        label.textContent = labelText;
+        row.appendChild(label);
+
+        var val = document.createElement("div");
+        val.className = "tcl-row-value" + (mono ? " mono" : "");
+        val.textContent = value === "" ? "—" : value;
+        val.title = value;
+        row.appendChild(val);
+
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn secondary tcl-copy";
+        btn.textContent = "Copy";
+        btn.setAttribute("aria-label", "Copy " + labelText + " result");
+        btn.disabled = value === "";
+        btn.addEventListener("click", function () { copy(value, btn); });
+        row.appendChild(btn);
+
+        return row;
+      }
+
+      function renderCases(analysis) {
+        casesEl.textContent = "";
+        analysis.cases.forEach(function (c) {
+          casesEl.appendChild(makeRow(c.label, c.value, true));
+        });
+      }
+
+      function renderTransforms(analysis) {
+        transformsEl.textContent = "";
+        analysis.transforms.forEach(function (t) {
+          transformsEl.appendChild(makeRow(t.label, t.value, false));
+        });
+      }
+
+      function renderStats(a) {
+        statChars.textContent = a.characters;
+        statCharsNs.textContent = a.charactersNoSpaces;
+        statWords.textContent = a.words;
+        statUnique.textContent = a.uniqueWords;
+        statSentences.textContent = a.sentences;
+        statLines.textContent = a.lines;
+        statsEl.hidden = false;
+      }
+
+      function renderDetected(detected) {
+        detectedEl.textContent = detected.label;
+        detectedEl.dataset.case = detected.id;
+        detectedEl.hidden = false;
+      }
+
+      function run() {
+        var text = dataEl.value;
+        if (text.trim() === "") {
+          current = null;
+          resultsEl.hidden = true;
+          emptyEl.hidden = false;
+          statsEl.hidden = true;
+          detectedEl.hidden = true;
+          btnMarkdown.disabled = true;
+          btnJson.disabled = true;
+          return;
+        }
+
+        var a = lib.analyze(text);
+        current = a;
+        renderStats(a.stats);
+        renderDetected(a.detected);
+        renderCases(a);
+        renderTransforms(a);
+        resultsEl.hidden = false;
+        emptyEl.hidden = true;
+        btnMarkdown.disabled = false;
+        btnJson.disabled = false;
+      }
+
+      function loadSample() {
+        dataEl.value = SAMPLE;
+        run();
+        dataEl.focus();
+      }
+
+      function clearAll() {
+        dataEl.value = "";
+        current = null;
+        resultsEl.hidden = true;
+        emptyEl.hidden = false;
+        statsEl.hidden = true;
+        detectedEl.hidden = true;
+        casesEl.textContent = "";
+        transformsEl.textContent = "";
+        btnMarkdown.disabled = true;
+        btnJson.disabled = true;
+        setStatus(null);
+        dataEl.focus();
+      }
+
+      function copyMarkdown() {
+        if (!current) return;
+        var md = lib.toMarkdown(dataEl.value);
+        copy(md, btnMarkdown);
+      }
+
+      function downloadJson() {
+        if (!current) return;
+        var blob = new Blob([lib.toJSON(dataEl.value)], { type: "application/json" });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = "text-case-lab-" + Date.now() + ".json";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setStatus("Downloaded the analysis as JSON.", "ok");
+      }
+
+      btnSample.addEventListener("click", loadSample);
+      btnSample2.addEventListener("click", loadSample);
+      btnClear.addEventListener("click", clearAll);
+      btnMarkdown.addEventListener("click", copyMarkdown);
+      btnJson.addEventListener("click", downloadJson);
+
+      dataEl.addEventListener("input", run);
+      dataEl.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          run();
+        }
+      });
+
+      run();
+    })();
+  </script>
+</body>
+</html>

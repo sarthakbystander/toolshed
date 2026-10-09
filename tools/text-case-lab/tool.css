@@ -1,0 +1,229 @@
+/* Text Case Lab — widget styles layered over the shared Toolshed design system. */
+
+.tcl-toolbody {
+  align-items: start;
+}
+
+/* ---------- Input pane ---------- */
+
+.tcl-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tcl-input .field-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.tcl-textarea {
+  min-height: 220px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+/* ---------- Statistics strip ---------- */
+
+.tcl-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.tcl-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.tcl-stat .k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.tcl-stat .v {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Results pane ---------- */
+
+.tcl-results {
+  min-width: 0;
+}
+
+.tcl-detected {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+
+.tcl-detected[data-case="empty"],
+.tcl-detected[data-case="unknown"] {
+  color: var(--ink-3);
+  background: var(--surface-2);
+  border-color: var(--rule-2);
+}
+
+.tcl-cases,
+.tcl-transforms {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tcl-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tcl-section-title {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-top: 1px solid var(--rule);
+  padding-top: 14px;
+}
+
+.tcl-section-note {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: -2px;
+}
+
+/* ---------- Result rows ---------- */
+
+.tcl-row {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.tcl-row-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tcl-row-value {
+  font-size: 13px;
+  color: var(--ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tcl-row-value.mono {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.tcl-copy {
+  font-size: 11px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.tcl-copy.copied {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+/* ---------- Empty state ---------- */
+
+.tcl-empty-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 4px;
+}
+
+.tcl-empty-mark {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tcl-empty h2 {
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: -.01em;
+}
+
+.tcl-empty p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 760px) {
+  .tcl-textarea {
+    min-height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tcl-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tcl-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .tcl-row-label {
+    grid-column: 1 / -1;
+  }
+}
