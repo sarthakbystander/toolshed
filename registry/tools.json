@@ -388,6 +388,29 @@
     }
   },
   {
+    "id": "unicode-text-inspector",
+    "name": "Unicode & Text Inspector",
+    "description": "Inspect any text character by character: code points, UTF-8 bytes, grapheme clusters, categories and blocks, plus a security scan for invisible characters, bidi controls, homoglyphs and normalization traps. Convert between escapes and sanitize copy-pasted text — all locally in your browser.",
+    "category": "Text",
+    "tags": [
+      "escape",
+      "homoglyph",
+      "invisible-characters",
+      "normalization",
+      "security",
+      "text",
+      "unicode",
+      "utf-8"
+    ],
+    "version": "1.0.0",
+    "runtime": "browser",
+    "privacy": {
+      "execution": "local",
+      "dataUploaded": false,
+      "storage": "none"
+    }
+  },
+  {
     "id": "uuid-generator",
     "name": "UUID Generator",
     "description": "Generate UUID v4 values, one or many at a time, in your browser.",
