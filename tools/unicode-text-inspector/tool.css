@@ -1,0 +1,393 @@
+/* Unicode & Text Inspector — widget styles layered on the shared Toolshed
+   design system (assets/toolshed.css). Only tool-specific pieces live here;
+   chrome, panes, buttons, status and hints come from the design system. */
+
+.sr-only{
+  position:absolute;
+  width:1px;height:1px;
+  padding:0;margin:-1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+  border:0;
+}
+
+.uti-file{display:none}
+
+/* ---------- Input ---------- */
+.uti-input{padding-bottom:18px}
+.uti-input textarea{min-height:150px}
+.uti-actions{align-items:center;gap:12px}
+.uti-keyhint{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--ink-3);
+}
+.uti-keyhint kbd{
+  font-family:var(--mono);
+  font-size:10.5px;
+  background:var(--surface-2);
+  border:1px solid var(--rule);
+  border-bottom-width:2px;
+  border-radius:4px;
+  padding:1px 5px;
+  color:var(--ink-2);
+}
+
+/* ---------- Summary cards ---------- */
+.uti-cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+  margin:22px 0;
+}
+.uti-card{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:0;
+}
+.uti-card-label{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+}
+.uti-card-value{
+  font-family:var(--mono);
+  font-size:1.35rem;
+  font-weight:700;
+  line-height:1.15;
+  color:var(--ink);
+  overflow-wrap:anywhere;
+}
+.uti-card-sub{
+  font-size:11.5px;
+  color:var(--ink-2);
+  line-height:1.35;
+}
+
+/* ---------- Security scan ---------- */
+.uti-scan{padding-bottom:18px}
+.uti-badge{
+  font-family:var(--mono);
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:4px 9px;
+  border-radius:999px;
+  border:1px solid var(--rule-2);
+  color:var(--ink-2);
+  background:var(--surface-2);
+  white-space:nowrap;
+}
+.uti-badge-high{color:#fff;background:var(--accent);border-color:var(--accent)}
+.uti-badge-medium{color:var(--accent-ink);background:var(--accent-soft);border-color:var(--accent)}
+.uti-badge-low{color:var(--ink-2);background:var(--surface-2)}
+.uti-badge-none{color:var(--ok);background:rgba(46,125,78,.12);border-color:var(--ok)}
+
+.uti-issues{display:flex;flex-direction:column;gap:12px}
+
+.uti-issue{
+  border:1px solid var(--rule);
+  border-left-width:3px;
+  border-radius:var(--radius-sm);
+  background:var(--paper);
+  padding:12px 14px;
+}
+.uti-issue-high{border-left-color:var(--accent)}
+.uti-issue-medium{border-left-color:#c98a2b}
+.uti-issue-low{border-left-color:var(--rule-2)}
+
+.uti-issue-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.uti-issue-level{
+  font-family:var(--mono);
+  font-size:9.5px;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:2px 7px;
+  border-radius:999px;
+  color:var(--paper);
+  background:var(--ink-3);
+  flex-shrink:0;
+}
+.uti-issue-high .uti-issue-level{background:var(--accent)}
+.uti-issue-medium .uti-issue-level{background:#c98a2b}
+.uti-issue-title{
+  font-size:15px;
+  font-weight:400;
+  letter-spacing:-.01em;
+  flex:1 1 auto;
+  min-width:0;
+}
+.uti-issue-count{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--ink-3);
+  flex-shrink:0;
+}
+.uti-issue-why{
+  margin-top:7px;
+  font-size:13.5px;
+  line-height:1.55;
+  color:var(--ink-2);
+}
+
+.uti-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.uti-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  font-family:var(--mono);
+  font-size:11px;
+  background:var(--surface-2);
+  border:1px solid var(--rule);
+  border-radius:var(--radius-sm);
+  padding:2px 7px;
+  color:var(--ink-2);
+}
+.uti-chip code{font-family:var(--mono);color:var(--ink)}
+.uti-chip-arrow{color:var(--ink-3)}
+.uti-chip-more{background:transparent;border-style:dashed;color:var(--ink-3)}
+
+/* ---------- Tabs ---------- */
+.uti-tabs-wrap{margin:26px 0 56px}
+.uti-tabs{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+  border-bottom:1px solid var(--rule);
+  margin-bottom:16px;
+}
+.uti-tab{
+  font-family:var(--mono);
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+  padding:9px 14px;
+  border:1px solid transparent;
+  border-bottom:none;
+  border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+  margin-bottom:-1px;
+  transition:color .15s,background .15s;
+}
+.uti-tab:hover{color:var(--accent)}
+.uti-tab[aria-selected="true"]{
+  color:var(--ink);
+  background:var(--surface);
+  border-color:var(--rule);
+  border-bottom:1px solid var(--surface);
+}
+.uti-panel{padding-bottom:22px}
+
+/* ---------- Filters ---------- */
+.uti-filters{
+  display:flex;
+  gap:14px;
+  align-items:flex-end;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.uti-field{display:flex;flex-direction:column;gap:6px;flex:1 1 200px;min-width:0}
+.uti-field label{
+  font-family:var(--mono);
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+}
+.uti-export{flex:0 0 auto;align-items:flex-end}
+
+.uti-count{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-3);
+  margin-bottom:10px;
+}
+
+/* ---------- Character table ---------- */
+.uti-tablewrap{
+  overflow-x:auto;
+  border:1px solid var(--rule);
+  border-radius:var(--radius-sm);
+  background:var(--surface);
+}
+.uti-table{
+  width:100%;
+  border-collapse:collapse;
+  font-family:var(--mono);
+  font-size:12px;
+  min-width:640px;
+}
+.uti-table th{
+  text-align:left;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+  padding:9px 10px;
+  border-bottom:1px solid var(--rule);
+  background:var(--surface-2);
+  position:sticky;
+  top:0;
+  white-space:nowrap;
+}
+.uti-table td{
+  padding:7px 10px;
+  border-bottom:1px solid var(--rule);
+  vertical-align:top;
+  color:var(--ink-2);
+}
+.uti-table tbody tr:last-child td{border-bottom:none}
+.uti-table tbody tr:hover td{background:var(--surface-2)}
+.uti-row-high td{background:rgba(179,64,42,.06)}
+.uti-row-medium td{background:rgba(201,138,43,.07)}
+
+.uti-num{color:var(--ink-3);text-align:right;white-space:nowrap}
+.uti-cp{color:var(--ink);white-space:nowrap}
+.uti-glyph{text-align:center}
+.uti-glyph-char{
+  display:inline-block;
+  min-width:1.6em;
+  padding:1px 4px;
+  border-radius:4px;
+  font-size:15px;
+  line-height:1.3;
+  color:var(--ink);
+}
+.uti-glyph-hidden{
+  color:var(--accent);
+  background:var(--accent-soft);
+  font-size:13px;
+}
+.uti-name{color:var(--ink);min-width:180px}
+.uti-desc{display:block;color:var(--ink-3);font-size:11px;margin-top:1px}
+.uti-cat,.uti-block,.uti-utf8{white-space:nowrap;color:var(--ink-2)}
+.uti-risk{white-space:nowrap}
+.uti-td-empty{
+  text-align:center;
+  color:var(--ink-3);
+  padding:28px 10px;
+  font-family:var(--font);
+  font-size:14px;
+}
+
+.uti-risk-tag{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:2px 6px;
+  border-radius:4px;
+  color:var(--ink-3);
+  background:transparent;
+}
+.uti-risk-high{color:#fff;background:var(--accent)}
+.uti-risk-medium{color:var(--accent-ink);background:var(--accent-soft)}
+.uti-risk-low{color:var(--ink-2);background:var(--surface-2)}
+
+.uti-pager{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  margin-top:14px;
+}
+.uti-pageinfo{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-3);
+}
+
+/* ---------- Escapes / transform ---------- */
+.uti-panel textarea{min-height:150px}
+.uti-fieldset{
+  border:1px solid var(--rule);
+  border-radius:var(--radius-sm);
+  padding:14px 16px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.uti-fieldset legend{padding:0 6px}
+.uti-check{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  font-size:13.5px;
+  color:var(--ink-2);
+  line-height:1.45;
+  cursor:pointer;
+}
+.uti-check input{accent-color:var(--accent);width:15px;height:15px;margin-top:2px;flex-shrink:0}
+.uti-norm{max-width:280px}
+
+/* ---------- Breakdown ---------- */
+.uti-sub{
+  font-size:15px;
+  font-weight:400;
+  letter-spacing:-.01em;
+  margin:20px 0 10px;
+}
+.uti-sub:first-child{margin-top:0}
+.uti-norm-table{min-width:0}
+.uti-norm-table td:first-child{color:var(--ink);font-weight:700}
+.uti-yes{color:var(--ok)}
+.uti-no{color:var(--accent-ink)}
+
+.uti-bars{display:flex;flex-direction:column;gap:7px}
+.uti-bar{
+  display:grid;
+  grid-template-columns:minmax(70px,150px) 1fr auto;
+  gap:10px;
+  align-items:center;
+  font-family:var(--mono);
+  font-size:11.5px;
+}
+.uti-bar-label{
+  color:var(--ink-2);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.uti-bar-track{
+  height:9px;
+  background:var(--surface-2);
+  border-radius:999px;
+  overflow:hidden;
+  min-width:40px;
+}
+.uti-bar-fill{
+  display:block;
+  height:100%;
+  background:var(--accent);
+  border-radius:999px;
+  opacity:.75;
+}
+.uti-bar-count{color:var(--ink-3);text-align:right;white-space:nowrap}
+
+@media (max-width:520px){
+  .uti-cards{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+  .uti-card-value{font-size:1.15rem}
+  .uti-filters{gap:10px}
+  .uti-export{width:100%}
+  .uti-bar{grid-template-columns:minmax(60px,110px) 1fr auto}
+}

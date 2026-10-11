@@ -1,0 +1,14 @@
+{
+  "id": "unicode-text-inspector",
+  "name": "Unicode & Text Inspector",
+  "description": "Inspect any text character by character: code points, UTF-8 bytes, grapheme clusters, categories and blocks, plus a security scan for invisible characters, bidi controls, homoglyphs and normalization traps. Convert between escapes and sanitize copy-pasted text — all locally in your browser.",
+  "category": "Text",
+  "tags": ["unicode", "text", "security", "homoglyph", "normalization", "utf-8", "invisible-characters", "escape"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

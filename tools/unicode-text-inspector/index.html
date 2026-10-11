@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Unicode &amp; Text Inspector — Toolshed</title>
+  <meta name="description" content="Inspect text code point by code point: UTF-8 bytes, grapheme clusters, Unicode categories and blocks, plus a security scan for invisible characters, bidi controls, homoglyphs and normalization traps. Convert escapes and sanitize text locally in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+    <div class="wrap hd-in">
+      <a class="logo" href="../..">
+        <span class="logo-mark" aria-hidden="true"></span>
+        Toolshed
+      </a>
+      <nav>
+        <a href="../..#index">Tools</a>
+        <a href="../..">Home</a>
+        <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66-.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / unicode-text-inspector</div>
+      <h1>Unicode &amp; Text Inspector</h1>
+      <p class="lede">See what is really inside a string: every code point, its UTF-8 bytes, category, block and script — and a security pass for the invisible characters, bidi controls, homoglyphs and normalization traps that break logins, comparisons and parsers. Everything runs locally in your tab.</p>
+    </section>
+
+    <section class="pane uti-input">
+      <div class="pane-header">
+        <label class="pane-title" for="input">TEXT TO INSPECT</label>
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+          <button type="button" class="btn secondary" id="btn-file">Open file</button>
+          <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          <input type="file" id="file" class="uti-file" accept=".txt,.md,.csv,.tsv,.json,.js,.ts,.css,.html,.xml,.svg,.yaml,.yml,.log,text/*,application/json" hidden>
+        </div>
+      </div>
+      <textarea id="input" placeholder="Paste text, a domain, an identifier, a line from a log, or a snippet of code. Try the sample to see a homoglyph, a zero-width space and a bidi override caught." spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="input-status"></textarea>
+      <div class="row uti-actions">
+        <button type="button" class="btn" id="btn-analyze">Analyze</button>
+        <span class="uti-keyhint">or press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></span>
+      </div>
+      <p class="status" id="input-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="uti-cards" id="cards" aria-label="Text measurements"></section>
+
+    <section class="pane uti-scan" id="scan-pane" aria-labelledby="scan-title">
+      <div class="pane-header">
+        <h2 class="pane-title" id="scan-title">SECURITY SCAN</h2>
+        <span class="uti-badge" id="risk-badge">No issues</span>
+      </div>
+      <div id="issues" class="uti-issues"></div>
+      <p class="hint" id="scan-empty" hidden>No suspicious characters found. The text contains no invisible formatting characters, bidi controls, homoglyphs or normalization traps from the checked set.</p>
+    </section>
+
+    <section class="uti-tabs-wrap">
+      <div class="uti-tabs" role="tablist" aria-label="Inspector views">
+        <button type="button" class="uti-tab" id="tab-chars" role="tab" aria-selected="true" aria-controls="panel-chars">Characters</button>
+        <button type="button" class="uti-tab" id="tab-escapes" role="tab" aria-selected="false" aria-controls="panel-escapes">Escapes</button>
+        <button type="button" class="uti-tab" id="tab-transform" role="tab" aria-selected="false" aria-controls="panel-transform">Transform</button>
+        <button type="button" class="uti-tab" id="tab-breakdown" role="tab" aria-selected="false" aria-controls="panel-breakdown">Breakdown</button>
+      </div>
+
+      <div class="pane uti-panel" id="panel-chars" role="tabpanel" aria-labelledby="tab-chars">
+        <div class="uti-filters">
+          <div class="uti-field">
+            <label for="filter">Filter</label>
+            <input type="text" id="filter" placeholder="name, U+XXXX, or character" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="uti-field">
+            <label for="filter-risk">Risk</label>
+            <select id="filter-risk">
+              <option value="all">All characters</option>
+              <option value="flagged">Flagged only</option>
+              <option value="high">High risk only</option>
+              <option value="medium">Medium risk and above</option>
+            </select>
+          </div>
+          <div class="row uti-export">
+            <button type="button" class="btn secondary" id="btn-copy-csv">Copy CSV</button>
+            <button type="button" class="btn secondary" id="btn-copy-json">Copy JSON</button>
+          </div>
+        </div>
+        <p class="uti-count" id="char-count" aria-live="polite"></p>
+        <div class="uti-tablewrap">
+          <table class="uti-table" id="char-table">
+            <caption class="sr-only">Characters in the inspected text</caption>
+            <thead>
+              <tr>
+                <th scope="col" class="col-i">#</th>
+                <th scope="col" class="col-cp">Code point</th>
+                <th scope="col" class="col-glyph">Glyph</th>
+                <th scope="col">Name</th>
+                <th scope="col" class="col-cat">Cat.</th>
+                <th scope="col" class="col-block">Block</th>
+                <th scope="col" class="col-utf8">UTF-8</th>
+                <th scope="col" class="col-risk">Risk</th>
+              </tr>
+            </thead>
+            <tbody id="char-body"></tbody>
+          </table>
+        </div>
+        <div class="uti-pager" id="pager" hidden>
+          <button type="button" class="btn secondary" id="prev-page">← Prev</button>
+          <span class="uti-pageinfo" id="pageinfo"></span>
+          <button type="button" class="btn secondary" id="next-page">Next →</button>
+        </div>
+      </div>
+
+      <div class="pane uti-panel" id="panel-escapes" role="tabpanel" aria-labelledby="tab-escapes" hidden>
+        <div class="uti-filters">
+          <div class="uti-field">
+            <label for="escape-format">Escape format</label>
+            <select id="escape-format">
+              <option value="auto">Auto (decode everything, nested too)</option>
+              <option value="js">JavaScript (\uXXXX, \u{...})</option>
+              <option value="html">HTML entities (&#x..; &#..; &amp;name;)</option>
+              <option value="percent">URL / percent-encoding</option>
+              <option value="css">CSS escapes</option>
+              <option value="json">JSON string</option>
+              <option value="codepoints">Code point list (U+XXXX)</option>
+            </select>
+          </div>
+          <div class="row uti-export">
+            <button type="button" class="btn" id="btn-decode">Decode</button>
+            <button type="button" class="btn secondary" id="btn-encode">Encode</button>
+          </div>
+        </div>
+        <label class="pane-title" for="escape-out">RESULT</label>
+        <textarea id="escape-out" readonly spellcheck="false" placeholder="Decoded or encoded text appears here."></textarea>
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-copy-escape">Copy result</button>
+          <button type="button" class="btn secondary" id="btn-apply-escape">Apply to input</button>
+        </div>
+        <p class="status" id="escape-status" role="status" aria-live="polite"></p>
+        <p class="hint">Decoding never executes the text; it is treated as data only. Auto mode repeats until the text stops changing, up to a fixed limit.</p>
+      </div>
+
+      <div class="pane uti-panel" id="panel-transform" role="tabpanel" aria-labelledby="tab-transform" hidden>
+        <fieldset class="uti-fieldset">
+          <legend class="pane-title">CLEAN UP</legend>
+          <label class="uti-check"><input type="checkbox" id="t-invisible" checked> Remove invisible characters (zero-width, bidi, BOM, tags)</label>
+          <label class="uti-check"><input type="checkbox" id="t-spaces"> Replace unusual spaces with a normal space</label>
+          <label class="uti-check"><input type="checkbox" id="t-quotes"> Straighten curly quotes and dashes</label>
+          <div class="uti-field uti-norm">
+            <label for="t-normalize">Normalize</label>
+            <select id="t-normalize">
+              <option value="">Leave as-is</option>
+              <option value="NFC">NFC (composed)</option>
+              <option value="NFD">NFD (decomposed)</option>
+              <option value="NFKC">NFKC (compatibility composed)</option>
+              <option value="NFKD">NFKD (compatibility decomposed)</option>
+            </select>
+          </div>
+        </fieldset>
+        <div class="row">
+          <button type="button" class="btn" id="btn-transform">Transform</button>
+        </div>
+        <label class="pane-title" for="transform-out">CLEANED TEXT</label>
+        <textarea id="transform-out" readonly spellcheck="false" placeholder="Cleaned text appears here."></textarea>
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-copy-transform">Copy result</button>
+          <button type="button" class="btn secondary" id="btn-apply-transform">Apply to input</button>
+        </div>
+        <p class="status" id="transform-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="pane uti-panel" id="panel-breakdown" role="tabpanel" aria-labelledby="tab-breakdown" hidden>
+        <h3 class="uti-sub">Normalization</h3>
+        <div class="uti-tablewrap">
+          <table class="uti-table uti-norm-table">
+            <caption class="sr-only">Normalization comparison</caption>
+            <thead>
+              <tr><th scope="col">Form</th><th scope="col">Code points</th><th scope="col">Bytes</th><th scope="col">Same as input</th></tr>
+            </thead>
+            <tbody id="norm-body"></tbody>
+          </table>
+        </div>
+        <h3 class="uti-sub">Scripts</h3>
+        <div id="scripts" class="uti-bars"></div>
+        <h3 class="uti-sub">Blocks</h3>
+        <div id="blocks" class="uti-bars"></div>
+        <h3 class="uti-sub">Categories</h3>
+        <div id="categories" class="uti-bars"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-in">
+      <div class="cr">
+        Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+      </div>
+      <nav>
+        <a href="../..">Home</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+        <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="tool.js"></script>
+  <script>
+  /* Unicode & Text Inspector — page UI.
+   * The analysis logic lives in tool.js (window.Toolshed.unicodeTextInspector);
+   * this file only wires the DOM to it. All user text is written with
+   * textContent, never innerHTML. */
+  (function () {
+    "use strict";
+
+    var lib = window.Toolshed && window.Toolshed.unicodeTextInspector;
+    if (!lib) return;
+
+    var PAGE_SIZE = 100;
+    var MAX_FILE_BYTES = 5 * 1024 * 1024;
+    var DEBOUNCE_MS = 250;
+
+    var SAMPLE =
+      "Account: p\u0430ypal-support.com\n" +
+      "Reset for \u201cJose\u0301\u201d \u2014 urgent\n" +
+      "Hidden here: pay\u200bpal\n" +
+      "Bidi trick: invoice\u202egnp.exe\u202c\n" +
+      "Space: 1\u00a0000 USD";
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    var els = {
+      input: $("input"),
+      status: $("input-status"),
+      cards: $("cards"),
+      riskBadge: $("risk-badge"),
+      issues: $("issues"),
+      scanEmpty: $("scan-empty"),
+      filter: $("filter"),
+      filterRisk: $("filter-risk"),
+      charCount: $("char-count"),
+      charBody: $("char-body"),
+      pager: $("pager"),
+      pageinfo: $("pageinfo"),
+      normBody: $("norm-body"),
+      scripts: $("scripts"),
+      blocks: $("blocks"),
+      categories: $("categories"),
+      escapeFormat: $("escape-format"),
+      escapeOut: $("escape-out"),
+      escapeStatus: $("escape-status"),
+      transformOut: $("transform-out"),
+      transformStatus: $("transform-status")
+    };
+
+    var state = {
+      analysis: null,
+      filtered: [],
+      page: 0
+    };
+
+    function el(tag, className, text) {
+      var node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined && text !== null) node.textContent = String(text);
+      return node;
+    }
+
+    function fmt(n) {
+      return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u2009");
+    }
+
+    function isInvisible(c) {
+      return c.flags.indexOf("invisible") !== -1 || c.flags.indexOf("bidi") !== -1 ||
+        c.flags.indexOf("tag") !== -1 || c.flags.indexOf("variation-selector") !== -1;
+    }
+
+    function glyphFor(c) {
+      if (isInvisible(c)) return "\u00b7";
+      if (c.cp === 0x20 || c.cp === 0x00a0 || c.flags.indexOf("odd-space") !== -1) return "\u2423";
+      if (c.cp === 0x09) return "\u21b9";
+      if (c.cp === 0x0a || c.cp === 0x0d) return "\u21b5";
+      if (c.cp < 0x20) return "\u00b7";
+      return c.char;
+    }
+
+    function riskLabel(risk) {
+      if (risk === "high") return "High";
+      if (risk === "medium") return "Medium";
+      if (risk === "low") return "Low";
+      return "\u2014";
+    }
+
+    function setStatus(node, message, kind) {
+      if (!message) { node.classList.add("hidden"); node.textContent = ""; return; }
+      node.textContent = message;
+      node.classList.remove("hidden", "ok", "error");
+      if (kind) node.classList.add(kind);
+    }
+
+    function copyText(text, button, statusNode, okMessage) {
+      if (!text) { setStatus(statusNode, "Nothing to copy yet.", "error"); return; }
+      if (!navigator.clipboard) {
+        setStatus(statusNode, "Clipboard API unavailable — select the text and copy manually.", "error");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(function () {
+        if (button) {
+          var old = button.textContent;
+          button.textContent = "Copied \u2713";
+          setTimeout(function () { button.textContent = old; }, 1400);
+        }
+        setStatus(statusNode, okMessage || "Copied to clipboard.", "ok");
+      }).catch(function () {
+        setStatus(statusNode, "Copy was blocked by the browser — select the text and copy manually.", "error");
+      });
+    }
+
+    function renderCards(a) {
+      els.cards.textContent = "";
+      var s = a.summary;
+      var items = [
+        ["Characters", fmt(s.chars), "Unicode code points"],
+        ["UTF-8 bytes", fmt(s.bytes), s.chars ? a.bytesPerChar + " per character" : "no input"],
+        ["Graphemes", fmt(s.graphemes), a.hasSegmenter ? "Intl.Segmenter" : "approximate"],
+        ["UTF-16 units", fmt(s.utf16Units), "JavaScript string length"],
+        ["Non-ASCII", fmt(s.nonAscii), "code points above U+007F"],
+        ["Invisible", fmt(s.invisible), "formatting characters"],
+        ["Issues", fmt(s.issues), s.highIssues ? s.highIssues + " high risk" : "none high risk"],
+        ["Lines / words", fmt(s.lines) + " / " + fmt(s.words), "split on whitespace"]
+      ];
+      items.forEach(function (it) {
+        var card = el("div", "uti-card");
+        card.appendChild(el("span", "uti-card-label", it[0]));
+        card.appendChild(el("span", "uti-card-value", it[1]));
+        card.appendChild(el("span", "uti-card-sub", it[2]));
+        els.cards.appendChild(card);
+      });
+    }
+
+    function renderIssues(a) {
+      els.issues.textContent = "";
+
+      var risk = a.risk;
+      els.riskBadge.className = "uti-badge uti-badge-" + risk;
+      els.riskBadge.textContent =
+        risk === "none" ? "No issues" :
+        risk === "low" ? "Low risk" :
+        risk === "medium" ? "Medium risk" : "High risk";
+
+      if (!a.issues.length) {
+        els.scanEmpty.hidden = false;
+        return;
+      }
+      els.scanEmpty.hidden = true;
+
+      a.issues.forEach(function (issue) {
+        var box = el("div", "uti-issue uti-issue-" + issue.level);
+        var head = el("div", "uti-issue-head");
+        head.appendChild(el("span", "uti-issue-level", riskLabel(issue.level)));
+        head.appendChild(el("h3", "uti-issue-title", issue.title));
+        head.appendChild(el("span", "uti-issue-count", fmt(issue.count) + (issue.count === 1 ? " occurrence" : " occurrences")));
+        box.appendChild(head);
+        box.appendChild(el("p", "uti-issue-why", issue.why));
+
+        if (issue.codePoints && issue.codePoints.length) {
+          var chips = el("div", "uti-chips");
+          issue.codePoints.slice(0, 12).forEach(function (c) {
+            var chip = el("span", "uti-chip");
+            chip.appendChild(el("code", null, "U+" + c.cp.toString(16).toUpperCase().padStart(4, "0")));
+            if (c.looksLike) {
+              chip.appendChild(el("span", "uti-chip-arrow", " looks like "));
+              chip.appendChild(el("code", null, c.looksLike));
+            }
+            if (c.name) chip.title = c.name;
+            chips.appendChild(chip);
+          });
+          if (issue.codePoints.length > 12) {
+            chips.appendChild(el("span", "uti-chip uti-chip-more", "+" + (issue.codePoints.length - 12) + " more"));
+          }
+          box.appendChild(chips);
+        }
+        els.issues.appendChild(box);
+      });
+    }
+
+    function applyFilter() {
+      if (!state.analysis) { state.filtered = []; return; }
+      var term = els.filter.value.trim().toLowerCase();
+      var risk = els.filterRisk.value;
+      state.filtered = state.analysis.chars.filter(function (c) {
+        if (risk === "flagged" && c.risk === "none") return false;
+        if (risk === "high" && c.risk !== "high") return false;
+        if (risk === "medium" && c.risk !== "medium" && c.risk !== "high") return false;
+        if (!term) return true;
+        var hay = (c.name + " U+" + c.cp.toString(16).toUpperCase() + " " + c.char + " " +
+          c.block + " " + (c.script || "") + " " + c.flags.join(" ")).toLowerCase();
+        return hay.indexOf(term) !== -1;
+      });
+      state.page = 0;
+    }
+
+    function renderTable() {
+      var a = state.analysis;
+      els.charBody.textContent = "";
+
+      if (!a || !a.chars.length) {
+        var emptyTr = el("tr");
+        var emptyTd = el("td", "uti-td-empty",
+          a && a.text ? "Nothing to show for this filter." : "Paste text above to see its characters.");
+        emptyTd.colSpan = 8;
+        emptyTr.appendChild(emptyTd);
+        els.charBody.appendChild(emptyTr);
+        els.charCount.textContent = "";
+        els.pager.hidden = true;
+        return;
+      }
+
+      var total = state.filtered.length;
+      var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (state.page >= pages) state.page = pages - 1;
+      if (state.page < 0) state.page = 0;
+      var start = state.page * PAGE_SIZE;
+      var slice = state.filtered.slice(start, start + PAGE_SIZE);
+
+      slice.forEach(function (c) {
+        var tr = el("tr", c.risk !== "none" ? "uti-row-" + c.risk : null);
+        tr.appendChild(el("td", "uti-num", c.index));
+        tr.appendChild(el("td", "uti-cp", "U+" + c.cp.toString(16).toUpperCase().padStart(4, "0")));
+
+        var glyphTd = el("td", "uti-glyph");
+        var glyph = el("span", "uti-glyph-char", glyphFor(c));
+        if (isInvisible(c)) glyph.classList.add("uti-glyph-hidden");
+        glyphTd.appendChild(glyph);
+        tr.appendChild(glyphTd);
+
+        var nameTd = el("td", "uti-name");
+        nameTd.appendChild(el("span", null, c.name));
+        if (c.describe) nameTd.appendChild(el("span", "uti-desc", c.describe));
+        tr.appendChild(nameTd);
+
+        tr.appendChild(el("td", "uti-cat", c.category));
+        tr.appendChild(el("td", "uti-block", c.block));
+        tr.appendChild(el("td", "uti-utf8", c.utf8));
+
+        var riskTd = el("td", "uti-risk");
+        riskTd.appendChild(el("span", "uti-risk-tag uti-risk-" + c.risk, riskLabel(c.risk)));
+        tr.appendChild(riskTd);
+
+        tr.title =
+          c.name + "\n" +
+          "Code point: U+" + c.cp.toString(16).toUpperCase() + " (" + c.cp + ")\n" +
+          "Category: " + c.category + " — " + c.categoryName + "\n" +
+          "Block: " + c.block + (c.script ? "\nScript: " + c.script : "") + "\n" +
+          "UTF-8: " + c.utf8 + "\n" +
+          "HTML: " + c.htmlEntity + "\n" +
+          "CSS: " + c.css + "\n" +
+          "JS: " + c.js +
+          (c.confusable ? "\nLooks like: " + c.confusable : "") +
+          (c.flags.length ? "\nFlags: " + c.flags.join(", ") : "");
+
+        els.charBody.appendChild(tr);
+      });
+
+      var shownEnd = Math.min(start + PAGE_SIZE, total);
+      els.charCount.textContent = total
+        ? "Showing " + (start + 1) + "\u2013" + shownEnd + " of " + fmt(total) + " character" + (total === 1 ? "" : "s") +
+          (a.detailTruncated ? " (detailed table capped at " + fmt(lib.MAX_DETAIL_CHARS) + " of " + fmt(a.length) + ")" : "")
+        : "No characters match this filter.";
+
+      if (pages > 1) {
+        els.pager.hidden = false;
+        els.pageinfo.textContent = "Page " + (state.page + 1) + " of " + pages;
+        $("prev-page").disabled = state.page === 0;
+        $("next-page").disabled = state.page >= pages - 1;
+      } else {
+        els.pager.hidden = true;
+      }
+    }
+
+    function renderBars(node, counts) {
+      node.textContent = "";
+      var keys = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+      if (!keys.length) {
+        node.appendChild(el("p", "hint", "No characters to break down."));
+        return;
+      }
+      var max = counts[keys[0]] || 1;
+      keys.forEach(function (k) {
+        var row = el("div", "uti-bar");
+        row.appendChild(el("span", "uti-bar-label", k));
+        var track = el("span", "uti-bar-track");
+        var fill = el("span", "uti-bar-fill");
+        fill.style.width = Math.max(2, Math.round((counts[k] / max) * 100)) + "%";
+        track.appendChild(fill);
+        row.appendChild(track);
+        row.appendChild(el("span", "uti-bar-count", fmt(counts[k])));
+        node.appendChild(row);
+      });
+    }
+
+    function renderBreakdown(a) {
+      els.normBody.textContent = "";
+      ["NFC", "NFD", "NFKC", "NFKD"].forEach(function (form) {
+        var normed = lib.normalize(a.text, form);
+        var cps = lib.toCodePoints(normed);
+        var bytes = lib.encodeUTF8(normed).length;
+        var same = normed === a.text;
+        var tr = el("tr");
+        tr.appendChild(el("td", "uti-cp", form));
+        tr.appendChild(el("td", null, fmt(cps.length)));
+        tr.appendChild(el("td", null, fmt(bytes)));
+        var td = el("td");
+        td.appendChild(el("span", same ? "uti-yes" : "uti-no", same ? "yes" : "no — changes"));
+        tr.appendChild(td);
+        els.normBody.appendChild(tr);
+      });
+      renderBars(els.scripts, a.scriptCounts);
+      renderBars(els.blocks, a.blockCounts);
+      renderBars(els.categories, a.categoryCounts);
+    }
+
+    function analyzeNow() {
+      var text = els.input.value;
+      var a;
+      try {
+        a = lib.analyze(text);
+      } catch (err) {
+        setStatus(els.status, "Could not analyze this text: " + (err && err.message ? err.message : "unknown error"), "error");
+        return;
+      }
+      state.analysis = a;
+      renderCards(a);
+      renderIssues(a);
+      applyFilter();
+      renderTable();
+      renderBreakdown(a);
+
+      if (!text) {
+        setStatus(els.status, "Empty input. Paste text, open a file, or load the sample to begin.", null);
+      } else {
+        var s = a.summary;
+        var msg = fmt(s.chars) + " character" + (s.chars === 1 ? "" : "s") +
+          ", " + fmt(s.bytes) + " UTF-8 byte" + (s.bytes === 1 ? "" : "s") +
+          ", " + fmt(s.graphemes) + " grapheme" + (s.graphemes === 1 ? "" : "s") + ".";
+        if (s.issues === 0) {
+          setStatus(els.status, msg + " No issues found.", "ok");
+        } else {
+          setStatus(els.status, msg + " " + s.issues + " issue" + (s.issues === 1 ? "" : "s") + " found" +
+            (s.highIssues ? " (" + s.highIssues + " high risk)" : "") + ".", s.highIssues ? "error" : null);
+        }
+      }
+    }
+
+    var debounceTimer = null;
+    function scheduleAnalyze() {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(analyzeNow, DEBOUNCE_MS);
+    }
+
+    function selectTab(id) {
+      ["chars", "escapes", "transform", "breakdown"].forEach(function (name) {
+        var tab = $("tab-" + name);
+        var panel = $("panel-" + name);
+        var selected = name === id;
+        tab.setAttribute("aria-selected", selected ? "true" : "false");
+        panel.hidden = !selected;
+      });
+    }
+
+    function runEscape(mode) {
+      var text = els.input.value;
+      if (!text) { setStatus(els.escapeStatus, "The input is empty.", "error"); els.escapeOut.value = ""; return; }
+      var format = els.escapeFormat.value;
+      var out = mode === "encode" ? lib.encodeEscapes(text, format) : lib.decodeEscapes(text, format);
+      els.escapeOut.value = out;
+      var changed = out !== text;
+      setStatus(els.escapeStatus, (mode === "encode" ? "Encoded" : "Decoded") + " with the " + format + " format" +
+        (changed ? "." : " — the text was unchanged (nothing to " + (mode === "encode" ? "encode" : "decode") + ")."),
+        changed ? "ok" : null);
+    }
+
+    function runTransform() {
+      var text = els.input.value;
+      if (!text) { setStatus(els.transformStatus, "The input is empty.", "error"); els.transformOut.value = ""; return; }
+      var norm = $("t-normalize").value;
+      var out = lib.sanitize(text, {
+        removeInvisible: $("t-invisible").checked,
+        replaceSpaces: $("t-spaces").checked,
+        replaceQuotes: $("t-quotes").checked,
+        normalize: norm || false
+      });
+      els.transformOut.value = out;
+      var removed = text.length - out.length;
+      var msg = out === text
+        ? "No changes — the text already passes these checks."
+        : "Cleaned: " + (removed > 0 ? removed + " character" + (removed === 1 ? "" : "s") + " removed" : "text rewritten") + ".";
+      setStatus(els.transformStatus, msg, out === text ? null : "ok");
+    }
+
+    els.input.addEventListener("input", scheduleAnalyze);
+    els.input.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (debounceTimer) clearTimeout(debounceTimer);
+        analyzeNow();
+      }
+    });
+
+    $("btn-analyze").addEventListener("click", analyzeNow);
+    $("btn-sample").addEventListener("click", function () {
+      els.input.value = SAMPLE;
+      analyzeNow();
+      els.input.focus();
+    });
+    $("btn-clear").addEventListener("click", function () {
+      els.input.value = "";
+      els.escapeOut.value = "";
+      els.transformOut.value = "";
+      setStatus(els.escapeStatus, "");
+      setStatus(els.transformStatus, "");
+      analyzeNow();
+      els.input.focus();
+    });
+
+    $("btn-file").addEventListener("click", function () { $("file").click(); });
+    $("file").addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (file.size > MAX_FILE_BYTES) {
+        setStatus(els.status, "That file is larger than 5 MB. Open a smaller file or paste the text.", "error");
+        e.target.value = "";
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function () {
+        els.input.value = String(reader.result || "");
+        analyzeNow();
+        setStatus(els.status, "Loaded " + file.name + " (" + fmt(file.size) + " bytes).", "ok");
+      };
+      reader.onerror = function () {
+        setStatus(els.status, "Could not read that file. It may be binary or unreadable.", "error");
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    });
+
+    els.filter.addEventListener("input", function () { applyFilter(); renderTable(); });
+    els.filterRisk.addEventListener("change", function () { applyFilter(); renderTable(); });
+    $("prev-page").addEventListener("click", function () { state.page--; renderTable(); });
+    $("next-page").addEventListener("click", function () { state.page++; renderTable(); });
+
+    $("btn-copy-csv").addEventListener("click", function () {
+      if (!state.analysis) return;
+      copyText(lib.exportCSV(state.analysis), this, els.status, "Character table copied as CSV.");
+    });
+    $("btn-copy-json").addEventListener("click", function () {
+      if (!state.analysis) return;
+      copyText(lib.exportJSON(state.analysis), this, els.status, "Full report copied as JSON.");
+    });
+
+    ["chars", "escapes", "transform", "breakdown"].forEach(function (name) {
+      $("tab-" + name).addEventListener("click", function () { selectTab(name); });
+    });
+
+    $("btn-decode").addEventListener("click", function () { runEscape("decode"); });
+    $("btn-encode").addEventListener("click", function () { runEscape("encode"); });
+    $("btn-copy-escape").addEventListener("click", function () {
+      copyText(els.escapeOut.value, this, els.escapeStatus, "Result copied.");
+    });
+    $("btn-apply-escape").addEventListener("click", function () {
+      els.input.value = els.escapeOut.value;
+      analyzeNow();
+      setStatus(els.escapeStatus, "Applied to the input.", "ok");
+    });
+
+    $("btn-transform").addEventListener("click", runTransform);
+    $("btn-copy-transform").addEventListener("click", function () {
+      copyText(els.transformOut.value, this, els.transformStatus, "Cleaned text copied.");
+    });
+    $("btn-apply-transform").addEventListener("click", function () {
+      els.input.value = els.transformOut.value;
+      analyzeNow();
+      setStatus(els.transformStatus, "Applied to the input.", "ok");
+    });
+
+    selectTab("chars");
+    analyzeNow();
+  })();
+  </script>
+</body>
+</html>
