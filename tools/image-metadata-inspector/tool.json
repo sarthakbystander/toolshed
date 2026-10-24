@@ -1,0 +1,14 @@
+{
+  "id": "image-metadata-inspector",
+  "name": "Image Metadata Inspector",
+  "description": "Read and strip the hidden metadata in your photos — EXIF, GPS location, XMP, IPTC, ICC profiles and comments — with a plain-language privacy report. JPEG, PNG, WebP and GIF, parsed entirely in your browser.",
+  "category": "Image",
+  "tags": ["exif", "gps", "icc", "image", "iptc", "metadata", "photo", "privacy", "xmp"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}

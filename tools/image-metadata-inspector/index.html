@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#efe9dd">
+  <title>Image Metadata Inspector — Toolshed</title>
+  <meta name="description" content="Read and strip the hidden metadata in your photos: EXIF, GPS location, XMP, IPTC, ICC profiles and comments, plus a plain-language privacy report. JPEG, PNG, WebP and GIF — all parsed locally in your browser.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / image-metadata-inspector</div>
+      <h1>Image Metadata Inspector</h1>
+      <p class="lede">See everything your photos reveal: camera model, capture time, GPS coordinates, XMP, IPTC and ICC profiles — then strip it and download a clean copy. Parsed entirely in your browser; the file never leaves your device.</p>
+    </section>
+
+    <section class="toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">IMAGE</span>
+          <span class="badge" id="file-badge">no file</span>
+        </div>
+
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Load an image: click to browse, or drop a file here">
+          <input type="file" id="file-input" accept="image/*,.jpg,.jpeg,.png,.webp,.gif" hidden>
+          <div class="dz-empty" id="dz-empty">
+            <p class="dz-main">Drop an image here, or <strong class="dz-browse">browse</strong></p>
+            <p class="dz-sub">JPEG, PNG, WebP and GIF. Read locally — nothing is uploaded, nothing is stored.</p>
+            <div class="dz-actions">
+              <button type="button" class="btn secondary" id="btn-sample-jpeg">Sample JPEG</button>
+              <button type="button" class="btn secondary" id="btn-sample-png">PNG</button>
+              <button type="button" class="btn secondary" id="btn-sample-webp">WebP</button>
+              <button type="button" class="btn secondary" id="btn-sample-gif">GIF</button>
+            </div>
+          </div>
+          <div class="file-card hidden" id="file-card">
+            <p class="file-name" id="file-name">—</p>
+            <dl class="kv" id="file-kv"></dl>
+          </div>
+        </div>
+
+        <p class="hint">Metadata is read from the container's own segments and tags — the pixel data is never decoded, so this is safe on untrusted files. Only JPEG, PNG, WebP and GIF are recognised.</p>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">PRIVACY EXPOSURE</span>
+          <span class="badge" id="privacy-badge">—</span>
+        </div>
+
+        <div class="privacy-meter" id="privacy-meter">
+          <div class="privacy-track"><span class="privacy-fill" id="privacy-fill"></span></div>
+          <p class="privacy-headline" id="privacy-headline">Load an image to see what it exposes.</p>
+        </div>
+
+        <ul class="exposure-list" id="exposure-list"></ul>
+        <p class="hint" id="privacy-hint">The score weighs location data most heavily, then serial numbers and identity tags. It is a guide, not a verdict.</p>
+
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-copy-report" disabled>Copy report</button>
+          <button type="button" class="btn secondary" id="btn-card" disabled>Privacy card</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbody single" id="report-wrap" hidden>
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">SUMMARY</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-copy-report-2" disabled>Copy report</button>
+            <button type="button" class="btn secondary" id="btn-download-report" disabled>Download .txt</button>
+          </div>
+        </div>
+
+        <dl class="kv kv-grid" id="summary-kv"></dl>
+
+        <ul class="findings" id="findings"></ul>
+
+        <div class="strip-box">
+          <div class="strip-copy">
+            <strong>Strip metadata &amp; download a clean copy</strong>
+            <span class="hint">Rebuilds the file from its image data only — EXIF, GPS, XMP, IPTC, ICC and comments are removed. The original file on your disk is never touched.</span>
+          </div>
+          <button type="button" class="btn" id="btn-strip" disabled>Strip &amp; download</button>
+        </div>
+        <p class="status hidden" id="strip-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="toolbody single" id="detail-wrap" hidden>
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">METADATA</span>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Metadata groups" id="tablist">
+          <button type="button" class="tab" role="tab" id="tab-exif" aria-controls="panel-exif" aria-selected="true" tabindex="0">EXIF</button>
+          <button type="button" class="tab" role="tab" id="tab-xmp" aria-controls="panel-xmp" aria-selected="false" tabindex="-1">XMP</button>
+          <button type="button" class="tab" role="tab" id="tab-iptc" aria-controls="panel-iptc" aria-selected="false" tabindex="-1">IPTC</button>
+          <button type="button" class="tab" role="tab" id="tab-icc" aria-controls="panel-icc" aria-selected="false" tabindex="-1">ICC</button>
+          <button type="button" class="tab" role="tab" id="tab-container" aria-controls="panel-container" aria-selected="false" tabindex="-1">Container</button>
+          <button type="button" class="tab" role="tab" id="tab-text" aria-controls="panel-text" aria-selected="false" tabindex="-1">Text report</button>
+        </div>
+
+        <div class="tabpanel" id="panel-exif" role="tabpanel" aria-labelledby="tab-exif" tabindex="0"></div>
+        <div class="tabpanel hidden" id="panel-xmp" role="tabpanel" aria-labelledby="tab-xmp" tabindex="0"></div>
+        <div class="tabpanel hidden" id="panel-iptc" role="tabpanel" aria-labelledby="tab-iptc" tabindex="0"></div>
+        <div class="tabpanel hidden" id="panel-icc" role="tabpanel" aria-labelledby="tab-icc" tabindex="0"></div>
+        <div class="tabpanel hidden" id="panel-container" role="tabpanel" aria-labelledby="tab-container" tabindex="0"></div>
+        <div class="tabpanel hidden" id="panel-text" role="tabpanel" aria-labelledby="tab-text" tabindex="0"></div>
+      </div>
+    </section>
+
+    <section class="toolbody single" id="card-wrap" hidden>
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">PRIVACY CARD</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-download-card">Download SVG</button>
+            <button type="button" class="btn secondary" id="btn-close-card">Close</button>
+          </div>
+        </div>
+        <div class="card-holder">
+          <img id="privacy-card" alt="Privacy summary card for the inspected image" width="640" height="360">
+        </div>
+        <p class="hint">A self-contained, script-free SVG summarising what the image exposes. Handy for sharing a privacy check without sharing the photo.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    var lib = window.Toolshed.imageMetadataInspector;
+    var els = {
+      dropzone: document.getElementById("dropzone"),
+      fileInput: document.getElementById("file-input"),
+      dzEmpty: document.getElementById("dz-empty"),
+      fileCard: document.getElementById("file-card"),
+      fileName: document.getElementById("file-name"),
+      fileKv: document.getElementById("file-kv"),
+      fileBadge: document.getElementById("file-badge"),
+      privacyBadge: document.getElementById("privacy-badge"),
+      privacyFill: document.getElementById("privacy-fill"),
+      privacyHeadline: document.getElementById("privacy-headline"),
+      exposureList: document.getElementById("exposure-list"),
+      privacyHint: document.getElementById("privacy-hint"),
+      reportWrap: document.getElementById("report-wrap"),
+      detailWrap: document.getElementById("detail-wrap"),
+      cardWrap: document.getElementById("card-wrap"),
+      summaryKv: document.getElementById("summary-kv"),
+      findings: document.getElementById("findings"),
+      stripStatus: document.getElementById("strip-status"),
+      privacyCard: document.getElementById("privacy-card"),
+      tablist: document.getElementById("tablist")
+    };
+
+    var state = { report: null, bytes: null, name: "", cardSvg: "" };
+
+    // ---- tiny DOM helpers (textContent only; never innerHTML) ----
+
+    function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+    function el(tag, className, text) {
+      var node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined && text !== null) node.textContent = String(text);
+      return node;
+    }
+
+    function defRow(dl, term, value) {
+      if (value === null || value === undefined || value === "") return;
+      dl.appendChild(el("dt", null, term));
+      dl.appendChild(el("dd", null, value));
+    }
+
+    function setStatus(node, message, kind) {
+      node.textContent = message;
+      node.className = "status" + (kind ? " " + kind : "");
+      node.classList.remove("hidden");
+    }
+
+    function hide(node) { node.classList.add("hidden"); }
+
+    // ---- file loading ----
+
+    function loadBytes(bytes, name) {
+      state.bytes = bytes;
+      state.name = name || "image";
+      var report = lib.inspect(bytes);
+      state.report = report;
+      render(report);
+    }
+
+    function readFile(file) {
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          loadBytes(new Uint8Array(reader.result), file.name);
+        } catch (err) {
+          showError("Could not read that file: " + (err && err.message ? err.message : "unknown error"));
+        }
+      };
+      reader.onerror = function () { showError("Could not read that file."); };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function showError(message) {
+      state.report = null;
+      els.fileBadge.textContent = "unreadable";
+      els.privacyBadge.textContent = "—";
+      els.privacyBadge.className = "badge";
+      els.privacyHeadline.textContent = message;
+      els.privacyFill.style.width = "0%";
+      els.privacyFill.className = "privacy-fill";
+      clear(els.exposureList);
+      els.reportWrap.hidden = true;
+      els.detailWrap.hidden = true;
+      els.cardWrap.hidden = true;
+      setControls(false);
+    }
+
+    function setControls(on) {
+      ["btn-copy-report", "btn-copy-report-2", "btn-download-report", "btn-strip", "btn-card"]
+        .forEach(function (id) {
+          var b = document.getElementById(id);
+          if (b) b.disabled = !on;
+        });
+    }
+
+    // ---- rendering ----
+
+    function render(report) {
+      clear(els.exposureList);
+      els.cardWrap.hidden = true;
+
+      if (!report.ok) {
+        showError(report.error || "This file could not be inspected.");
+        return;
+      }
+
+      setControls(true);
+
+      // File identity
+      els.dzEmpty.classList.add("hidden");
+      els.fileCard.classList.remove("hidden");
+      els.dropzone.classList.add("has-image");
+      els.fileName.textContent = state.name;
+      els.fileBadge.textContent = report.formatLabel;
+      clear(els.fileKv);
+      defRow(els.fileKv, "Format", report.formatLabel + " · " + report.mime);
+      defRow(els.fileKv, "Size", lib.formatBytes(report.fileSize));
+      if (report.dimensions && report.dimensions.width) {
+        defRow(els.fileKv, "Dimensions", report.dimensions.width + " × " + report.dimensions.height + " px");
+      }
+      if (report.dimensions && report.dimensions.bitDepth) {
+        defRow(els.fileKv, "Bit depth", report.dimensions.bitDepth + "-bit");
+      }
+      if (report.version) defRow(els.fileKv, "Version", report.version);
+
+      renderPrivacy(report);
+      renderSummary(report);
+      renderFindings(report);
+      renderExif(report);
+      renderXmp(report);
+      renderIptc(report);
+      renderIcc(report);
+      renderContainer(report);
+      renderText(report);
+
+      els.reportWrap.hidden = false;
+      els.detailWrap.hidden = false;
+    }
+
+    function renderPrivacy(report) {
+      var p = report.privacy;
+      els.privacyBadge.textContent = p.level;
+      els.privacyBadge.className = "badge level-" + p.level;
+      els.privacyFill.className = "privacy-fill level-" + p.level;
+      els.privacyFill.style.width = Math.min(100, p.score) + "%";
+      els.privacyHeadline.textContent = p.items.length
+        ? p.count + " identif" + (p.count === 1 ? "ying detail" : "ying details") + " found — " + p.level + " exposure."
+        : "No identifying metadata found. This image looks clean.";
+
+      if (!p.items.length) {
+        els.exposureList.appendChild(el("li", "exposure-none", "Nothing that identifies a person, place or device was found in the metadata."));
+      } else {
+        p.items.forEach(function (item) {
+          var li = el("li", "exposure-item");
+          li.appendChild(el("span", "exposure-label", item.label));
+          li.appendChild(el("span", "exposure-detail", item.detail));
+          els.exposureList.appendChild(li);
+        });
+      }
+    }
+
+    function renderSummary(report) {
+      clear(els.summaryKv);
+      var s = report.summary;
+      defRow(els.summaryKv, "Camera", s.camera);
+      defRow(els.summaryKv, "Lens", s.lens);
+      defRow(els.summaryKv, "Taken", s.taken);
+      defRow(els.summaryKv, "Exposure", s.exposure);
+      defRow(els.summaryKv, "Aperture", s.aperture);
+      defRow(els.summaryKv, "ISO", s.iso);
+      defRow(els.summaryKv, "Focal length", s.focalLength);
+      defRow(els.summaryKv, "Orientation", s.orientation);
+      defRow(els.summaryKv, "Software", s.software);
+      defRow(els.summaryKv, "GPS", s.gps);
+      if (!els.summaryKv.children.length) {
+        els.summaryKv.appendChild(el("dt", null, "Capture data"));
+        els.summaryKv.appendChild(el("dd", null, "None — this file carries no EXIF capture fields."));
+      }
+    }
+
+    function renderFindings(report) {
+      clear(els.findings);
+      report.findings.forEach(function (f) {
+        var li = el("li", "finding " + (f.present ? "present" : "absent"));
+        li.appendChild(el("span", "finding-mark", f.present ? "✓" : "–"));
+        li.appendChild(el("span", "finding-label", f.label));
+        if (f.present && f.count) li.appendChild(el("span", "finding-count", f.count));
+        if (f.present && f.note) li.appendChild(el("span", "finding-note", f.note));
+        els.findings.appendChild(li);
+      });
+    }
+
+    function metadataTable(rows) {
+      var table = el("table", "meta-table");
+      var tbody = el("tbody");
+      rows.forEach(function (r) {
+        var tr = el("tr");
+        tr.appendChild(el("th", "meta-name", r.name));
+        var td = el("td", "meta-value", r.value);
+        if (r.note) td.title = r.note;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return table;
+    }
+
+    function emptyNote(message) {
+      return el("p", "panel-empty", message);
+    }
+
+    function renderExif(report) {
+      var panel = document.getElementById("panel-exif");
+      clear(panel);
+      if (!report.exif) {
+        panel.appendChild(emptyNote("No EXIF block in this file."));
+        return;
+      }
+      var groups = [
+        ["Main image (IFD0)", report.exif.ifd0],
+        ["Camera (Exif sub-IFD)", report.exif.exif],
+        ["GPS", report.exif.gps],
+        ["Interoperability", report.exif.interop],
+        ["Thumbnail (IFD1)", report.exif.ifd1]
+      ];
+      var any = false;
+      groups.forEach(function (g) {
+        if (!g[1] || !g[1].length) return;
+        any = true;
+        panel.appendChild(el("h3", "panel-sub", g[0]));
+        panel.appendChild(metadataTable(g[1].map(function (e) {
+          return { name: e.name, value: e.display || "—", note: e.typeName + " · tag 0x" + e.tag.toString(16).toUpperCase() };
+        })));
+      });
+      if (report.exif.thumbnail) {
+        panel.appendChild(el("p", "panel-note", "Embedded thumbnail present (" + report.exif.thumbnail.length + " bytes) — it can carry a second copy of the metadata."));
+      }
+      if (!any) panel.appendChild(emptyNote("The EXIF block is present but holds no readable tags."));
+    }
+
+    function renderXmp(report) {
+      var panel = document.getElementById("panel-xmp");
+      clear(panel);
+      if (!report.xmp || !report.xmp.properties) {
+        panel.appendChild(emptyNote("No XMP packet in this file."));
+        return;
+      }
+      var keys = Object.keys(report.xmp.properties).sort();
+      if (!keys.length) {
+        panel.appendChild(emptyNote("An XMP packet is present but holds no readable properties."));
+        return;
+      }
+      panel.appendChild(metadataTable(keys.map(function (k) {
+        var v = report.xmp.properties[k];
+        return { name: k, value: Array.isArray(v) ? v.join(", ") : String(v) };
+      })));
+      var ns = report.xmp.namespaces ? Object.keys(report.xmp.namespaces) : [];
+      if (ns.length) {
+        panel.appendChild(el("p", "panel-note", "Namespaces: " + ns.sort().join(", ")));
+      }
+    }
+
+    function renderIptc(report) {
+      var panel = document.getElementById("panel-iptc");
+      clear(panel);
+      if (!report.iptc || !report.iptc.records || !report.iptc.records.length) {
+        panel.appendChild(emptyNote("No IPTC / Photoshop IRB metadata in this file."));
+        return;
+      }
+      report.iptc.records.forEach(function (rec) {
+        panel.appendChild(el("h3", "panel-sub", rec.name + " (record " + rec.record + ")"));
+        panel.appendChild(metadataTable(rec.datasets.map(function (d) {
+          return { name: d.name, value: d.value || "—" };
+        })));
+      });
+    }
+
+    function renderIcc(report) {
+      var panel = document.getElementById("panel-icc");
+      clear(panel);
+      if (!report.icc) {
+        panel.appendChild(emptyNote("No embedded ICC colour profile in this file."));
+        return;
+      }
+      var dl = el("dl", "kv kv-grid");
+      defRow(dl, "Profile size", lib.formatBytes(report.icc.size));
+      if (report.icc.name) defRow(dl, "Profile name", report.icc.name);
+      panel.appendChild(dl);
+      panel.appendChild(el("p", "panel-note", "Colour profiles are not identifying, but they add weight. Stripping removes them and can shift how some viewers render the image."));
+    }
+
+    function renderContainer(report) {
+      var panel = document.getElementById("panel-container");
+      clear(panel);
+      var rows = [];
+      if (report.segments) {
+        report.segments.forEach(function (s) {
+          rows.push({
+            name: s.label,
+            value: "offset " + s.offset + " · " + (s.length ? lib.formatBytes(s.length) : "to end of file"),
+            note: s.note || ""
+          });
+        });
+      } else if (report.chunks) {
+        report.chunks.forEach(function (c) {
+          rows.push({
+            name: c.type || c.fourcc,
+            value: "offset " + c.offset + " · " + lib.formatBytes(c.length || c.size || 0)
+          });
+        });
+      }
+      if (report.textChunks && report.textChunks.length) {
+        rows = rows.concat(report.textChunks.map(function (t) {
+          return { name: t.kind + " · " + t.keyword, value: t.text || "—" };
+        }));
+      }
+      if (report.features) {
+        var on = Object.keys(report.features).filter(function (k) { return report.features[k]; });
+        rows.push({ name: "WebP features", value: on.length ? on.join(", ") : "none" });
+      }
+      if (report.comments && report.comments.length) {
+        report.comments.forEach(function (c, i) {
+          rows.push({ name: "Comment " + (i + 1), value: c || "—" });
+        });
+      }
+      if (!rows.length) {
+        panel.appendChild(emptyNote("No container structure was recorded."));
+        return;
+      }
+      panel.appendChild(metadataTable(rows));
+    }
+
+    function renderText(report) {
+      var panel = document.getElementById("panel-text");
+      clear(panel);
+      var pre = el("pre", "report-text", lib.reportToText(report));
+      panel.appendChild(pre);
+      if (report.warnings && report.warnings.length) {
+        var warn = el("div", "warn-box");
+        warn.appendChild(el("h3", "panel-sub", "Parser warnings"));
+        var ul = el("ul", "warn-list");
+        report.warnings.forEach(function (w) { ul.appendChild(el("li", null, w)); });
+        warn.appendChild(ul);
+        panel.appendChild(warn);
+      }
+    }
+
+    // ---- tabs ----
+
+    function selectTab(tab) {
+      var tabs = els.tablist.querySelectorAll('[role="tab"]');
+      tabs.forEach(function (t) {
+        var selected = t === tab;
+        t.setAttribute("aria-selected", selected ? "true" : "false");
+        t.tabIndex = selected ? 0 : -1;
+        var panel = document.getElementById(t.getAttribute("aria-controls"));
+        if (panel) panel.classList.toggle("hidden", !selected);
+      });
+    }
+
+    els.tablist.addEventListener("click", function (e) {
+      var tab = e.target.closest('[role="tab"]');
+      if (tab) selectTab(tab);
+    });
+    els.tablist.addEventListener("keydown", function (e) {
+      var tabs = Array.prototype.slice.call(els.tablist.querySelectorAll('[role="tab"]'));
+      var i = tabs.indexOf(document.activeElement);
+      if (i === -1) return;
+      var next = null;
+      if (e.key === "ArrowRight") next = tabs[(i + 1) % tabs.length];
+      else if (e.key === "ArrowLeft") next = tabs[(i - 1 + tabs.length) % tabs.length];
+      else if (e.key === "Home") next = tabs[0];
+      else if (e.key === "End") next = tabs[tabs.length - 1];
+      if (next) { e.preventDefault(); next.focus(); selectTab(next); }
+    });
+
+    // ---- actions ----
+
+    function download(blob, filename) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    }
+
+    function baseName(name) {
+      return String(name || "image").replace(/\.[^.]+$/, "");
+    }
+
+    function copyReport(button) {
+      if (!state.report) return;
+      var text = lib.reportToText(state.report);
+      var done = function () {
+        var original = button.textContent;
+        button.textContent = "Copied";
+        setTimeout(function () { button.textContent = original; }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+      } else {
+        fallbackCopy(text, done);
+      }
+    }
+
+    function fallbackCopy(text, done) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (err) { /* clipboard unavailable */ }
+      document.body.removeChild(ta);
+    }
+
+    function stripAndDownload() {
+      if (!state.bytes) return;
+      var result = lib.stripMetadata(state.bytes);
+      if (!result.ok) {
+        setStatus(els.stripStatus, result.error, "error");
+        return;
+      }
+      var before = state.bytes.length;
+      var after = result.bytes.length;
+      var removed = result.removedSegments || [];
+      download(new Blob([result.bytes], { type: state.report.mime }),
+        baseName(state.name) + "-clean." + extensionFor(state.report.format));
+      setStatus(els.stripStatus,
+        "Downloaded a clean copy — removed " + (removed.length ? removed.join(", ") : "no metadata segments") +
+        " (" + lib.formatBytes(before) + " → " + lib.formatBytes(after) + ").",
+        "ok");
+    }
+
+    function extensionFor(format) {
+      return format === "jpeg" ? "jpg" : format;
+    }
+
+    function openCard() {
+      if (!state.report) return;
+      var svg = lib.privacyCardSvg(state.report);
+      state.cardSvg = svg;
+      els.privacyCard.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      els.cardWrap.hidden = false;
+      els.cardWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    // ---- wire up ----
+
+    els.dropzone.addEventListener("click", function (e) {
+      if (e.target.closest("button")) return;
+      els.fileInput.click();
+    });
+    els.dropzone.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); els.fileInput.click(); }
+    });
+    els.fileInput.addEventListener("change", function () {
+      readFile(els.fileInput.files && els.fileInput.files[0]);
+      els.fileInput.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach(function (type) {
+      els.dropzone.addEventListener(type, function (e) {
+        e.preventDefault();
+        els.dropzone.classList.add("drag");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (type) {
+      els.dropzone.addEventListener(type, function (e) {
+        e.preventDefault();
+        els.dropzone.classList.remove("drag");
+      });
+    });
+    els.dropzone.addEventListener("drop", function (e) {
+      var dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) readFile(dt.files[0]);
+    });
+
+    [["btn-sample-jpeg", "jpeg"], ["btn-sample-png", "png"], ["btn-sample-webp", "webp"], ["btn-sample-gif", "gif"]]
+      .forEach(function (pair) {
+        document.getElementById(pair[0]).addEventListener("click", function (e) {
+          e.stopPropagation();
+          loadBytes(lib.sampleBytes(pair[1]), "sample." + extensionFor(pair[1]));
+        });
+      });
+
+    document.getElementById("btn-strip").addEventListener("click", stripAndDownload);
+    document.getElementById("btn-copy-report").addEventListener("click", function () { copyReport(this); });
+    document.getElementById("btn-copy-report-2").addEventListener("click", function () { copyReport(this); });
+    document.getElementById("btn-card").addEventListener("click", openCard);
+    document.getElementById("btn-close-card").addEventListener("click", function () { els.cardWrap.hidden = true; });
+    document.getElementById("btn-download-report").addEventListener("click", function () {
+      if (!state.report) return;
+      download(new Blob([lib.reportToText(state.report)], { type: "text/plain" }),
+        baseName(state.name) + "-metadata.txt");
+    });
+    document.getElementById("btn-download-card").addEventListener("click", function () {
+      if (!state.cardSvg) return;
+      download(new Blob([state.cardSvg], { type: "image/svg+xml" }), baseName(state.name) + "-privacy-card.svg");
+    });
+
+    setControls(false);
+  })();
+  </script>
+</body>
+</html>
