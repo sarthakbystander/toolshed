@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>SVG Optimizer — Toolshed</title>
+  <meta name="description" content="Clean up and shrink SVG files in your browser. Optimize paths and numbers, drop editor metadata and comments, flatten useless groups, preview before and after, and audit contrast and accessibility. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / svg-optimizer</div>
+      <h1>SVG Optimizer</h1>
+      <p class="lede">Shrink and clean up SVG files — optimize path data, drop editor metadata, flatten useless groups, and audit the result for accessibility and safety. Everything runs in your browser.</p>
+    </section>
+
+    <section class="toolbody">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">SOURCE SVG</span>
+          <div class="row">
+            <span class="badge" id="src-badge">empty</span>
+          </div>
+        </div>
+
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Load an SVG: click to browse, drop a file, or type in the box below">
+          <input type="file" id="file-input" accept=".svg,image/svg+xml" hidden>
+          <p class="dz-main">Drop an <strong>.svg</strong> file here, or <strong class="dz-browse">browse</strong></p>
+          <p class="dz-sub">Files are read locally and never uploaded.</p>
+        </div>
+
+        <label class="field-label" for="source">Paste or edit SVG markup</label>
+        <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off"
+          placeholder="&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 24 24&quot;&gt;&#10;  &lt;path d=&quot;M12 2 L22 22 L2 22 Z&quot;/&gt;&#10;&lt;/svg&gt;"></textarea>
+
+        <div class="row">
+          <button type="button" class="btn secondary" id="btn-sample">Load sample</button>
+          <button type="button" class="btn secondary" id="btn-paste">Paste</button>
+          <button type="button" class="btn secondary" id="btn-browse">Open file</button>
+          <button type="button" class="btn secondary" id="btn-clear">Clear</button>
+        </div>
+        <span class="status hidden" id="src-status" role="status" aria-live="polite"></span>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">OPTIMIZED SVG</span>
+          <div class="row">
+            <span class="badge" id="out-badge">—</span>
+            <span class="badge saved" id="saved-badge" hidden>0% smaller</span>
+          </div>
+        </div>
+
+        <div class="empty-out" id="out-empty">
+          <p>Paste or open an SVG on the left. The optimized markup appears here, along with a size report and a review of accessibility, contrast and safety issues.</p>
+        </div>
+
+        <textarea id="output" readonly spellcheck="false" hidden aria-label="Optimized SVG markup"></textarea>
+
+        <div class="row out-actions" id="out-actions" hidden>
+          <button type="button" class="btn" id="btn-copy">Copy SVG</button>
+          <button type="button" class="btn secondary" id="btn-download">Download .svg</button>
+          <button type="button" class="btn secondary" id="btn-report">Download report</button>
+          <button type="button" class="btn secondary" id="btn-pretty" aria-pressed="false">Pretty view: off</button>
+        </div>
+        <span class="status hidden" id="out-status" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">OPTIMIZATIONS</span>
+          <div class="row">
+            <button type="button" class="btn secondary" id="btn-preset-safe">Safe</button>
+            <button type="button" class="btn secondary" id="btn-preset-strong">Strong</button>
+            <button type="button" class="btn secondary" id="btn-preset-minimal">Minimal</button>
+          </div>
+        </div>
+        <p class="hint">Each option below is a structural rewrite that preserves how the image renders. Turn any of them off if a specific file needs the original form.</p>
+
+        <div class="opt-grid" id="opt-grid">
+          <label class="opt"><input type="checkbox" id="opt-removeComments" checked><span><b>Remove comments</b><i>Strips &lt;!-- --&gt; notes, including editor banners.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-removeMetadata" checked><span><b>Remove metadata</b><i>Drops &lt;metadata&gt; blocks and the XML declaration.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-removeEditorData" checked><span><b>Remove editor data</b><i>Deletes Inkscape/Sketch/Figma elements and unused namespaces.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-removeEmptyContainers" checked><span><b>Remove empty containers</b><i>Deletes &lt;g&gt;, &lt;defs&gt; and similar that end up empty.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-collapseGroups" checked><span><b>Collapse groups</b><i>Unwraps a plain &lt;g&gt; that holds a single element.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-removeDefaults" checked><span><b>Remove default attributes</b><i>Drops attributes set to their own default (x="0", rx="0"…).</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-trimWhitespace" checked><span><b>Trim whitespace</b><i>Removes formatting whitespace between elements only.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-roundNumbers" checked><span><b>Round numbers</b><i>Rounds coordinate and length values to the precision below.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-optimizePaths" checked><span><b>Optimize path data</b><i>Normalizes spacing and rounds coordinates in the d attribute.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-minifyColors" checked><span><b>Minify colors</b><i>Converts colors to the shortest equivalent hex form.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-sortAttributes" checked><span><b>Sort attributes</b><i>Sorts attributes alphabetically for stable, diffable output.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-shortenIds"><span><b>Shorten ids</b><i>Renames ids to short names and rewrites every reference.</i></span></label>
+          <label class="opt"><input type="checkbox" id="opt-removeDimensions"><span><b>Remove width/height</b><i>Only when a viewBox exists, so the SVG scales to its container.</i></span></label>
+        </div>
+
+        <div class="field opt-precision">
+          <label class="field-label" for="opt-precision">Number precision <span class="field-val" id="opt-precision-val">2</span></label>
+          <input type="range" id="opt-precision" min="0" max="4" step="1" value="2">
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">REVIEW</span>
+          <div class="row">
+            <span class="badge" id="audit-badge">—</span>
+          </div>
+        </div>
+
+        <div class="preview-grid" id="preview-grid" hidden>
+          <figure class="preview">
+            <figcaption>Before</figcaption>
+            <div class="preview-frame checker"><img id="preview-before" alt="Preview of the original SVG"></div>
+          </figure>
+          <figure class="preview">
+            <figcaption>After</figcaption>
+            <div class="preview-frame checker"><img id="preview-after" alt="Preview of the optimized SVG"></div>
+          </figure>
+        </div>
+
+        <div id="audit-body">
+          <p class="empty-note">Load an SVG to see its review here.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbody single">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">SIZE REPORT</span>
+        </div>
+        <div id="report-body">
+          <p class="empty-note">The size report appears once an SVG has been loaded.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed.svgOptimizer;
+
+      var els = {
+        dropzone: document.getElementById("dropzone"),
+        fileInput: document.getElementById("file-input"),
+        srcBadge: document.getElementById("src-badge"),
+        source: document.getElementById("source"),
+        srcStatus: document.getElementById("src-status"),
+        outBadge: document.getElementById("out-badge"),
+        savedBadge: document.getElementById("saved-badge"),
+        outEmpty: document.getElementById("out-empty"),
+        output: document.getElementById("output"),
+        outActions: document.getElementById("out-actions"),
+        outStatus: document.getElementById("out-status"),
+        btnPretty: document.getElementById("btn-pretty"),
+        auditBadge: document.getElementById("audit-badge"),
+        auditBody: document.getElementById("audit-body"),
+        reportBody: document.getElementById("report-body"),
+        previewGrid: document.getElementById("preview-grid"),
+        previewBefore: document.getElementById("preview-before"),
+        previewAfter: document.getElementById("preview-after"),
+        precision: document.getElementById("opt-precision"),
+        precisionVal: document.getElementById("opt-precision-val")
+      };
+
+      var OPTION_IDS = [
+        "removeComments", "removeMetadata", "removeEditorData", "removeEmptyContainers",
+        "collapseGroups", "removeDefaults", "trimWhitespace", "roundNumbers",
+        "optimizePaths", "minifyColors", "sortAttributes", "shortenIds", "removeDimensions"
+      ];
+
+      var PRESETS = {
+        minimal: { removeComments: true, removeMetadata: false, removeEditorData: false, removeEmptyContainers: false, collapseGroups: false, removeDefaults: false, trimWhitespace: true, roundNumbers: false, optimizePaths: false, minifyColors: false, sortAttributes: false, shortenIds: false, removeDimensions: false },
+        safe: { removeComments: true, removeMetadata: true, removeEditorData: true, removeEmptyContainers: true, collapseGroups: true, removeDefaults: true, trimWhitespace: true, roundNumbers: true, optimizePaths: true, minifyColors: true, sortAttributes: true, shortenIds: false, removeDimensions: false },
+        strong: { removeComments: true, removeMetadata: true, removeEditorData: true, removeEmptyContainers: true, collapseGroups: true, removeDefaults: true, trimWhitespace: true, roundNumbers: true, optimizePaths: true, minifyColors: true, sortAttributes: true, shortenIds: true, removeDimensions: true }
+      };
+
+      var MAX_BYTES = 5 * 1024 * 1024;
+      var SAMPLE = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<!-- Exported by a vector editor -->',
+        '<svg xmlns="http://www.w3.org/2000/svg"',
+        '     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"',
+        '     width="48.000000" height="48.000000" viewBox="0 0 48 48">',
+        '  <metadata>Created with an editor</metadata>',
+        '  <title>Rocket icon</title>',
+        '  <desc>A simple rocket glyph</desc>',
+        '  <g id="layer1">',
+        '    <g>',
+        '      <path fill="rgb(179, 64, 42)" d="M24.0000,4.0000 C30.0000,10.0000 32.0000,18.0000 32.0000,28.0000 L16.0000,28.0000 C16.0000,18.0000 18.0000,10.0000 24.0000,4.0000 Z"/>',
+        '      <circle cx="24.0000" cy="20.0000" r="3.5000" fill="#ffffff"/>',
+        '    </g>',
+        '  </g>',
+        '  <rect x="0" y="0" width="48" height="48" fill="none"/>',
+        '  <sodipodi:namedview id="namedview1"/>',
+        '</svg>'
+      ].join("\n");
+
+      var lastResult = null;
+      var pretty = false;
+      var beforeUrl = null;
+      var afterUrl = null;
+      var debounceTimer = null;
+
+      function node(tag, cls, text) {
+        var el = document.createElement(tag);
+        if (cls) el.className = cls;
+        if (text != null) el.textContent = text;
+        return el;
+      }
+
+      function setStatus(el, msg, kind) {
+        el.classList.remove("ok", "error", "hidden");
+        if (!msg) { el.classList.add("hidden"); el.textContent = ""; return; }
+        if (kind) el.classList.add(kind);
+        el.textContent = msg;
+      }
+
+      function clearChildren(el) {
+        while (el.firstChild) el.removeChild(el.firstChild);
+      }
+
+      function formatBytes(n) {
+        if (n < 1024) return n + " B";
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+        return (n / 1024 / 1024).toFixed(2) + " MB";
+      }
+
+      function readOptions() {
+        var options = {};
+        for (var i = 0; i < OPTION_IDS.length; i++) {
+          var box = document.getElementById("opt-" + OPTION_IDS[i]);
+          if (box) options[OPTION_IDS[i]] = box.checked;
+        }
+        options.numberPrecision = Number(els.precision.value);
+        return options;
+      }
+
+      function applyOptions(values) {
+        for (var i = 0; i < OPTION_IDS.length; i++) {
+          var box = document.getElementById("opt-" + OPTION_IDS[i]);
+          if (box && Object.prototype.hasOwnProperty.call(values, OPTION_IDS[i])) {
+            box.checked = !!values[OPTION_IDS[i]];
+          }
+        }
+      }
+
+      function updatePreview(img, text, which) {
+        if (!text) { img.removeAttribute("src"); return; }
+        var url = URL.createObjectURL(new Blob([text], { type: "image/svg+xml" }));
+        if (which === "before") {
+          if (beforeUrl) URL.revokeObjectURL(beforeUrl);
+          beforeUrl = url;
+        } else {
+          if (afterUrl) URL.revokeObjectURL(afterUrl);
+          afterUrl = url;
+        }
+        img.src = url;
+      }
+
+      function renderAudit(result) {
+        var body = els.auditBody;
+        clearChildren(body);
+
+        if (!result.ok) {
+          els.auditBadge.textContent = "not parsed";
+          body.appendChild(node("p", "note error-note",
+            "This does not parse as SVG: " + result.error.message +
+            " (line " + result.error.line + ", column " + result.error.column + ")."));
+          return;
+        }
+
+        var issues = result.audit.issues;
+        var errors = 0, warns = 0, infos = 0;
+        for (var i = 0; i < issues.length; i++) {
+          if (issues[i].level === "error") errors++;
+          else if (issues[i].level === "warn") warns++;
+          else infos++;
+        }
+        els.auditBadge.textContent = errors + " error" + (errors === 1 ? "" : "s") +
+          " · " + warns + " warning" + (warns === 1 ? "" : "s") +
+          " · " + infos + " note" + (infos === 1 ? "" : "s");
+        els.auditBadge.classList.toggle("bad", errors > 0);
+        els.auditBadge.classList.toggle("warn", errors === 0 && warns > 0);
+
+        if (issues.length === 0) {
+          body.appendChild(node("p", "note", "No accessibility, contrast or safety issues found."));
+        } else {
+          var list = node("ul", "issue-list");
+          for (var j = 0; j < issues.length; j++) {
+            var item = issues[j];
+            var li = node("li", "issue " + item.level);
+            li.appendChild(node("span", "issue-level", item.level.toUpperCase()));
+            li.appendChild(node("span", "issue-msg", item.message));
+            list.appendChild(li);
+          }
+          body.appendChild(list);
+        }
+
+        if (result.audit.contrasts.length > 0) {
+          var cTitle = node("h3", "subhead", "Low-contrast color pairs");
+          body.appendChild(cTitle);
+          var cList = node("ul", "contrast-list");
+          for (var c = 0; c < result.audit.contrasts.length; c++) {
+            var pair = result.audit.contrasts[c];
+            var cli = node("li", "contrast");
+            var swatchA = node("span", "swatch");
+            swatchA.style.background = pair.a;
+            cli.appendChild(swatchA);
+            var b2 = node("span", "swatch");
+            b2.style.background = pair.b;
+            cli.appendChild(b2);
+            cli.appendChild(node("span", "contrast-text",
+              pair.a + " vs " + pair.b + " — ratio " + pair.ratio.toFixed(2) + ":1"));
+            cList.appendChild(cli);
+          }
+          body.appendChild(cList);
+          body.appendChild(node("p", "note", "Ratios below 3:1 fall short of the WCAG AA minimum for graphical objects and large text."));
+        }
+      }
+
+      function renderReport(result) {
+        var body = els.reportBody;
+        clearChildren(body);
+
+        if (!result.ok) {
+          body.appendChild(node("p", "note error-note", "No report — the SVG could not be parsed."));
+          return;
+        }
+
+        var table = node("table", "report-table");
+        var tbody = node("tbody");
+        function row(label, value, cls) {
+          var tr = node("tr", cls || "");
+          tr.appendChild(node("th", null, label));
+          tr.appendChild(node("td", "num", value));
+          tbody.appendChild(tr);
+        }
+        row("Original size", formatBytes(result.before.bytes));
+        row("Optimized size", formatBytes(result.after.bytes));
+        row("Saved", formatBytes(result.savedBytes) + " (" + (result.savedPercent * 100).toFixed(1) + "%)", "strong-row");
+        row("Elements", result.before.elements + " → " + result.after.elements);
+        table.appendChild(tbody);
+        body.appendChild(table);
+
+        var stats = result.stats;
+        var changes = [
+          ["Comments removed", stats.removedComments],
+          ["Metadata removed", stats.removedMetadata],
+          ["Editor data removed", stats.removedEditorData],
+          ["Empty containers removed", stats.removedEmptyContainers],
+          ["Groups collapsed", stats.collapsedGroups],
+          ["Default attributes removed", stats.removedDefaults],
+          ["Whitespace nodes removed", stats.removedWhitespace],
+          ["Path data optimized", stats.optimizedPaths],
+          ["Colors minified", stats.minifiedColors],
+          ["Ids shortened", stats.shortenedIds],
+          ["Width/height removed", stats.removedDimensions],
+          ["Namespaces removed", stats.removedNamespaces],
+          ["XML declaration/DOCTYPE removed", stats.removedProlog]
+        ];
+        var changed = changes.filter(function (row) { return row[1] > 0; });
+        if (changed.length === 0) {
+          body.appendChild(node("p", "note", "No structural changes were needed — the input was already tidy."));
+        } else {
+          body.appendChild(node("h3", "subhead", "What changed"));
+          var list = node("ul", "change-list");
+          for (var i = 0; i < changed.length; i++) {
+            var li = node("li");
+            li.appendChild(node("span", "change-count", String(changed[i][1])));
+            li.appendChild(node("span", null, changed[i][0]));
+            list.appendChild(li);
+          }
+          body.appendChild(list);
+        }
+      }
+
+      var EMPTY_OUT_TEXT = "Paste or open an SVG on the left. The optimized markup appears here, along with a size report and a review of accessibility, contrast and safety issues.";
+
+      function renderEmptyStates(message) {
+        els.output.hidden = true;
+        els.outEmpty.hidden = false;
+        els.outEmpty.textContent = message || EMPTY_OUT_TEXT;
+        els.outActions.hidden = true;
+        els.outBadge.textContent = "—";
+        els.savedBadge.hidden = true;
+        els.auditBadge.textContent = "—";
+        els.auditBadge.classList.remove("bad", "warn");
+        els.previewGrid.hidden = true;
+        clearChildren(els.auditBody);
+        els.auditBody.appendChild(node("p", "empty-note", "Load an SVG to see its review here."));
+        clearChildren(els.reportBody);
+        els.reportBody.appendChild(node("p", "empty-note", "The size report appears once an SVG has been loaded."));
+      }
+
+      function render() {
+        var text = els.source.value;
+        els.srcBadge.textContent = text.trim() ? formatBytes(lib.byteLength(text)) : "empty";
+
+        if (!text.trim()) {
+          lastResult = null;
+          renderEmptyStates();
+          return;
+        }
+        if (lib.byteLength(text) > MAX_BYTES) {
+          lastResult = null;
+          renderEmptyStates("That SVG is larger than the 5 MB limit. Trim it down, then try again.");
+          setStatus(els.srcStatus, "That SVG is larger than 5 MB — trim it before optimizing.", "error");
+          return;
+        }
+
+        var result;
+        try {
+          result = lib.optimize(text, readOptions());
+        } catch (err) {
+          lastResult = null;
+          renderEmptyStates("Something went wrong while processing that SVG. Check the markup on the left and try again.");
+          setStatus(els.srcStatus, "Could not process that SVG.", "error");
+          return;
+        }
+        lastResult = result;
+        setStatus(els.srcStatus, null);
+
+        if (!result.ok) {
+          els.output.hidden = true;
+          els.outEmpty.hidden = false;
+          els.outEmpty.textContent = "That input could not be parsed as SVG: " + result.error.message +
+            " (line " + result.error.line + ", column " + result.error.column + "). Fix the markup on the left and the optimized output will appear here.";
+          els.outActions.hidden = true;
+          els.outBadge.textContent = "not parsed";
+          els.savedBadge.hidden = true;
+          els.previewGrid.hidden = true;
+          renderAudit(result);
+          renderReport(result);
+          return;
+        }
+
+        els.outEmpty.hidden = true;
+        els.output.hidden = false;
+        els.outActions.hidden = false;
+        els.output.value = pretty ? result.prettyOutput : result.output;
+        els.outBadge.textContent = formatBytes(result.after.bytes);
+        els.savedBadge.hidden = false;
+        els.savedBadge.textContent = (result.savedPercent * 100).toFixed(1) + "% smaller";
+        els.savedBadge.classList.toggle("none", result.savedPercent <= 0);
+
+        els.previewGrid.hidden = false;
+        updatePreview(els.previewBefore, result.input, "before");
+        updatePreview(els.previewAfter, result.output, "after");
+
+        renderAudit(result);
+        renderReport(result);
+      }
+
+      function scheduleRender() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(render, 180);
+      }
+
+      function loadText(text, note) {
+        els.source.value = text;
+        render();
+        if (note) setStatus(els.srcStatus, note, "ok");
+      }
+
+      function loadFile(file) {
+        if (!file) return;
+        if (file.size > MAX_BYTES) {
+          setStatus(els.srcStatus, "That file is larger than 5 MB — trim it before optimizing.", "error");
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          loadText(String(reader.result), "Loaded " + file.name);
+        };
+        reader.onerror = function () {
+          setStatus(els.srcStatus, "Could not read that file.", "error");
+        };
+        reader.readAsText(file);
+      }
+
+      function download(text, filename, mime) {
+        var blob = new Blob([text], { type: mime || "text/plain" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      function copyOutput() {
+        if (!lastResult || !lastResult.ok) return;
+        var text = els.output.value;
+        function done() { setStatus(els.outStatus, "Copied to clipboard.", "ok"); }
+        function fallback() {
+          els.output.focus();
+          els.output.select();
+          try {
+            if (document.execCommand("copy")) done();
+            else setStatus(els.outStatus, "Copy failed — select the text and copy manually.", "error");
+          } catch (err) {
+            setStatus(els.outStatus, "Copy failed — select the text and copy manually.", "error");
+          }
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, fallback);
+        } else {
+          fallback();
+        }
+      }
+
+      // ---- Events ----
+
+      els.source.addEventListener("input", function () {
+        setStatus(els.srcStatus, null);
+        scheduleRender();
+      });
+
+      document.getElementById("btn-sample").addEventListener("click", function () {
+        loadText(SAMPLE, "Loaded the sample icon.");
+      });
+
+      document.getElementById("btn-clear").addEventListener("click", function () {
+        els.source.value = "";
+        setStatus(els.srcStatus, null);
+        render();
+        els.source.focus();
+      });
+
+      document.getElementById("btn-browse").addEventListener("click", function () {
+        els.fileInput.click();
+      });
+
+      document.getElementById("btn-paste").addEventListener("click", function () {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then(function (text) {
+            if (!text) { setStatus(els.srcStatus, "The clipboard is empty.", "error"); return; }
+            loadText(text, "Pasted from the clipboard.");
+          }, function () {
+            setStatus(els.srcStatus, "Clipboard access was blocked — paste into the box manually.", "error");
+          });
+        } else {
+          setStatus(els.srcStatus, "This browser does not allow reading the clipboard — paste into the box manually.", "error");
+        }
+      });
+
+      els.dropzone.addEventListener("click", function () { els.fileInput.click(); });
+      els.dropzone.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); els.fileInput.click(); }
+      });
+      ["dragenter", "dragover"].forEach(function (ev) {
+        els.dropzone.addEventListener(ev, function (e) {
+          e.preventDefault();
+          els.dropzone.classList.add("drag");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (ev) {
+        els.dropzone.addEventListener(ev, function (e) {
+          e.preventDefault();
+          els.dropzone.classList.remove("drag");
+        });
+      });
+      els.dropzone.addEventListener("drop", function (e) {
+        var file = e.dataTransfer && e.dataTransfer.files[0];
+        if (file) loadFile(file);
+        else setStatus(els.srcStatus, "No file in that drop.", "error");
+      });
+      els.fileInput.addEventListener("change", function () {
+        loadFile(els.fileInput.files[0]);
+        els.fileInput.value = "";
+      });
+
+      els.precision.addEventListener("input", function () {
+        els.precisionVal.textContent = els.precision.value;
+        scheduleRender();
+      });
+
+      OPTION_IDS.forEach(function (id) {
+        var box = document.getElementById("opt-" + id);
+        if (box) box.addEventListener("change", scheduleRender);
+      });
+
+      document.getElementById("btn-preset-minimal").addEventListener("click", function () {
+        applyOptions(PRESETS.minimal);
+        render();
+        setStatus(els.outStatus, "Applied the Minimal preset.", "ok");
+      });
+      document.getElementById("btn-preset-safe").addEventListener("click", function () {
+        applyOptions(PRESETS.safe);
+        render();
+        setStatus(els.outStatus, "Applied the Safe preset.", "ok");
+      });
+      document.getElementById("btn-preset-strong").addEventListener("click", function () {
+        applyOptions(PRESETS.strong);
+        render();
+        setStatus(els.outStatus, "Applied the Strong preset — check the preview before shipping.", "ok");
+      });
+
+      els.btnPretty.addEventListener("click", function () {
+        pretty = !pretty;
+        els.btnPretty.setAttribute("aria-pressed", pretty ? "true" : "false");
+        els.btnPretty.textContent = "Pretty view: " + (pretty ? "on" : "off");
+        if (lastResult && lastResult.ok) els.output.value = pretty ? lastResult.prettyOutput : lastResult.output;
+      });
+
+      document.getElementById("btn-copy").addEventListener("click", copyOutput);
+
+      document.getElementById("btn-download").addEventListener("click", function () {
+        if (!lastResult || !lastResult.ok) return;
+        download(lastResult.output, "optimized.svg", "image/svg+xml");
+        setStatus(els.outStatus, "Downloaded optimized.svg", "ok");
+      });
+
+      document.getElementById("btn-report").addEventListener("click", function () {
+        if (!lastResult) return;
+        download(lib.toReport(lastResult), "svg-optimizer-report.md", "text/markdown");
+        setStatus(els.outStatus, "Downloaded svg-optimizer-report.md", "ok");
+      });
+
+      window.addEventListener("beforeunload", function () {
+        if (beforeUrl) URL.revokeObjectURL(beforeUrl);
+        if (afterUrl) URL.revokeObjectURL(afterUrl);
+      });
+
+      els.precisionVal.textContent = els.precision.value;
+      render();
+    })();
+  </script>
+</body>
+</html>

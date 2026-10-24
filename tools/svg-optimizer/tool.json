@@ -1,0 +1,14 @@
+{
+  "id": "svg-optimizer",
+  "name": "SVG Optimizer",
+  "description": "Clean up and shrink SVG files in your browser. Optimize paths and numbers, drop editor metadata and comments, flatten useless groups, preview before and after, and check contrast and accessibility. Nothing is uploaded.",
+  "category": "Image",
+  "tags": ["svg", "optimizer", "minify", "vector", "graphics", "image", "path", "accessibility"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
