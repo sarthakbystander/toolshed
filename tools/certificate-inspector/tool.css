@@ -1,0 +1,342 @@
+/* Certificate Inspector — widget styles layered over the shared Toolshed design system. */
+
+/* ---------- Layout ---------- */
+.ci-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .ci-body { grid-template-columns: minmax(0, 1fr); }
+}
+.ci-full { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- Labels and inputs ---------- */
+.ci-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+
+.ci-input {
+  min-height: 150px !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+  word-break: break-all;
+}
+.ci-input.ci-dragover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.ci-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Chips ---------- */
+.ci-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ci-chips:empty { display: none; }
+
+.ci-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+  border-radius: 999px;
+  padding: 3px 10px;
+  max-width: 100%;
+}
+.ci-chip-k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ci-chip-v {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.ci-chip.ok { border-color: var(--ok); }
+.ci-chip.ok .ci-chip-v { color: var(--ok); }
+.ci-chip.danger { border-color: var(--accent); background: var(--accent-soft); }
+.ci-chip.danger .ci-chip-v { color: var(--accent-ink); }
+.ci-chip.warn { border-color: var(--rule-2); background: var(--surface-2); }
+
+/* ---------- Item picker (one button per parsed block) ---------- */
+.ci-items { display: flex; flex-direction: column; gap: 8px; }
+.ci-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--paper);
+  border: 1px solid var(--rule-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.ci-item:hover { border-color: var(--ink-3); }
+.ci-item[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.ci-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.ci-item-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.ci-item-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Badges ---------- */
+.ci-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--rule-2);
+  color: var(--ink-2);
+  background: var(--surface);
+  white-space: nowrap;
+}
+.ci-badge.ok { border-color: var(--ok); color: var(--ok); background: transparent; }
+.ci-badge.warn { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+.ci-badge.error { border-color: var(--accent); color: var(--paper); background: var(--accent); }
+.ci-badge.info { border-color: var(--rule-2); color: var(--ink-3); }
+
+/* ---------- Fact grid ---------- */
+.ci-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.ci-fact {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  padding: 10px 12px;
+  min-width: 0;
+}
+.ci-fact.wide { grid-column: 1 / -1; }
+.ci-fact dt {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 5px;
+}
+.ci-fact dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.ci-fact dd.mono { font-family: var(--mono); font-size: 12px; }
+.ci-fact .ci-muted { color: var(--ink-3); }
+
+/* ---------- Validity bar ---------- */
+.ci-window {
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  position: relative;
+}
+.ci-window-fill {
+  height: 100%;
+  background: var(--ok);
+  border-radius: 999px;
+}
+.ci-window-fill.warn { background: var(--accent); }
+.ci-window-fill.error { background: var(--accent); opacity: .8; }
+.ci-window-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  margin-top: 5px;
+}
+
+/* ---------- Findings ---------- */
+.ci-findings { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.ci-finding {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid var(--rule);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  padding: 10px 12px;
+}
+.ci-finding.error { border-left-color: var(--accent); }
+.ci-finding.warning { border-left-color: var(--accent); opacity: .96; }
+.ci-finding.info { border-left-color: var(--rule-2); }
+.ci-finding-body { min-width: 0; }
+.ci-finding-title { font-size: 13.5px; font-weight: 700; }
+.ci-finding-detail { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; margin-top: 2px; }
+.ci-finding-where {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+.ci-empty {
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+
+/* ---------- Tables ---------- */
+.ci-tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius-sm); }
+.ci-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.ci-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--surface-2);
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+.ci-table td {
+  padding: 8px 10px;
+  border-top: 1px solid var(--rule);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.ci-table td.mono { font-family: var(--mono); font-size: 11.5px; }
+.ci-table caption {
+  text-align: left;
+  font-size: 12px;
+  color: var(--ink-3);
+  padding: 8px 10px 0;
+}
+
+/* ---------- Chain ---------- */
+.ci-chain { display: flex; flex-direction: column; gap: 0; }
+.ci-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+}
+.ci-link + .ci-link { border-top: 1px dashed var(--rule); }
+.ci-link-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+.ci-link-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid var(--rule-2);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.ci-link-dot.ok { border-color: var(--ok); color: var(--ok); }
+.ci-link-dot.error { border-color: var(--accent); color: var(--accent); }
+.ci-link-dot.unsupported { border-color: var(--rule-2); color: var(--ink-3); }
+.ci-link-body { min-width: 0; flex: 1 1 auto; }
+.ci-link-name { font-size: 13.5px; font-weight: 700; overflow-wrap: anywhere; }
+.ci-link-sub { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 2px; overflow-wrap: anywhere; }
+.ci-link-verdict { margin-top: 6px; font-size: 12.5px; line-height: 1.5; }
+.ci-link-verdict.ok { color: var(--ok); }
+.ci-link-verdict.error { color: var(--accent-ink); }
+.ci-link-verdict.unsupported { color: var(--ink-3); }
+
+/* ---------- Reference ---------- */
+.ci-ref dl { margin: 0; }
+.ci-ref dt {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 14px;
+}
+.ci-ref dt:first-child { margin-top: 0; }
+.ci-ref dd { margin: 4px 0 0; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+.ci-ref code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--surface-2);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+/* ---------- Misc ---------- */
+.ci-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ci-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
