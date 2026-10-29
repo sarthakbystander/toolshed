@@ -1,0 +1,14 @@
+{
+  "id": "certificate-inspector",
+  "name": "Certificate Inspector",
+  "description": "Decode and inspect X.509 certificates and PKCS#10 certificate signing requests in your browser. Read the subject and issuer, validity window, public key, extensions and fingerprints, review the security findings, and build and verify a chain. Nothing is uploaded.",
+  "category": "Developer",
+  "tags": ["certificate", "csr", "developer", "pki", "security", "tls", "x509"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
