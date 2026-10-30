@@ -1,0 +1,289 @@
+/* Toolshed — Task Board
+ * Widget-only styles. Shared chrome (header, footer, panes, buttons, chips,
+ * status, empty state) comes from ../../assets/toolshed.css and is not
+ * restyled here.
+ */
+
+/* Two-column board: tasks on the left, overview + data tools on the right. */
+.board{
+  grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
+  align-items:start;
+}
+@media (max-width:860px){
+  .board{grid-template-columns:1fr}
+}
+
+.rule{
+  border:0;
+  border-top:1px solid var(--rule);
+  margin:2px 0;
+}
+
+/* ---------- Composer (new task) ---------- */
+.composer{display:flex;flex-direction:column;gap:12px}
+.composer-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{
+  font-family:var(--mono);
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+}
+.field input[type="text"],
+.field input[type="date"],
+.field input[type="search"],
+.field select,
+.field textarea{
+  width:100%;
+  font-family:var(--mono);
+  font-size:13px;
+  color:var(--ink);
+  background:var(--paper);
+  border:1px solid var(--rule-2);
+  border-radius:var(--radius-sm);
+  padding:10px 12px;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field textarea{resize:vertical;line-height:1.5}
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.field input::placeholder,
+.field textarea::placeholder{color:var(--ink-3)}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.hint{font-size:12px;line-height:1.55;color:var(--ink-3)}
+.hint code{
+  font-family:var(--mono);
+  font-size:11.5px;
+  background:var(--surface-2);
+  border-radius:4px;
+  padding:1px 5px;
+}
+.hint kbd{
+  font-family:var(--mono);
+  font-size:11px;
+  background:var(--surface-2);
+  border:1px solid var(--rule);
+  border-bottom-width:2px;
+  border-radius:4px;
+  padding:1px 5px;
+  color:var(--ink-2);
+}
+
+/* Small "Saved" confirmation next to the pane title. */
+.saveflag{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ok);
+  opacity:0;
+  transition:opacity .2s;
+}
+.saveflag.on{opacity:1}
+
+.count{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--ink-3);
+}
+
+/* ---------- Filters ---------- */
+.filters{display:flex;flex-direction:column;gap:12px}
+.filter-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:12px;
+}
+
+/* ---------- Task list ---------- */
+.tasks{list-style:none;display:flex;flex-direction:column;gap:8px}
+
+.task{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  padding:11px 12px;
+  background:var(--paper);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--rule-2);
+  border-radius:var(--radius-sm);
+  transition:border-color .15s,box-shadow .15s,opacity .15s;
+}
+.task:hover{border-color:var(--rule-2)}
+.task:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.task.done{opacity:.62}
+.task.done .title{text-decoration:line-through;color:var(--ink-3)}
+.task.due-overdue{border-left-color:var(--accent)}
+.task.due-today{border-left-color:var(--accent-ink)}
+.task.due-soon{border-left-color:var(--rule-2)}
+.task.dragging{opacity:.4}
+.task.drop-target{border-color:var(--accent);border-left-color:var(--accent)}
+
+/* Checkbox drawn from the design system's ink colours. */
+.check{position:relative;display:inline-flex;flex:0 0 auto;cursor:pointer;padding-top:1px}
+.check input{
+  position:absolute;
+  opacity:0;
+  width:20px;
+  height:20px;
+  margin:0;
+  cursor:pointer;
+}
+.check .box{
+  width:20px;
+  height:20px;
+  border:1.5px solid var(--rule-2);
+  border-radius:5px;
+  background:var(--surface);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .15s,border-color .15s;
+}
+.check .box::after{
+  content:"";
+  width:5px;
+  height:9px;
+  border:solid var(--paper);
+  border-width:0 2px 2px 0;
+  transform:rotate(45deg) scale(0);
+  transition:transform .12s;
+  margin-top:-2px;
+}
+.check input:checked + .box{background:var(--ok);border-color:var(--ok)}
+.check input:checked + .box::after{transform:rotate(45deg) scale(1)}
+.check input:focus-visible + .box{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+
+.task .body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px}
+.task .title{
+  font-size:14px;
+  line-height:1.45;
+  color:var(--ink);
+  overflow-wrap:anywhere;
+}
+.task .meta{display:flex;flex-wrap:wrap;gap:6px}
+
+.badge{
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.03em;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid var(--rule);
+  background:var(--surface);
+  color:var(--ink-2);
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.badge.pri-high{border-color:var(--accent);color:var(--accent-ink)}
+.badge.pri-low{color:var(--ink-3)}
+.badge.due{border-style:dashed}
+.badge.tag{color:var(--ink-2)}
+.badge.note{color:var(--ink-3);border-style:dotted}
+
+.task-actions{
+  display:flex;
+  gap:4px;
+  flex:0 0 auto;
+  align-items:flex-start;
+}
+.icon-btn{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--ink-2);
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:5px;
+  padding:4px 7px;
+  cursor:pointer;
+  line-height:1;
+  transition:all .13s;
+}
+.icon-btn:hover{background:var(--surface-2);border-color:var(--rule);color:var(--ink)}
+.icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.icon-btn.danger:hover{color:var(--accent-ink);border-color:var(--accent)}
+
+/* ---------- Inline editor ---------- */
+.editor{
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+  width:100%;
+}
+.editor-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:11px;
+}
+
+.render-note{
+  font-size:12px;
+  color:var(--ink-3);
+  padding:10px 12px;
+  border:1px dashed var(--rule-2);
+  border-radius:var(--radius-sm);
+  text-align:center;
+}
+
+/* ---------- Overview ---------- */
+.stats{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:7px 12px;
+  font-family:var(--mono);
+  font-size:12.5px;
+}
+.stats dt{color:var(--ink-2)}
+.stats dd{color:var(--ink);font-weight:700;text-align:right}
+.stats dd.warn{color:var(--accent)}
+
+.progress{display:flex;flex-direction:column;gap:6px}
+.progress-head{
+  display:flex;
+  justify-content:space-between;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+}
+.bar{
+  height:8px;
+  background:var(--surface-2);
+  border-radius:999px;
+  overflow:hidden;
+}
+.bar span{
+  display:block;
+  height:100%;
+  background:var(--accent);
+  border-radius:999px;
+  transition:width .25s ease;
+}
+
+/* ---------- Narrow screens ---------- */
+@media (max-width:620px){
+  .task{flex-wrap:wrap}
+  .task-actions{width:100%;justify-content:flex-end}
+  .composer-grid,
+  .filter-grid,
+  .editor-grid{grid-template-columns:1fr}
+}

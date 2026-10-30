@@ -1,0 +1,14 @@
+{
+  "id": "task-board",
+  "name": "Task Board",
+  "description": "A local-first todo board with due dates, priorities, tags, search, filters and drag-to-reorder. Saves to your browser and exports to JSON or Markdown.",
+  "category": "Productivity",
+  "tags": ["todo", "tasks", "productivity", "localstorage", "checklist", "kanban", "notes"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "localStorage"
+  }
+}
