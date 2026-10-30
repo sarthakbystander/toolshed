@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Task Board — Toolshed</title>
+  <meta name="description" content="A keyboard-friendly todo board with due dates, priorities, tags, search and filters that saves to your browser. Export and import as JSON. Nothing leaves your tab.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / task-board</div>
+      <h1>Task Board</h1>
+      <p>A real todo board that lives in your browser. Add tasks with due dates, priorities and tags, then search, filter and reorder them. Everything saves locally — no account, no sync, no server.</p>
+    </section>
+
+    <section class="toolbody board">
+      <!-- ---------------- main column ---------------- -->
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">New task</span>
+          <span class="saveflag" id="saveflag" role="status" aria-live="polite"></span>
+        </div>
+
+        <form class="composer" id="composer" autocomplete="off" novalidate>
+          <div class="field">
+            <label for="f-title">Title</label>
+            <input type="text" id="f-title" name="title" maxlength="200" placeholder="What needs doing?" aria-describedby="f-title-hint">
+            <span class="hint" id="f-title-hint">Press Enter in the title field to add the task.</span>
+          </div>
+
+          <div class="composer-grid">
+            <div class="field">
+              <label for="f-due">Due date</label>
+              <input type="date" id="f-due" name="due">
+            </div>
+            <div class="field">
+              <label for="f-priority">Priority</label>
+              <select id="f-priority" name="priority">
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-tags">Tags</label>
+              <input type="text" id="f-tags" name="tags" maxlength="300" placeholder="work, home">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn" id="btn-add">Add task</button>
+            <button type="button" class="btn secondary" id="btn-sample">Load sample board</button>
+          </div>
+        </form>
+
+        <hr class="rule">
+
+        <div class="pane-header">
+          <span class="pane-title">Tasks</span>
+          <span class="count" id="list-count" aria-live="polite"></span>
+        </div>
+
+        <div class="filters">
+          <div class="chips" id="status-chips" role="group" aria-label="Filter by status"></div>
+
+          <div class="filter-grid">
+            <div class="field">
+              <label for="f-search">Search</label>
+              <input type="search" id="f-search" placeholder="title, notes or tags">
+            </div>
+            <div class="field">
+              <label for="f-priority-filter">Priority</label>
+              <select id="f-priority-filter">
+                <option value="">Any</option>
+                <option value="high">High</option>
+                <option value="normal">Normal</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-tag-filter">Tag</label>
+              <select id="f-tag-filter">
+                <option value="">Any</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-sort">Sort</label>
+              <select id="f-sort">
+                <option value="manual">Manual order</option>
+                <option value="due">Due date</option>
+                <option value="priority">Priority</option>
+                <option value="created">Newest first</option>
+                <option value="title">Title (A–Z)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn secondary" id="btn-clear-filters">Clear filters</button>
+          </div>
+        </div>
+
+        <ul class="tasks" id="task-list" aria-label="Tasks"></ul>
+
+        <div class="empty hidden" id="empty-state">
+          <p id="empty-message">No tasks yet. Add one above, or load the sample board to see how it works.</p>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn secondary" id="btn-all-done">Mark all done</button>
+          <button type="button" class="btn secondary" id="btn-all-active">Mark all active</button>
+          <button type="button" class="btn danger" id="btn-clear-done">Clear completed</button>
+        </div>
+      </div>
+
+      <!-- ---------------- side column ---------------- -->
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">Overview</span>
+        </div>
+
+        <dl class="stats" id="stats"></dl>
+
+        <div class="progress" role="img" aria-labelledby="progress-label">
+          <div class="progress-head">
+            <span id="progress-label">Completion</span>
+            <span id="progress-value">0%</span>
+          </div>
+          <div class="bar"><span id="progress-bar" style="width:0%"></span></div>
+        </div>
+
+        <hr class="rule">
+
+        <div class="pane-header">
+          <span class="pane-title">Your data</span>
+        </div>
+
+        <p class="hint">
+          Tasks are stored in this browser's <code>localStorage</code> only. Export a JSON file to
+          back them up or move them to another device, then import it here.
+        </p>
+
+        <div class="actions">
+          <button type="button" class="btn secondary" id="btn-export-json">Export JSON</button>
+          <button type="button" class="btn secondary" id="btn-export-md">Export Markdown</button>
+          <button type="button" class="btn secondary" id="btn-copy-md">Copy as Markdown</button>
+          <button type="button" class="btn secondary" id="btn-import">Import JSON…</button>
+          <button type="button" class="btn danger" id="btn-reset">Delete all tasks</button>
+        </div>
+
+        <input type="file" id="file-input" accept="application/json,.json" hidden>
+
+        <p class="status hidden" id="status" role="status" aria-live="polite"></p>
+
+        <p class="hint">
+          Keyboard: <kbd>Enter</kbd> in the title field adds a task, <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd>
+          moves the focused task in manual order, and <kbd>Esc</kbd> cancels an edit.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
