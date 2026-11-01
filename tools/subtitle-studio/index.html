@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Subtitle Studio — Toolshed</title>
+  <meta name="description" content="Edit, retime and QA subtitle files in your browser. Open an SRT or WebVTT file, shift and stretch timings, fix overlaps, find and replace, rewrap long lines, check reading speed, split and merge cues, then export SRT, VTT, plain text or CSV. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / subtitle-studio</div>
+      <h1>Subtitle Studio</h1>
+      <p class="lede">Open a SubRip (.srt) or WebVTT (.vtt) subtitle file and work on it like an editor: retime and stretch cues, repair overlaps, find and replace, rewrap long lines, check reading speed, split and merge, then export SRT, VTT, plain text or CSV. Everything is parsed and edited locally in your browser — no file ever leaves your machine.</p>
+    </section>
+
+    <section class="toolbody sub-toolbody">
+      <div class="sub-grid">
+        <!-- ============================ LEFT COLUMN ============================ -->
+        <div class="sub-col">
+
+          <!-- ---------------------------- Source ---------------------------- -->
+          <div class="pane" id="sub-source-pane">
+            <div class="pane-header">
+              <span class="pane-title">1 · Source subtitle file</span>
+              <span class="sub-meta" id="sub-src-meta">no file loaded</span>
+            </div>
+
+            <div class="sub-drop" id="sub-drop">
+              Drag an <b>.srt</b> or <b>.vtt</b> file here, or use the buttons below.
+            </div>
+
+            <div class="sub-pane-actions">
+              <button type="button" class="btn secondary" id="sub-open">Open file</button>
+              <input type="file" id="sub-file" accept=".srt,.vtt,text/vtt,text/plain" hidden>
+              <button type="button" class="btn secondary" id="sub-sample">Load sample</button>
+              <span class="sub-spacer"></span>
+              <button type="button" class="btn danger" id="sub-clear">Clear</button>
+            </div>
+
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-format">Input format</label>
+                <select id="sub-format">
+                  <option value="auto">Detect automatically</option>
+                  <option value="srt">SubRip (.srt)</option>
+                  <option value="vtt">WebVTT (.vtt)</option>
+                </select>
+              </div>
+              <div class="sub-field">
+                <label for="sub-fps">Frame rate (for frames)</label>
+                <select id="sub-fps">
+                  <option value="23.976">23.976</option>
+                  <option value="24">24</option>
+                  <option value="25" selected>25</option>
+                  <option value="29.97">29.97</option>
+                  <option value="30">30</option>
+                  <option value="50">50</option>
+                  <option value="59.94">59.94</option>
+                  <option value="60">60</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sub-field">
+              <label for="sub-paste">Or paste subtitle text</label>
+              <textarea id="sub-paste" class="sub-textarea" spellcheck="false" autocomplete="off"
+                aria-label="Paste subtitle text"
+                placeholder="Paste SRT or WebVTT text here, then choose “Parse text”.
+
+1
+00:00:01,000 --> 00:00:04,000
+Hello there.
+
+2
+00:00:05,000 --> 00:00:08,500
+General Kenobi.
+You are a bold one."></textarea>
+            </div>
+
+            <div class="sub-pane-actions">
+              <button type="button" class="btn" id="sub-parse">Parse text</button>
+              <span class="sub-note">Recognized automatically: SubRip and WebVTT, with or without cue ids.</span>
+            </div>
+
+            <p class="status hidden" id="sub-src-status" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- --------------------------- Cue list --------------------------- -->
+          <div class="pane">
+            <div class="pane-header">
+              <span class="pane-title">2 · Cues</span>
+              <span class="sub-meta" id="sub-cue-meta">0 of 0 shown</span>
+            </div>
+
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-filter">Find in cues</label>
+                <input type="text" id="sub-filter" placeholder="filter the cue list…" autocomplete="off">
+              </div>
+              <div class="sub-field" style="flex:0 0 120px">
+                <label for="sub-filter-mode">Match</label>
+                <select id="sub-filter-mode">
+                  <option value="contains">Contains</option>
+                  <option value="regex">Regular expression</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sub-checks">
+              <label><input type="checkbox" id="sub-filter-issues"> Show only cues with problems</label>
+            </div>
+
+            <div class="sub-cue-view" id="sub-cue-view" tabindex="0" role="listbox"
+              aria-label="Subtitle cues" aria-activedescendant="">
+              <div class="sub-cue-spacer" id="sub-cue-spacer" aria-hidden="true"></div>
+              <div class="sub-cue-rows" id="sub-cue-rows"></div>
+            </div>
+            <p class="sub-note" id="sub-cue-hint">Use ↑/↓ to move through cues, Enter to edit, Delete to remove. Click a cue to select it.</p>
+            <p class="status hidden" id="sub-cue-status" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- -------------------------- Cue editor -------------------------- -->
+          <div class="pane sub-editor" id="sub-editor" hidden>
+            <div class="pane-header">
+              <span class="pane-title" id="sub-editor-title">Cue editor</span>
+              <span class="sub-meta" id="sub-editor-meta"></span>
+            </div>
+
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-edit-start">Start (HH:MM:SS,mmm)</label>
+                <input type="text" id="sub-edit-start" spellcheck="false" autocomplete="off">
+              </div>
+              <div class="sub-field">
+                <label for="sub-edit-end">End (HH:MM:SS,mmm)</label>
+                <input type="text" id="sub-edit-end" spellcheck="false" autocomplete="off">
+              </div>
+            </div>
+
+            <div class="sub-field">
+              <label for="sub-edit-text">Text</label>
+              <textarea id="sub-edit-text" class="sub-textarea" spellcheck="false" aria-label="Cue text"></textarea>
+            </div>
+
+            <div class="sub-editor-actions">
+              <button type="button" class="btn" id="sub-edit-save">Save cue</button>
+              <button type="button" class="btn secondary" id="sub-edit-nudge-left" title="Move both edges earlier by the nudge amount">← Nudge</button>
+              <button type="button" class="btn secondary" id="sub-edit-nudge-right" title="Move both edges later by the nudge amount">Nudge →</button>
+              <button type="button" class="btn secondary" id="sub-edit-split">Split at middle</button>
+              <button type="button" class="btn secondary" id="sub-edit-merge">Merge with next</button>
+              <button type="button" class="btn danger" id="sub-edit-delete">Delete cue</button>
+            </div>
+            <p class="status hidden" id="sub-editor-status" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- ---------------------------- Output ---------------------------- -->
+          <div class="pane">
+            <div class="pane-header">
+              <span class="pane-title">4 · Export</span>
+              <span class="sub-meta" id="sub-out-meta">—</span>
+            </div>
+
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-out-format">Output format</label>
+                <select id="sub-out-format">
+                  <option value="srt">SubRip (.srt)</option>
+                  <option value="vtt">WebVTT (.vtt)</option>
+                  <option value="txt">Plain text (.txt)</option>
+                  <option value="csv">Spreadsheet (.csv)</option>
+                </select>
+              </div>
+              <div class="sub-field" id="sub-out-id-field" hidden>
+                <label for="sub-out-ids">Cue identifiers</label>
+                <select id="sub-out-ids">
+                  <option value="hide">Omit</option>
+                  <option value="show">Include</option>
+                </select>
+              </div>
+              <div class="sub-field" id="sub-out-time-field" hidden>
+                <label for="sub-out-timecodes">Timecodes</label>
+                <select id="sub-out-timecodes">
+                  <option value="hide">Omit</option>
+                  <option value="show">Include</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sub-pane-actions">
+              <button type="button" class="btn secondary" id="sub-out-copy">Copy</button>
+              <button type="button" class="btn" id="sub-out-download">Download</button>
+              <span class="sub-note" id="sub-out-name"></span>
+            </div>
+
+            <textarea id="sub-out-text" class="sub-textarea sub-out-textarea" readonly
+              spellcheck="false" aria-label="Exported subtitle output"></textarea>
+            <p class="status hidden" id="sub-out-status" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <!-- ============================ RIGHT COLUMN ============================ -->
+        <div class="sub-col">
+
+          <!-- -------------------------- Timing tools -------------------------- -->
+          <div class="pane">
+            <div class="pane-header">
+              <span class="pane-title">3 · Retime</span>
+              <span class="sub-meta" id="sub-scope-meta">whole file</span>
+            </div>
+
+            <div class="sub-checks">
+              <label><input type="checkbox" id="sub-scope-selected"> Apply to the selected cue only</label>
+            </div>
+
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-shift-amount">Shift by</label>
+                <input type="number" id="sub-shift-amount" value="0" step="1" inputmode="decimal">
+              </div>
+              <div class="sub-field">
+                <label for="sub-shift-unit">Unit</label>
+                <select id="sub-shift-unit">
+                  <option value="ms">milliseconds</option>
+                  <option value="s" selected>seconds</option>
+                  <option value="frames">frames</option>
+                </select>
+              </div>
+            </div>
+            <div class="sub-pane-actions">
+              <button type="button" class="btn" id="sub-shift-apply">Shift earlier / later</button>
+              <span class="sub-note">Positive moves later, negative moves earlier.</span>
+            </div>
+
+            <div class="sub-field">
+              <label for="sub-scale-percent">Stretch / squeeze</label>
+              <input type="number" id="sub-scale-percent" value="100" step="0.1" min="1" inputmode="decimal">
+            </div>
+            <div class="sub-field">
+              <label for="sub-scale-anchor">Anchor time (optional)</label>
+              <input type="text" id="sub-scale-anchor" placeholder="00:00:00,000" spellcheck="false" autocomplete="off">
+            </div>
+            <div class="sub-pane-actions">
+              <button type="button" class="btn" id="sub-scale-apply">Apply stretch</button>
+              <span class="sub-note">100% leaves timing unchanged. Used to convert 25 fps → 23.976 fps, etc.</span>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--rule);margin:2px 0">
+            <span class="sub-field-label">Timing repair</span>
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-min-duration">Min duration (ms)</label>
+                <input type="number" id="sub-min-duration" value="800" step="50" min="0" inputmode="numeric">
+              </div>
+              <div class="sub-field">
+                <label for="sub-min-gap">Min gap (ms)</label>
+                <input type="number" id="sub-min-gap" value="0" step="10" min="0" inputmode="numeric">
+              </div>
+            </div>
+            <div class="sub-pane-actions">
+              <button type="button" class="btn" id="sub-fix-timing">Fix overlaps &amp; durations</button>
+            </div>
+            <p class="sub-note">Sorts cues by start time, removes overlaps, clamps negative times and enforces the minimum duration and gap.</p>
+          </div>
+
+          <!-- -------------------------- Text tools -------------------------- -->
+          <div class="pane">
+            <div class="pane-header">
+              <span class="pane-title">Text tools</span>
+            </div>
+
+            <div class="sub-field">
+              <label for="sub-find">Find</label>
+              <input type="text" id="sub-find" placeholder="text to find…" autocomplete="off">
+            </div>
+            <div class="sub-field">
+              <label for="sub-replace">Replace with</label>
+              <input type="text" id="sub-replace" placeholder="replacement" autocomplete="off">
+            </div>
+            <div class="sub-checks">
+              <label><input type="checkbox" id="sub-replace-regex"> Regular expression</label>
+              <label><input type="checkbox" id="sub-replace-case"> Match case</label>
+              <label><input type="checkbox" id="sub-replace-word"> Whole words only</label>
+            </div>
+            <div class="sub-pane-actions">
+              <button type="button" class="btn" id="sub-replace-apply">Replace in all cues</button>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--rule);margin:2px 0">
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-wrap-chars">Max line length</label>
+                <input type="number" id="sub-wrap-chars" value="42" step="1" min="10" inputmode="numeric">
+              </div>
+              <div class="sub-field">
+                <label for="sub-wrap-lines">Max lines</label>
+                <input type="number" id="sub-wrap-lines" value="2" step="1" min="1" inputmode="numeric">
+              </div>
+            </div>
+            <div class="sub-pane-actions">
+              <button type="button" class="btn" id="sub-wrap-apply">Rewrap all cues</button>
+              <button type="button" class="btn secondary" id="sub-strip-tags">Strip markup</button>
+            </div>
+            <p class="sub-note">Rewrapping removes existing line breaks and re-flows the text. Stripping removes <code>&lt;i&gt;</code>, <code>&lt;font&gt;</code>, WebVTT timestamp tags and ASS override blocks.</p>
+            <p class="status hidden" id="sub-text-status" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- ----------------------------- QA ----------------------------- -->
+          <div class="pane">
+            <div class="pane-header">
+              <span class="pane-title">QA &amp; statistics</span>
+              <span class="sub-meta" id="sub-qa-meta">—</span>
+            </div>
+
+            <div class="sub-stats" id="sub-stats"></div>
+
+            <div class="sub-inline">
+              <div class="sub-field">
+                <label for="sub-qa-cps">Max chars/second</label>
+                <input type="number" id="sub-qa-cps" value="21" step="1" min="1" inputmode="numeric">
+              </div>
+              <div class="sub-field">
+                <label for="sub-qa-line">Max line length</label>
+                <input type="number" id="sub-qa-line" value="42" step="1" min="1" inputmode="numeric">
+              </div>
+            </div>
+            <div class="sub-pane-actions">
+              <button type="button" class="btn secondary" id="sub-qa-run">Re-run checks</button>
+              <button type="button" class="btn" id="sub-fix-all">Fix all problems</button>
+            </div>
+
+            <div id="sub-qa-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var lib = window.Toolshed && window.Toolshed.subtitleStudio;
+      if (!lib) return;
+
+      var SAMPLE = [
+        "1",
+        "00:00:00,500 --> 00:00:03,200",
+        "This is a subtitle file with a few problems that the studio can find and fix.",
+        "",
+        "2",
+        "00:00:03,000 --> 00:00:04,100",
+        "<i>Overlapping</i> cue with markup.",
+        "",
+        "3",
+        "00:00:04,100 --> 00:00:04,400",
+        "Too short.",
+        "",
+        "4",
+        "00:00:05,000 --> 00:00:20,000",
+        "A very long cue that stays on screen far too long and reads uncomfortably because the text is not broken into readable lines at all.",
+        "",
+        "5",
+        "00:00:20,500 --> 00:00:23,000",
+        "Normal cue.",
+        ""
+      ].join("\n");
+
+      var els = {};
+      var state = {
+        cues: [],
+        sourceName: "",
+        format: "srt",
+        selectedId: null,
+        issuesByIndex: {},
+        visible: [],
+        lastStart: -1,
+        lastEnd: -1,
+        renderPending: false,
+        outDirty: true
+      };
+
+      function $(id) { return document.getElementById(id); }
+
+      function cacheEls() {
+        [
+          "sub-drop", "sub-open", "sub-file", "sub-sample", "sub-clear", "sub-format",
+          "sub-fps", "sub-paste", "sub-parse", "sub-src-status", "sub-src-meta",
+          "sub-filter", "sub-filter-mode", "sub-filter-issues", "sub-cue-view",
+          "sub-cue-spacer", "sub-cue-rows", "sub-cue-meta", "sub-cue-status",
+          "sub-editor", "sub-editor-title", "sub-editor-meta", "sub-edit-start",
+          "sub-edit-end", "sub-edit-text", "sub-edit-save", "sub-edit-nudge-left",
+          "sub-edit-nudge-right", "sub-edit-split", "sub-edit-merge", "sub-edit-delete",
+          "sub-editor-status",
+          "sub-out-format", "sub-out-ids", "sub-out-timecodes", "sub-out-id-field",
+          "sub-out-time-field", "sub-out-copy", "sub-out-download", "sub-out-text",
+          "sub-out-meta", "sub-out-name", "sub-out-status",
+          "sub-scope-selected", "sub-scope-meta", "sub-shift-amount", "sub-shift-unit",
+          "sub-shift-apply", "sub-scale-percent", "sub-scale-anchor", "sub-scale-apply",
+          "sub-min-duration", "sub-min-gap", "sub-fix-timing",
+          "sub-find", "sub-replace", "sub-replace-regex", "sub-replace-case",
+          "sub-replace-word", "sub-replace-apply", "sub-wrap-chars", "sub-wrap-lines",
+          "sub-wrap-apply", "sub-strip-tags", "sub-text-status",
+          "sub-qa-meta", "sub-stats", "sub-qa-cps", "sub-qa-line", "sub-qa-run",
+          "sub-fix-all", "sub-qa-body"
+        ].forEach(function (id) {
+          els[id] = $(id);
+        });
+      }
+
+      // ------------------------------------------------------------- status
+
+      var statusTimers = {};
+      function setStatus(key, message, kind) {
+        var el = els[key];
+        if (!el) return;
+        el.textContent = message || "";
+        el.className = "status" + (kind ? " " + kind : "");
+        el.classList.toggle("hidden", !message);
+        if (statusTimers[key]) clearTimeout(statusTimers[key]);
+        if (message) {
+          statusTimers[key] = setTimeout(function () {
+            el.classList.add("hidden");
+          }, 6000);
+        }
+      }
+
+      // ------------------------------------------------------- load + parse
+
+      function readFile(file) {
+        if (!file) return;
+        if (file.size > lib.MAX_FILE_CHARS) {
+          setStatus("sub-src-status", "That file is larger than the 12 MB limit. Trim it first.", "error");
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          loadText(String(reader.result), file.name);
+        };
+        reader.onerror = function () {
+          setStatus("sub-src-status", "Could not read that file. Try opening it again.", "error");
+        };
+        reader.readAsText(file);
+      }
+
+      function loadText(text, name) {
+        var parsed = lib.parseSubtitle(text, els["sub-format"].value);
+        if (!parsed.cues.length) {
+          setStatus("sub-src-status",
+            "No subtitle cues were found. Check that the file uses SRT or WebVTT timecodes.", "error");
+          return;
+        }
+        state.cues = lib.reindex(lib.sortCues(parsed.cues));
+        state.sourceName = name || "";
+        state.format = parsed.format === "vtt" ? "vtt" : "srt";
+        state.selectedId = null;
+        els["sub-out-format"].value = state.format;
+        els["sub-paste"].value = "";
+
+        var message = parsed.cues.length.toLocaleString() + " cues parsed as " +
+          (state.format === "vtt" ? "WebVTT" : "SubRip") + ".";
+        if (parsed.errors.length) {
+          message += " " + parsed.errors.length + " block" + (parsed.errors.length === 1 ? "" : "s") + " skipped.";
+        }
+        setStatus("sub-src-status", message, parsed.errors.length ? "error" : "ok");
+        els["sub-src-meta"].textContent = (name || "pasted text") + " · " + parsed.cues.length.toLocaleString() + " cues";
+
+        els["sub-parse"].textContent = "Re-parse text";
+        els["sub-cue-view"].scrollTop = 0;
+        updateAll();
+      }
+
+      function clearAll() {
+        state.cues = [];
+        state.sourceName = "";
+        state.selectedId = null;
+        state.issuesByIndex = {};
+        els["sub-paste"].value = "";
+        els["sub-src-meta"].textContent = "no file loaded";
+        els["sub-parse"].textContent = "Parse text";
+        setStatus("sub-cue-status", "");
+        els["sub-cue-view"].scrollTop = 0;
+        setStatus("sub-src-status", "Cleared.", "ok");
+        updateAll();
+      }
+
+      // ------------------------------------------------------------ parsing
+
+      function parsePasted() {
+        var text = els["sub-paste"].value;
+        if (!text.trim()) {
+          setStatus("sub-src-status", "Paste some subtitle text first, or open a file.", "error");
+          return;
+        }
+        loadText(text, "");
+      }
+
+      // ------------------------------------------------------------- render
+
+      function updateAll() {
+        runQa();
+        syncOutputFields();
+        applyFilter(true);
+        renderEditor();
+        renderStats();
+        renderOutput();
+        updateScopeMeta();
+      }
+
+      function syncOutputFields() {
+        var format = els["sub-out-format"].value;
+        els["sub-out-id-field"].hidden = format !== "vtt";
+        els["sub-out-time-field"].hidden = format !== "txt";
+      }
+
+      function updateScopeMeta() {
+        var scoped = els["sub-scope-selected"].checked && state.selectedId;
+        els["sub-scope-meta"].textContent = scoped ? "selected cue" : "whole file";
+      }
+
+      function runQa() {
+        var report = lib.validate(state.cues, {
+          maxCps: Number(els["sub-qa-cps"].value) || lib.DEFAULT_QA.maxCps,
+          maxLineChars: Number(els["sub-qa-line"].value) || lib.DEFAULT_QA.maxLineChars,
+          maxLines: lib.DEFAULT_QA.maxLines,
+          minDurationMs: Number(els["sub-min-duration"].value) || 0,
+          maxDurationMs: lib.DEFAULT_QA.maxDurationMs,
+          minGapMs: Number(els["sub-min-gap"].value) || 0
+        });
+        state.report = report;
+
+        var byIndex = {};
+        for (var i = 0; i < report.issues.length; i++) {
+          var issue = report.issues[i];
+          var list = byIndex[issue.cueIndex] || (byIndex[issue.cueIndex] = []);
+          list.push(issue);
+        }
+        state.issuesByIndex = byIndex;
+
+        els["sub-qa-meta"].textContent = report.clean
+          ? "no problems"
+          : report.errors + " error" + (report.errors === 1 ? "" : "s") +
+            ", " + report.warnings + " warning" + (report.warnings === 1 ? "" : "s");
+
+        renderQaBody(report);
+      }
+
+      function renderQaBody(report) {
+        var body = els["sub-qa-body"];
+        body.textContent = "";
+
+        if (!state.cues.length) {
+          var empty = document.createElement("div");
+          empty.className = "sub-qa-empty";
+          empty.textContent = "Load a subtitle file to see reading-speed, duration, overlap and line-length checks here.";
+          body.appendChild(empty);
+          return;
+        }
+        if (report.clean) {
+          var ok = document.createElement("div");
+          ok.className = "sub-qa-empty";
+          ok.textContent = "No problems found with the current limits. Nice.";
+          body.appendChild(ok);
+          return;
+        }
+
+        var list = document.createElement("ul");
+        list.className = "sub-qa-list";
+        var shown = report.issues.slice(0, 300);
+        for (var i = 0; i < shown.length; i++) {
+          (function (issue) {
+            var li = document.createElement("li");
+            li.className = "sub-qa-item " + issue.severity;
+            li.tabIndex = 0;
+            li.setAttribute("role", "button");
+
+            var sev = document.createElement("span");
+            sev.className = "sev";
+            sev.textContent = issue.severity === "error" ? "error" : "warn";
+            li.appendChild(sev);
+
+            var msg = document.createElement("span");
+            msg.textContent = issue.message;
+            li.appendChild(msg);
+
+            function go() { selectCueByIndex(issue.cueIndex - 1, true); }
+            li.addEventListener("click", go);
+            li.addEventListener("keydown", function (e) {
+              if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
+            });
+            list.appendChild(li);
+          })(shown[i]);
+        }
+        body.appendChild(list);
+
+        if (report.issues.length > shown.length) {
+          var more = document.createElement("p");
+          more.className = "sub-note";
+          more.textContent = "Showing the first " + shown.length + " of " + report.issues.length + " problems.";
+          body.appendChild(more);
+        }
+      }
+
+      function renderStats() {
+        var s = lib.stats(state.cues);
+        var rows = [
+          ["Cues", s.count.toLocaleString()],
+          ["Words", s.words.toLocaleString()],
+          ["Runtime", lib.formatDuration(s.spanMs)],
+          ["Avg duration", lib.formatDuration(s.avgDurationMs)],
+          ["Avg speed", s.avgCps ? s.avgCps.toFixed(1) + " cps" : "—"],
+          ["First cue", s.count ? lib.formatTimestamp(s.minStart, "compact") : "—"]
+        ];
+        var box = els["sub-stats"];
+        box.textContent = "";
+        for (var i = 0; i < rows.length; i++) {
+          var cell = document.createElement("div");
+          cell.className = "sub-stat";
+          var k = document.createElement("div");
+          k.className = "k";
+          k.textContent = rows[i][0];
+          var v = document.createElement("div");
+          v.className = "v";
+          v.textContent = rows[i][1];
+          cell.appendChild(k);
+          cell.appendChild(v);
+          box.appendChild(cell);
+        }
+      }
+
+      // -------------------------------------------------------- cue list
+
+      function currentFilter() {
+        return {
+          text: els["sub-filter"].value.trim(),
+          regex: els["sub-filter-mode"].value === "regex",
+          issuesOnly: els["sub-filter-issues"].checked
+        };
+      }
+
+      function matchesFilter(cue, index, filter) {
+        if (filter.issuesOnly && !state.issuesByIndex[index + 1]) return false;
+        if (!filter.text) return true;
+        var haystack = lib.cuePlainText(cue);
+        if (filter.regex) {
+          var re;
+          try {
+            re = new RegExp(filter.text, "i");
+          } catch (err) {
+            return true;
+          }
+          return re.test(haystack);
+        }
+        return haystack.toLowerCase().indexOf(filter.text.toLowerCase()) !== -1;
+      }
+
+      function applyFilter(skipReset) {
+        var filter = currentFilter();
+        var visible = [];
+        for (var i = 0; i < state.cues.length; i++) {
+          if (matchesFilter(state.cues[i], i, filter)) visible.push(i);
+        }
+        state.visible = visible;
+
+        els["sub-cue-meta"].textContent = visible.length.toLocaleString() +
+          " of " + state.cues.length.toLocaleString() + " shown";
+
+        if (filter.regex && filter.text) {
+          try {
+            new RegExp(filter.text, "i");
+            setStatus("sub-cue-status", "");
+          } catch (err) {
+            setStatus("sub-cue-status", "The cue filter is not a valid regular expression.", "error");
+          }
+        } else {
+          setStatus("sub-cue-status", "");
+        }
+
+        if (!skipReset) els["sub-cue-view"].scrollTop = 0;
+        state.lastStart = -1;
+        state.lastEnd = -1;
+        state.forceRedraw = true;
+        renderCueRows();
+      }
+
+      function rowHeight() {
+        var raw = getComputedStyle(els["sub-cue-view"]).getPropertyValue("--sub-row-h");
+        var value = parseFloat(raw);
+        return isFinite(value) && value > 0 ? value : 64;
+      }
+
+      function renderCueRows() {
+        if (state.renderPending) return;
+        state.renderPending = true;
+        requestAnimationFrame(function () {
+          state.renderPending = false;
+          drawCueRows();
+        });
+      }
+
+      function drawCueRows() {
+        var rows = state.visible;
+        var total = rows.length;
+        var rh = rowHeight();
+        els["sub-cue-spacer"].style.height = (total * rh) + "px";
+
+        var scrollTop = els["sub-cue-view"].scrollTop;
+        var viewport = els["sub-cue-view"].clientHeight || 460;
+        var visibleCount = Math.ceil(viewport / rh);
+        var start = Math.max(0, Math.floor(scrollTop / rh) - 3);
+        var end = Math.min(total, start + visibleCount + 6);
+
+        if (start === state.lastStart && end === state.lastEnd && !state.forceRedraw) return;
+        state.lastStart = start;
+        state.lastEnd = end;
+        state.forceRedraw = false;
+
+        var frag = document.createDocumentFragment();
+        for (var i = start; i < end; i++) {
+          frag.appendChild(cueRow(rows[i], i, rh));
+        }
+        els["sub-cue-rows"].textContent = "";
+        els["sub-cue-rows"].appendChild(frag);
+      }
+
+      function cueRow(cueIndex, position, rh) {
+        var cue = state.cues[cueIndex];
+        var issues = state.issuesByIndex[cueIndex + 1] || [];
+        var hasError = issues.some(function (i) { return i.severity === "error"; });
+        var hasWarning = issues.length > 0;
+
+        var row = document.createElement("div");
+        row.className = "sub-cue-row" + (hasError ? " is-error" : (hasWarning ? " is-warning" : ""));
+        row.id = "sub-cue-row-" + cue.id;
+        row.setAttribute("role", "option");
+        row.setAttribute("aria-selected", cue.id === state.selectedId ? "true" : "false");
+        row.tabIndex = -1;
+        row.style.top = (position * rh) + "px";
+        row.style.height = rh + "px";
+
+        var n = document.createElement("div");
+        n.className = "sub-cue-n";
+        n.textContent = String(cue.index || (cueIndex + 1));
+        row.appendChild(n);
+
+        var body = document.createElement("div");
+        body.className = "sub-cue-body";
+
+        var time = document.createElement("div");
+        time.className = "sub-cue-time";
+        var span = document.createElement("span");
+        span.textContent = lib.formatTimestamp(cue.start, "compact") + " → " + lib.formatTimestamp(cue.end, "compact");
+        time.appendChild(span);
+        var dur = document.createElement("span");
+        dur.className = "sub-cue-dur";
+        dur.textContent = lib.formatDuration(cue.end - cue.start);
+        time.appendChild(dur);
+
+        if (issues.length) {
+          var flag = document.createElement("span");
+          flag.className = "sub-flag " + (hasError ? "error" : "warning");
+          flag.textContent = hasError ? "error" : "warn";
+          if (issues.length > 1) flag.textContent += " ×" + issues.length;
+          flag.title = issues.map(function (i) { return i.message; }).join("\n");
+          time.appendChild(flag);
+        }
+        body.appendChild(time);
+
+        var text = document.createElement("div");
+        text.className = "sub-cue-text";
+        text.textContent = lib.cuePlainText(cue);
+        body.appendChild(text);
+
+        row.appendChild(body);
+
+        row.addEventListener("click", function () { selectCueByIndex(cueIndex, false); });
+        return row;
+      }
+
+      function selectCueByIndex(cueIndex, scrollIntoView) {
+        if (cueIndex < 0 || cueIndex >= state.cues.length) return;
+        state.selectedId = state.cues[cueIndex].id;
+        state.forceRedraw = true;
+        renderCueRows();
+        renderEditor();
+        updateScopeMeta();
+
+        var row = $("sub-cue-row-" + state.selectedId);
+        els["sub-cue-view"].setAttribute("aria-activedescendant", state.selectedId ? "sub-cue-row-" + state.selectedId : "");
+
+        if (scrollIntoView) {
+          var position = state.visible.indexOf(cueIndex);
+          if (position !== -1) {
+            var rh = rowHeight();
+            var view = els["sub-cue-view"];
+            var top = position * rh;
+            var bottom = top + rh;
+            if (top < view.scrollTop) view.scrollTop = top;
+            else if (bottom > view.scrollTop + view.clientHeight) view.scrollTop = bottom - view.clientHeight;
+            state.lastStart = -1;
+            state.lastEnd = -1;
+            renderCueRows();
+          }
+        }
+        if (row && typeof row.focus === "function") {
+          // Keep focus on the listbox container so arrow keys keep working.
+          els["sub-cue-view"].focus({ preventScroll: true });
+        }
+      }
+
+      function selectedCue() {
+        if (!state.selectedId) return null;
+        for (var i = 0; i < state.cues.length; i++) {
+          if (state.cues[i].id === state.selectedId) return state.cues[i];
+        }
+        return null;
+      }
+
+      function selectedIndex() {
+        if (!state.selectedId) return -1;
+        for (var i = 0; i < state.cues.length; i++) {
+          if (state.cues[i].id === state.selectedId) return i;
+        }
+        return -1;
+      }
+
+      // ------------------------------------------------------- cue editor
+
+      function renderEditor() {
+        var cue = selectedCue();
+        if (!cue) {
+          els["sub-editor"].hidden = true;
+          els["sub-editor-status"].classList.add("hidden");
+          return;
+        }
+        els["sub-editor"].hidden = false;
+        els["sub-edit-start"].value = lib.formatTimestamp(cue.start, "srt");
+        els["sub-edit-end"].value = lib.formatTimestamp(cue.end, "srt");
+        els["sub-edit-text"].value = cue.text;
+
+        var index = selectedIndex();
+        els["sub-editor-title"].textContent = "Cue editor · #" + (index + 1);
+        var speed = lib.readingSpeed(cue);
+        els["sub-editor-meta"].textContent =
+          lib.formatDuration(cue.end - cue.start) +
+          (speed ? " · " + speed.cps.toFixed(1) + " cps" : "");
+      }
+
+      function saveEditor() {
+        var cue = selectedCue();
+        if (!cue) return;
+        var start = lib.parseTimestamp(els["sub-edit-start"].value);
+        var end = lib.parseTimestamp(els["sub-edit-end"].value);
+        if (start === null || end === null) {
+          setStatus("sub-editor-status", "Use HH:MM:SS,mmm (or MM:SS.mmm) for both times.", "error");
+          return;
+        }
+        if (end < start) {
+          setStatus("sub-editor-status", "The end time is before the start time.", "error");
+          return;
+        }
+        var text = els["sub-edit-text"].value;
+        state.cues = lib.updateCueText(state.cues, cue.id, text);
+        state.cues = lib.setCueTime(state.cues, cue.id, start, end);
+        setStatus("sub-editor-status", "Cue saved.", "ok");
+        afterEdit(cue.id);
+      }
+
+      function afterEdit(keepSelectedId) {
+        state.selectedId = keepSelectedId && state.cues.some(function (c) { return c.id === keepSelectedId; })
+          ? keepSelectedId
+          : state.selectedId;
+        state.cues = lib.reindex(state.cues);
+        updateAll();
+      }
+
+      // ------------------------------------------------------- transforms
+
+      function shiftAmountMs() {
+        var amount = Number(els["sub-shift-amount"].value) || 0;
+        var unit = els["sub-shift-unit"].value;
+        if (unit === "s") return Math.round(amount * 1000);
+        if (unit === "frames") {
+          var fps = Number(els["sub-fps"].value) || 25;
+          return Math.round((amount / fps) * 1000);
+        }
+        return Math.round(amount);
+      }
+
+      function applyShift() {
+        if (!state.cues.length) return;
+        var offset = shiftAmountMs();
+        if (!offset) {
+          setStatus("sub-text-status", "Enter a non-zero shift amount first.", "error");
+          return;
+        }
+        if (scopedToSelection()) {
+          state.cues = lib.nudgeCue(state.cues, state.selectedId, offset, offset);
+          setStatus("sub-text-status", "Shifted the selected cue by " + lib.formatDuration(Math.abs(offset)) + ".", "ok");
+        } else {
+          state.cues = lib.shiftCues(state.cues, offset);
+          setStatus("sub-text-status", "Shifted " + state.cues.length.toLocaleString() + " cues by " +
+            (offset > 0 ? "+" : "−") + lib.formatDuration(Math.abs(offset)) + ".", "ok");
+        }
+        afterEdit(state.selectedId);
+      }
+
+      function scopedToSelection() {
+        return els["sub-scope-selected"].checked && !!state.selectedId;
+      }
+
+      function applyScale() {
+        if (!state.cues.length) return;
+        var percent = Number(els["sub-scale-percent"].value);
+        if (!isFinite(percent) || percent <= 0) {
+          setStatus("sub-text-status", "Enter a positive percentage.", "error");
+          return;
+        }
+        var anchorRaw = els["sub-scale-anchor"].value.trim();
+        var anchor = null;
+        if (anchorRaw) {
+          anchor = lib.parseTimestamp(anchorRaw);
+          if (anchor === null) {
+            setStatus("sub-text-status", "The anchor must be a timecode such as 00:00:00,000.", "error");
+            return;
+          }
+        }
+        state.cues = lib.scaleCues(state.cues, percent / 100, anchor === null ? undefined : anchor);
+        setStatus("sub-text-status", "Stretched timing to " + percent + "%.", "ok");
+        afterEdit(state.selectedId);
+      }
+
+      function applyFixTiming() {
+        if (!state.cues.length) return;
+        var result = lib.applyTimingRules(state.cues, {
+          minDurationMs: Number(els["sub-min-duration"].value) || 0,
+          minGapMs: Number(els["sub-min-gap"].value) || 0,
+          allowOverlap: false
+        });
+        state.cues = lib.reindex(result.cues);
+        setStatus("sub-text-status",
+          result.changed ? "Adjusted " + result.changed + " cue" + (result.changed === 1 ? "" : "s") + "." : "Timing was already clean.",
+          "ok");
+        afterEdit(state.selectedId);
+      }
+
+      function applyReplace() {
+        if (!state.cues.length) return;
+        var find = els["sub-find"].value;
+        if (!find) {
+          setStatus("sub-text-status", "Enter something to find.", "error");
+          return;
+        }
+        var result = lib.replaceInCues(state.cues, find, els["sub-replace"].value, {
+          regex: els["sub-replace-regex"].checked,
+          caseSensitive: els["sub-replace-case"].checked,
+          wholeWord: els["sub-replace-word"].checked
+        });
+        if (result.error) {
+          setStatus("sub-text-status", result.error, "error");
+          return;
+        }
+        state.cues = result.cues;
+        setStatus("sub-text-status",
+          result.count ? "Replaced " + result.count + " match" + (result.count === 1 ? "" : "es") + "." : "No matches found.",
+          result.count ? "ok" : "");
+        afterEdit(state.selectedId);
+      }
+
+      function applyWrap() {
+        if (!state.cues.length) return;
+        var result = lib.rewrapCues(state.cues,
+          Number(els["sub-wrap-chars"].value) || 42,
+          Number(els["sub-wrap-lines"].value) || 2);
+        state.cues = result.cues;
+        setStatus("sub-text-status",
+          result.changed ? "Rewrapped " + result.changed + " cue" + (result.changed === 1 ? "" : "s") + "." : "Nothing needed rewrapping.",
+          "ok");
+        afterEdit(state.selectedId);
+      }
+
+      function applyStripTags() {
+        if (!state.cues.length) return;
+        var result = lib.stripTagsInCues(state.cues);
+        state.cues = result.cues;
+        setStatus("sub-text-status",
+          result.changed ? "Stripped markup from " + result.changed + " cue" + (result.changed === 1 ? "" : "s") + "." : "No markup found.",
+          "ok");
+        afterEdit(state.selectedId);
+      }
+
+      function fixAll() {
+        if (!state.cues.length) return;
+        var timing = lib.applyTimingRules(state.cues, {
+          minDurationMs: Number(els["sub-min-duration"].value) || 0,
+          minGapMs: Number(els["sub-min-gap"].value) || 0,
+          allowOverlap: false
+        });
+        var stripped = lib.stripTagsInCues(timing.cues);
+        var wrapped = lib.rewrapCues(stripped.cues,
+          Number(els["sub-wrap-chars"].value) || 42,
+          Number(els["sub-wrap-lines"].value) || 2);
+        state.cues = lib.reindex(wrapped.cues);
+        setStatus("sub-text-status",
+          "Repaired timing (" + timing.changed + "), stripped markup (" + stripped.changed + ") and rewrapped (" + wrapped.changed + ").",
+          "ok");
+        afterEdit(state.selectedId);
+      }
+
+      // ------------------------------------------------------------ output
+
+      function renderOutput() {
+        if (!state.cues.length) {
+          els["sub-out-text"].value = "";
+          els["sub-out-meta"].textContent = "—";
+          els["sub-out-name"].textContent = "";
+          return;
+        }
+        var format = els["sub-out-format"].value;
+        var text;
+        if (format === "vtt") {
+          text = lib.toVTT(state.cues, { includeIds: els["sub-out-ids"].value === "show" });
+        } else if (format === "txt") {
+          text = lib.toTXT(state.cues, { withTimecodes: els["sub-out-timecodes"].value === "show" });
+        } else if (format === "csv") {
+          text = lib.toCSV(state.cues);
+        } else {
+          text = lib.toSRT(state.cues);
+        }
+        els["sub-out-text"].value = text;
+
+        var bytes = new Blob([text]).size;
+        els["sub-out-meta"].textContent = format.toUpperCase() + " · " +
+          (bytes < 1024 ? bytes + " B" : (bytes / 1024).toFixed(1) + " kB");
+        els["sub-out-name"].textContent = outputFilename();
+      }
+
+      function baseName() {
+        if (!state.sourceName) return "subtitles";
+        return state.sourceName.replace(/\.[^.]+$/, "");
+      }
+
+      function outputFilename() {
+        return baseName() + "." + els["sub-out-format"].value;
+      }
+
+      function legacyCopy() {
+        // execCommand("copy") still works where the async Clipboard API is
+        // unavailable, e.g. over file:// or a plain-http origin.
+        var area = els["sub-out-text"];
+        try {
+          area.focus();
+          area.select();
+          return document.execCommand("copy");
+        } catch (err) {
+          return false;
+        }
+      }
+
+      function copyOutput() {
+        var text = els["sub-out-text"].value;
+        if (!text) {
+          setStatus("sub-out-status", "There is nothing to copy yet.", "error");
+          return;
+        }
+        function done() { setStatus("sub-out-status", "Copied " + text.length.toLocaleString() + " characters.", "ok"); }
+        function manual(message) {
+          els["sub-out-text"].select();
+          setStatus("sub-out-status", message, "error");
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () {
+            if (legacyCopy()) done();
+            else manual("Select-all and copy manually — the clipboard was blocked.");
+          });
+        } else if (legacyCopy()) {
+          done();
+        } else {
+          manual("Press Ctrl/⌘ + C to copy the selected text.");
+        }
+      }
+
+      function downloadOutput() {
+        var text = els["sub-out-text"].value;
+        if (!text) {
+          setStatus("sub-out-status", "There is nothing to download yet.", "error");
+          return;
+        }
+        var type = els["sub-out-format"].value === "csv"
+          ? "text/csv"
+          : (els["sub-out-format"].value === "txt" ? "text/plain" : "text/vtt");
+        var blob = new Blob([text], { type: type + ";charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = outputFilename();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setStatus("sub-out-status", "Downloaded " + outputFilename() + ".", "ok");
+      }
+
+      // ------------------------------------------------------- cue actions
+
+      function nudgeSelected(direction) {
+        var cue = selectedCue();
+        if (!cue) return;
+        var amount = Number(els["sub-shift-amount"].value) || 1;
+        var unit = els["sub-shift-unit"].value;
+        var ms = unit === "ms" ? amount : (unit === "frames"
+          ? Math.round((amount / (Number(els["sub-fps"].value) || 25)) * 1000)
+          : Math.round(amount * 1000));
+        if (!ms) ms = 100;
+        ms = Math.abs(ms) * direction;
+        state.cues = lib.nudgeCue(state.cues, cue.id, ms, ms);
+        setStatus("sub-editor-status", "Nudged by " + lib.formatDuration(Math.abs(ms)) + ".", "ok");
+        afterEdit(cue.id);
+      }
+
+      function splitSelected() {
+        var cue = selectedCue();
+        if (!cue) return;
+        var middle = Math.round((cue.start + cue.end) / 2);
+        var result = lib.splitCue(state.cues, cue.id, middle);
+        if (!result.split) {
+          setStatus("sub-editor-status", "This cue is too short to split.", "error");
+          return;
+        }
+        state.cues = lib.reindex(result.cues);
+        setStatus("sub-editor-status", "Cue split at " + lib.formatTimestamp(middle, "srt") + ".", "ok");
+        afterEdit(cue.id);
+      }
+
+      function mergeSelected() {
+        var cue = selectedCue();
+        if (!cue) return;
+        var index = selectedIndex();
+        if (index === -1 || index >= state.cues.length - 1) {
+          setStatus("sub-editor-status", "There is no following cue to merge with.", "error");
+          return;
+        }
+        var next = state.cues[index + 1];
+        var result = lib.mergeCues(state.cues, cue.id, next.id);
+        state.cues = lib.reindex(result.cues);
+        setStatus("sub-editor-status", "Merged with the next cue.", "ok");
+        afterEdit(cue.id);
+      }
+
+      function deleteSelected() {
+        var cue = selectedCue();
+        if (!cue) return;
+        var index = selectedIndex();
+        state.cues = lib.reindex(lib.deleteCue(state.cues, cue.id));
+        state.selectedId = state.cues.length
+          ? state.cues[Math.min(index, state.cues.length - 1)].id
+          : null;
+        setStatus("sub-editor-status", "Cue deleted.", "ok");
+        updateAll();
+      }
+
+      // --------------------------------------------------------- keyboard
+
+      function onCueKeydown(event) {
+        if (!state.cues.length) return;
+        var index = selectedIndex();
+        if (index === -1) index = state.visible.length ? state.visible[0] : 0;
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          var next = state.visible[state.visible.indexOf(index) + 1];
+          if (next !== undefined) selectCueByIndex(next, true);
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          var prev = state.visible[state.visible.indexOf(index) - 1];
+          if (prev !== undefined) selectCueByIndex(prev, true);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          if (state.visible.length) selectCueByIndex(state.visible[0], true);
+        } else if (event.key === "End") {
+          event.preventDefault();
+          if (state.visible.length) selectCueByIndex(state.visible[state.visible.length - 1], true);
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          if (selectedCue()) els["sub-edit-text"].focus();
+        } else if (event.key === "Delete" || event.key === "Backspace") {
+          if (selectedCue()) { event.preventDefault(); deleteSelected(); }
+        }
+      }
+
+      // ------------------------------------------------------------ wiring
+
+      function wire() {
+        els["sub-open"].addEventListener("click", function () { els["sub-file"].click(); });
+        els["sub-file"].addEventListener("change", function (event) {
+          readFile(event.target.files && event.target.files[0]);
+          event.target.value = "";
+        });
+        els["sub-sample"].addEventListener("click", function () {
+          loadText(SAMPLE, "sample.srt");
+        });
+        els["sub-clear"].addEventListener("click", clearAll);
+        els["sub-parse"].addEventListener("click", parsePasted);
+
+        var drop = els["sub-drop"];
+        ["dragenter", "dragover"].forEach(function (type) {
+          drop.addEventListener(type, function (e) {
+            e.preventDefault();
+            drop.classList.add("is-over");
+          });
+        });
+        ["dragleave", "drop"].forEach(function (type) {
+          drop.addEventListener(type, function (e) {
+            e.preventDefault();
+            drop.classList.remove("is-over");
+          });
+        });
+        drop.addEventListener("drop", function (e) {
+          var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (file) readFile(file);
+        });
+
+        els["sub-filter"].addEventListener("input", function () { applyFilter(); });
+        els["sub-filter-mode"].addEventListener("change", function () { applyFilter(); });
+        els["sub-filter-issues"].addEventListener("change", function () { applyFilter(); });
+        els["sub-cue-view"].addEventListener("scroll", renderCueRows);
+        window.addEventListener("resize", function () {
+          state.lastStart = -1;
+          state.lastEnd = -1;
+          renderCueRows();
+        });
+        els["sub-cue-view"].addEventListener("keydown", onCueKeydown);
+
+        els["sub-scope-selected"].addEventListener("change", updateScopeMeta);
+        els["sub-shift-apply"].addEventListener("click", applyShift);
+        els["sub-scale-apply"].addEventListener("click", applyScale);
+        els["sub-fix-timing"].addEventListener("click", applyFixTiming);
+        els["sub-find"].addEventListener("keydown", function (e) {
+          if (e.key === "Enter") { e.preventDefault(); applyReplace(); }
+        });
+        els["sub-replace-apply"].addEventListener("click", applyReplace);
+        els["sub-wrap-apply"].addEventListener("click", applyWrap);
+        els["sub-strip-tags"].addEventListener("click", applyStripTags);
+        els["sub-qa-run"].addEventListener("click", function () {
+          updateAll();
+          setStatus("sub-text-status", "Checks re-run.", "ok");
+        });
+        els["sub-fix-all"].addEventListener("click", fixAll);
+
+        els["sub-edit-save"].addEventListener("click", saveEditor);
+        els["sub-edit-nudge-left"].addEventListener("click", function () { nudgeSelected(-1); });
+        els["sub-edit-nudge-right"].addEventListener("click", function () { nudgeSelected(1); });
+        els["sub-edit-split"].addEventListener("click", splitSelected);
+        els["sub-edit-merge"].addEventListener("click", mergeSelected);
+        els["sub-edit-delete"].addEventListener("click", deleteSelected);
+
+        els["sub-out-format"].addEventListener("change", function () {
+          syncOutputFields();
+          renderOutput();
+        });
+        els["sub-out-ids"].addEventListener("change", function () { renderOutput(); });
+        els["sub-out-timecodes"].addEventListener("change", function () { renderOutput(); });
+        els["sub-out-copy"].addEventListener("click", copyOutput);
+        els["sub-out-download"].addEventListener("click", downloadOutput);
+      }
+
+      function init() {
+        cacheEls();
+        wire();
+        updateAll();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
