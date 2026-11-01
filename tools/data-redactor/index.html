@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Data Redactor — Toolshed</title>
+  <meta name="description" content="Find and redact sensitive values in text, logs and data before you share them. Detects emails, card numbers, API keys, tokens and private keys, then redacts, masks, hashes or tokenizes them locally in your browser. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / data-redactor</div>
+      <h1>Data Redactor</h1>
+      <p class="lede">Paste a log, ticket, dataset or note and strip out the sensitive parts before you share it. Finds emails, card numbers, API keys, tokens, private keys and more, then redacts, masks, hashes or tokenizes them — entirely in your browser. Nothing is uploaded, and nothing is stored.</p>
+    </section>
+
+    <section class="toolbody dr-toolbody">
+      <!-- ============================ INPUT ============================ -->
+      <div class="pane dr-source">
+        <div class="pane-header">
+          <label class="pane-title" for="dr-input">SOURCE TEXT</label>
+          <span class="dr-meta" id="dr-input-meta">0 characters</span>
+        </div>
+
+        <div class="dr-toolbar">
+          <button type="button" class="btn secondary" id="dr-sample">Load sample</button>
+          <button type="button" class="btn secondary" id="dr-open">Open file</button>
+          <input type="file" id="dr-file" accept=".log,.txt,.json,.jsonl,.ndjson,.csv,.tsv,.md,.yaml,.yml,.env,.xml,.sql,text/*,application/json" hidden>
+          <span class="dr-toolbar-spacer"></span>
+          <button type="button" class="btn danger" id="dr-clear">Clear</button>
+        </div>
+
+        <textarea id="dr-input" spellcheck="false" autocomplete="off" autocapitalize="off"
+          aria-label="Source text to redact"
+          placeholder="Paste text, a log excerpt, a config file or a dataset here — or click “Open file”.&#10;&#10;Examples of what gets found:&#10;  alice@example.com&#10;  4111 1111 1111 1111&#10;  AKIAIOSFODNN7EXAMPLE&#10;  password=hunter2supersecret&#10;  postgres://user:p4ss@db:5432/app&#10;  -----BEGIN PRIVATE KEY-----…"></textarea>
+
+        <div class="dr-input-actions">
+          <button type="button" class="btn" id="dr-scan">Scan</button>
+          <button type="button" class="btn" id="dr-redact">Redact</button>
+          <span class="dr-hint-inline">Ctrl/⌘ + Enter to redact</span>
+        </div>
+
+        <div class="status hidden" id="dr-status" role="status" aria-live="polite"></div>
+      </div>
+
+      <!-- ============================ CONTROLS ============================ -->
+      <div class="pane dr-controls">
+        <div class="pane-header">
+          <span class="pane-title">SETTINGS</span>
+          <button type="button" class="btn secondary dr-btn-sm" id="dr-reset">Reset</button>
+        </div>
+
+        <div class="dr-field">
+          <label class="dr-field-label" for="dr-strategy">Replacement strategy</label>
+          <select id="dr-strategy">
+            <option value="redact">Redact — [EMAIL_ADDRESS]</option>
+            <option value="mask">Mask — jo*******@example.com</option>
+            <option value="hash">Hash — deterministic fingerprint</option>
+            <option value="tokenize">Tokenize — EMAIL_ADDRESS_1, _2, …</option>
+            <option value="remove">Remove — delete the value</option>
+          </select>
+          <p class="dr-field-help" id="dr-strategy-help">Replaces each value with a typed placeholder. The safest default for sharing.</p>
+        </div>
+
+        <div class="dr-field" id="dr-mask-field" hidden>
+          <label class="dr-field-label" for="dr-mask-keep">Mask: characters to keep at each end</label>
+          <input type="number" id="dr-mask-keep" min="0" max="8" step="1" value="2">
+        </div>
+
+        <div class="dr-field" id="dr-salt-field" hidden>
+          <label class="dr-field-label" for="dr-salt">Hash salt (optional)</label>
+          <input type="text" id="dr-salt" placeholder="shared secret for stable fingerprints" spellcheck="false" autocomplete="off">
+          <p class="dr-field-help">With the same salt and input, the hash is stable — so records can be joined across files without revealing the values.</p>
+        </div>
+
+        <div class="dr-field">
+          <label class="dr-field-label" for="dr-terms">Custom terms (one per line)</label>
+          <textarea id="dr-terms" rows="3" spellcheck="false" autocomplete="off"
+            placeholder="Project Nightingale&#10;Acme Internal"></textarea>
+          <p class="dr-field-help">Literal words or phrases to redact too, such as internal codenames or a client name.</p>
+        </div>
+
+        <fieldset class="dr-fieldset">
+          <legend class="dr-field-label">Detectors</legend>
+          <div class="dr-groups" id="dr-groups"></div>
+          <div class="dr-toggle-row">
+            <button type="button" class="dr-linkbtn" id="dr-all-on">Enable all</button>
+            <button type="button" class="dr-linkbtn" id="dr-all-off">Disable all</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <!-- ============================ RESULTS ============================ -->
+      <section class="dr-results" id="dr-results" hidden aria-label="Redaction results">
+        <div class="dr-kpis" id="dr-kpis"></div>
+
+        <div class="pane dr-output">
+          <div class="pane-header">
+            <span class="pane-title" id="dr-output-title">REDACTED OUTPUT</span>
+            <div class="row dr-output-actions">
+              <button type="button" class="btn secondary dr-btn-sm" id="dr-copy">Copy</button>
+              <button type="button" class="btn secondary dr-btn-sm" id="dr-download">Download</button>
+              <button type="button" class="btn secondary dr-btn-sm" id="dr-restore">Restore originals</button>
+            </div>
+          </div>
+          <textarea id="dr-output" readonly spellcheck="false" aria-label="Redacted output"></textarea>
+        </div>
+
+        <div class="pane dr-findings">
+          <div class="pane-header">
+            <span class="pane-title">FINDINGS</span>
+            <div class="row dr-output-actions">
+              <button type="button" class="btn secondary dr-btn-sm" id="dr-copy-md">Copy report (Markdown)</button>
+              <button type="button" class="btn secondary dr-btn-sm" id="dr-copy-csv">Copy report (CSV)</button>
+              <button type="button" class="btn secondary dr-btn-sm" id="dr-copy-json">Copy report (JSON)</button>
+            </div>
+          </div>
+          <div class="dr-findings-toolbar">
+            <label class="dr-field dr-field-inline">
+              <span class="dr-field-label">Filter</span>
+              <input type="text" id="dr-filter" placeholder="filter findings by value or type…" spellcheck="false" autocomplete="off">
+            </label>
+            <label class="dr-check" for="dr-hide-values">
+              <input type="checkbox" id="dr-hide-values"> Hide original values in this list
+            </label>
+          </div>
+          <div class="dr-table-wrap">
+            <table class="dr-table">
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col">Severity</th>
+                  <th scope="col" class="dr-num">Start</th>
+                  <th scope="col">Matched value</th>
+                  <th scope="col">Replacement</th>
+                </tr>
+              </thead>
+              <tbody id="dr-findings-body"></tbody>
+            </table>
+            <p class="dr-empty" id="dr-findings-empty" hidden>No findings match the current filter.</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="dr-about">
+      <h2>How this works</h2>
+      <p>
+        Every byte you paste is processed in this tab. The tool runs a set of
+        pattern detectors over your text, keeps the ones whose checksums validate
+        (card numbers must pass Luhn, IBANs must pass the mod-97 check), and
+        replaces each match with the strategy you choose. The results table lists
+        exactly what it changed so you can audit it before sharing the output.
+      </p>
+      <p>
+        <strong>Redact</strong> and <strong>remove</strong> are irreversible.
+        <strong>Mask</strong> keeps a couple of characters for readability.
+        <strong>Hash</strong> gives a stable, salted fingerprint you can join on
+        without ever revealing the original. <strong>Tokenize</strong> assigns a
+        numbered label per distinct value.
+      </p>
+      <p class="dr-caveat">
+        Detectors are pattern-based, so they can miss unusual formats and can
+        occasionally flag something harmless. Always review the findings list
+        before sharing the output — treat it as a careful first pass, not a
+        guarantee.
+      </p>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script src="ui.js"></script>
+</body>
+</html>

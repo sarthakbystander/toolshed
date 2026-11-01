@@ -1,0 +1,14 @@
+{
+  "id": "data-redactor",
+  "name": "Data Redactor",
+  "description": "Find and redact sensitive values in text, logs and data before you share them. Detects emails, card numbers, API keys, tokens, private keys and more, then redacts, masks, hashes or tokenizes them locally in your browser. Nothing is uploaded.",
+  "category": "Privacy",
+  "tags": ["anonymize", "gdpr", "pii", "privacy", "redaction", "sanitize", "secrets"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
