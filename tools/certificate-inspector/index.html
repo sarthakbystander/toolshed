@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Certificate Inspector — Toolshed</title>
+  <meta name="description" content="Decode and inspect X.509 certificates and PKCS#10 certificate signing requests in your browser. Read the subject and issuer, validity window, public key, extensions and fingerprints, review the security findings, and build and verify a chain. Nothing is uploaded.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / certificate-inspector</div>
+      <h1>Certificate Inspector</h1>
+      <p class="lede">Paste an X.509 certificate or a PKCS#10 certificate signing request to read it in plain language: subject and issuer, validity window, public key, signature algorithm, every extension, and the fingerprints. Review what the certificate is actually claiming, check a chain and its signatures, and export a JSON report. Parsing and cryptography happen in your tab — certificates never leave the page.</p>
+    </section>
+
+    <!-- ============================ 1 · INPUT ============================ -->
+    <section class="toolbody ci-body">
+      <div class="pane" id="dropzone">
+        <div class="pane-header">
+          <span class="pane-title">1 · INPUT</span>
+          <div class="ci-actions">
+            <button type="button" class="btn secondary" id="btn-sample-chain">Sample chain</button>
+            <button type="button" class="btn secondary" id="btn-sample-expired">Expired cert</button>
+            <button type="button" class="btn secondary" id="btn-sample-csr">CSR</button>
+            <button type="button" class="btn danger" id="btn-clear">Clear</button>
+          </div>
+        </div>
+
+        <label class="ci-label" for="input">Certificate, chain or CSR</label>
+        <textarea id="input" class="ci-input" spellcheck="false" autocomplete="off" autocapitalize="off"
+          aria-describedby="input-hint"
+          placeholder="-----BEGIN CERTIFICATE-----&#10;MIID…&#10;-----END CERTIFICATE-----"></textarea>
+        <p class="hint" id="input-hint">Paste one or more PEM blocks, a PEM chain in any order, raw DER as base64, or raw DER as hex. Private keys are recognised and refused on purpose. You can also drop a <code>.pem</code>, <code>.crt</code>, <code>.cer</code>, <code>.der</code>, <code>.csr</code> or <code>.req</code> file onto this pane.</p>
+
+        <div class="ci-actions">
+          <input type="file" id="file" class="ci-file" accept=".pem,.crt,.cer,.der,.csr,.req,.txt">
+          <button type="button" class="btn secondary" id="btn-file">Choose a file…</button>
+          <span class="hint" id="file-name"></span>
+        </div>
+
+        <div class="status hidden" id="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">2 · PARSED BLOCKS</span>
+          <span class="hint" id="block-count"></span>
+        </div>
+        <div class="ci-items" id="items">
+          <p class="ci-empty">Nothing parsed yet. Paste a certificate or load one of the samples to begin.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ 3 · OVERVIEW ============================ -->
+    <section class="toolbody ci-full">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">3 · OVERVIEW</span>
+          <div class="ci-actions">
+            <button type="button" class="btn secondary" id="btn-copy-report" disabled>Copy JSON report</button>
+            <button type="button" class="btn secondary" id="btn-download-report" disabled>Download JSON</button>
+          </div>
+        </div>
+        <div class="ci-facts" id="overview">
+          <p class="ci-empty">Select a block to see its details.</p>
+        </div>
+        <p class="hint" id="overview-note"></p>
+      </div>
+    </section>
+
+    <!-- ============================ 4 · SECURITY REVIEW ============================ -->
+    <section class="toolbody ci-full">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">4 · SECURITY REVIEW</span>
+          <span class="hint" id="finding-count"></span>
+        </div>
+        <ul class="ci-findings" id="findings" aria-live="polite">
+          <li class="ci-empty">Decode a certificate or request to see its review.</li>
+        </ul>
+        <p class="hint">The review flags expired or not-yet-valid dates, broken or weak signature hashes, undersized keys, a CA that cannot sign certificates, long lifetimes and missing modern extensions. It is guidance about the certificate's own contents — not a statement that a chain is trusted.</p>
+      </div>
+    </section>
+
+    <!-- ============================ 5 · EXTENSIONS ============================ -->
+    <section class="toolbody ci-full">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">5 · EXTENSIONS</span>
+          <span class="hint" id="ext-count"></span>
+        </div>
+        <div class="ci-tablewrap">
+          <table class="ci-table">
+            <caption id="ext-caption" class="ci-sr">Extensions carried by the selected certificate or request</caption>
+            <thead>
+              <tr>
+                <th scope="col">Extension</th>
+                <th scope="col">Critical</th>
+                <th scope="col">Value</th>
+                <th scope="col">OID</th>
+              </tr>
+            </thead>
+            <tbody id="extensions">
+              <tr><td colspan="4" class="ci-empty">No extensions to show.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ 6 · CHAIN ============================ -->
+    <section class="toolbody ci-full">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">6 · CHAIN &amp; SIGNATURES</span>
+          <div class="ci-actions">
+            <button type="button" class="btn" id="btn-verify" disabled>Verify chain</button>
+          </div>
+        </div>
+        <p class="hint">Every certificate in the input is ordered into a leaf-to-root chain using authority key identifiers, then each link's signature is checked against the issuer's public key with the Web Crypto API. A signature that verifies proves the issuer really signed that certificate — it does not prove the issuer is one you trust.</p>
+        <div class="ci-chain" id="chain">
+          <p class="ci-empty">Load two or more certificates to build and verify a chain.</p>
+        </div>
+        <div class="status hidden" id="chain-status" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ============================ 7 · REFERENCE ============================ -->
+    <section class="toolbody ci-full">
+      <div class="pane">
+        <div class="pane-header">
+          <span class="pane-title">X.509 REFERENCE</span>
+        </div>
+        <div class="ci-ref">
+          <dl>
+            <dt>What a certificate is</dt>
+            <dd>A DER-encoded ASN.1 structure — a SEQUENCE of three parts: the <code>tbsCertificate</code> (everything the issuer signed), the signature <code>algorithmIdentifier</code>, and the signature <code>BIT STRING</code>. PEM is the same bytes, Base64-encoded between <code>-----BEGIN CERTIFICATE-----</code> markers.</dd>
+
+            <dt>Fingerprints</dt>
+            <dd>The SHA-1 and SHA-256 digests of the whole DER certificate. A fingerprint identifies an exact certificate — change one byte and every fingerprint changes — but it says nothing about whether the certificate is trustworthy.</dd>
+
+            <dt>Subject and issuer</dt>
+            <dd>Distinguished names built from attribute type/value pairs. The common ones are <code>C</code> (country), <code>ST</code> (state), <code>L</code> (locality), <code>O</code> (organisation), <code>OU</code> (unit) and <code>CN</code> (common name). Modern TLS ignores <code>CN</code> and reads the hostnames from <code>subjectAltName</code>.</dd>
+
+            <dt>Validity</dt>
+            <dd>Two <code>UTCTime</code> or <code>GeneralizedTime</code> values, <code>notBefore</code> and <code>notAfter</code>. Certificates outside that window are rejected regardless of signature. Publicly-trusted TLS certificates are capped at 398 days.</dd>
+
+            <dt>Key usage</dt>
+            <dd>Which operations the key may perform — <code>digitalSignature</code>, <code>keyEncipherment</code>, <code>keyCertSign</code> and so on. <code>extendedKeyUsage</code> narrows the purpose further, for example <code>serverAuth</code> or <code>clientAuth</code>.</dd>
+
+            <dt>Basic constraints</dt>
+            <dd>Whether the certificate is a CA (<code>CA: TRUE</code>) and, optionally, how many intermediate CAs may follow it (<code>pathLenConstraint</code>). A leaf certificate should never be a CA.</dd>
+
+            <dt>Subject / authority key identifier</dt>
+            <dd>The subject key identifier is a hash of the public key; the authority key identifier names the issuer's key. Chain-building matches one to the other, which is why it works even when the same CA issues under several names.</dd>
+
+            <dt>Signature verification, and its limits</dt>
+            <dd>The tool checks that the signature over the <code>tbsCertificate</code> matches the issuer's public key. That is one link in a chain of trust. It does not check revocation, does not fetch anything over the network, and cannot tell you whether the root is one your system trusts.</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var ci = window.Toolshed.certificateInspector;
+
+      var SAMPLE_CHAIN = "-----BEGIN CERTIFICATE-----\nMIIEmzCCA4OgAwIBAgIUBsZT8K0FhH4WEI6ZI25WxH61W6YwDQYJKoZIhvcNAQEL\nBQAwXTELMAkGA1UEBhMCVVMxJjAkBgNVBAoMHVRvb2xzaGVkIFRlc3QgSW50ZXJt\nZWRpYXRlIENBMSYwJAYDVQQDDB1Ub29sc2hlZCBUZXN0IEludGVybWVkaWF0ZSBD\nQTAeFw0yNjEwMjkwMzM2NDJaFw0yNzAxMjcwMzM2NDJaMGwxCzAJBgNVBAYTAlVT\nMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMRow\nGAYDVQQKDBFUb29sc2hlZCBUZXN0IEx0ZDEUMBIGA1UEAwwLZXhhbXBsZS5jb20w\nggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDJ9/GEq7inJXoc9qpR8DDG\ndp05ZFMixuxKUjRh/c6R6RJMHSXrzl+8Secvt6JlVfRSDRk0eBZgMIxVUKYBE1WC\n0fOav3mMtgG2jVD4FRRbMn02A1+iOUzCM4nOnrERiv1+2zZpaaxJHIfW7QWAzwng\n2Qr9QUbKelRbLl5D7AFSSZcYyFKASG+fc8BbzZjL3hEeMYzKanxHsZ4ckF4BQRl7\nai9fZhVElCSh1L4JThZoTS2n38eOts4YQ3sUTFewtEryZ+9TKi23vMwj7RA+6bBd\noT/Ih6g0h9tgh1Wv4DRVPvkf1touwQOg/JT8aDReTX6hySSM0khXUZ3OiInZdYLF\nAgMBAAGjggFCMIIBPjAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIFoDAdBgNV\nHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFG9t3LKnnYA48wPK\nF6sJj7SLHqGOMB8GA1UdIwQYMBaAFGHrMjumE/VGqE4QvUZf4xeuSZ8RMDYGCCsG\nAQUFBwEBBCowKDAmBggrBgEFBQcwAYYaaHR0cDovL29jc3AudG9vbHNoZWQudGVz\ndC8wMgYDVR0fBCswKTAnoCWgI4YhaHR0cDovL2NybC50b29sc2hlZC50ZXN0L3Jv\nb3QuY3JsMBEGA1UdIAQKMAgwBgYEKgMEBTBABgNVHREEOTA3ggtleGFtcGxlLmNv\nbYIPd3d3LmV4YW1wbGUuY29thwTLAHEKgRFhZG1pbkBleGFtcGxlLmNvbTANBgkq\nhkiG9w0BAQsFAAOCAQEAqvkaCprabZb75Eb56kWShajrWIbfD91GPkCxVNnsYyD1\nPl0DyAf8KWgTCunWQRv93qUsQPQZPyjVPSgis3FDX6spdjKCejiPMcBJ4nXgePJg\nsTpHKuPBOoSCmZM5YkiouKtLZdTcsyVrZWqGr0CGT9HnOehjOoHZGOVmfTo6yqvz\nE0WkWVZVZzhDqaiXHrppeNpYGEWPdUpwH5B68TAue2Mc7hy6zotWrgM9FqLF+gFF\noVOIzVakCnTixsIrhxQVbZtvILwWtvf8eXAN49AvZ+vkz3KwEWwsx1QGk3oth0cw\nqD/ajZkhOk92HwW+g1tGRS9HmHITa2lfkXVtatsuVQ==\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nMIIDyzCCArOgAwIBAgIUO8V1rOSEEITAKKrSwpuYrBjiJHwwDQYJKoZIhvcNAQEL\nBQAwejELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcM\nDVNhbiBGcmFuY2lzY28xHjAcBgNVBAoMFVRvb2xzaGVkIFRlc3QgUm9vdCBDQTEe\nMBwGA1UEAwwVVG9vbHNoZWQgVGVzdCBSb290IENBMB4XDTI2MTAyOTAzMzY0MloX\nDTM2MTAyNjAzMzY0MlowXTELMAkGA1UEBhMCVVMxJjAkBgNVBAoMHVRvb2xzaGVk\nIFRlc3QgSW50ZXJtZWRpYXRlIENBMSYwJAYDVQQDDB1Ub29sc2hlZCBUZXN0IElu\ndGVybWVkaWF0ZSBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL53\nMpaU1RD7Ip5HEqLkTKdwKtQO8IVb7SsMRMHZxf9FM13VlgH7k6Wov17qoOxNwS02\nk2wUCrIpBX9iI+zcNZBTLf7js6Ftoq2T/dUQJg/48xp8Mryxsx4wBQv+DsLHqB3O\nQwgyw+nFp1c+m8BShzBfh2VkHqOGZrYSZQwkLuOvA7M3uC98HJrK2c72zgjv2cTx\nwbyD/1d6Mgroe8CAkABoCiWdrcdUyp5f609Bg83kiuZBxgFLmBoO4GGycwxmoKRT\nBtlDCOx8Dh5xh90vyy2Kv+tb/ziqh9OXpJYQxXND579Jjr+jVtaHVK4nnDKmMeiT\nL7gYNzcQAkkNMJlZZ10CAwEAAaNmMGQwEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNV\nHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFGHrMjumE/VGqE4QvUZf4xeuSZ8RMB8GA1Ud\nIwQYMBaAFPY/PSiAyLd1N7Qy8eB3sykSvSgxMA0GCSqGSIb3DQEBCwUAA4IBAQAc\nI1SqbrzsHToeLhR+/yrLfvm3j+odMkEbNn1VGEsRZWiWHL9n4MMcUzfcZL7L7f6r\n4RB44OyrnAjDXur1Y239hp8zp2XzIa4GOBc6Yi5zMc/V7z8UjahHaXBetjztqFJ4\nKfc9yqtjfpdy5sObfoiSG2L9/Q1rhcn+wgfB734DTYX2C0ZzzXyHrRKo51qLoJQP\nFiBke9sPfegFFTZ6jwsMJlDYIQFKEgck9G92kX0d+whqE3myJLAqfbBLaZjsA9JJ\niPeRv41V7j1Q/uOXV6slUitl8iyOadnk38NZz5YaWoYa3bjGnVd5pMuuh9Ema5je\nKU9YsVyJJ5qs9wGkJ5A/\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nMIID5TCCAs2gAwIBAgIUDeNLtsBwIAN9NpOo7ZjWcfLboPQwDQYJKoZIhvcNAQEL\nBQAwejELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcM\nDVNhbiBGcmFuY2lzY28xHjAcBgNVBAoMFVRvb2xzaGVkIFRlc3QgUm9vdCBDQTEe\nMBwGA1UEAwwVVG9vbHNoZWQgVGVzdCBSb290IENBMB4XDTI2MTAyOTAzMzY0MloX\nDTQ2MTAyNDAzMzY0MlowejELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3Ju\naWExFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xHjAcBgNVBAoMFVRvb2xzaGVkIFRl\nc3QgUm9vdCBDQTEeMBwGA1UEAwwVVG9vbHNoZWQgVGVzdCBSb290IENBMIIBIjAN\nBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuucRRcnN1DQPXZPxNHYQydPZoBUI\nRz33u+rl/uVKfFIBtybZGGnI7trH+vBKJBzzsDAYIpFIWB4iXnVGhdAOEx+9DwVq\n2ImcMDFCNtS8jPwT2Xb7flA6UbJi/KPkns4bA3OegMrWKOPanv0jzLegQG5jLtDO\nTZSA29Ohu1yfYP90nMFtSOKIUKqWtLXmP+4NuQmmuTtygjB3DDZBRauBw7xi8LhQ\nUq/gzG22MO8p0P/F0eJTqTrBX0HH3URm8N3eYnxHUVGd5F90AmPH63fL8ru8CxP4\n+peKIbxTJmKh4ruTAKLvuYi+YNv8eJ8GwDRqWDoZBq2HYGsCV65MgUClmQIDAQAB\no2MwYTAfBgNVHSMEGDAWgBT2Pz0ogMi3dTe0MvHgd7MpEr0oMTAPBgNVHRMBAf8E\nBTADAQH/MA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQU9j89KIDIt3U3tDLx4Hez\nKRK9KDEwDQYJKoZIhvcNAQELBQADggEBAK6w8Us0DeMT24LMgTvBZRz3SV9G2G7h\nqkDRuNuzaNdweVq5/XgYo52JMzJrM7f7Dt2V+8Zd3rEZaSHpOr2aS8Vk7Z/Xek2T\nHi24IdtEO2SDSLZSZBLDWqqemlFMGzI54hoxOXjp/aIpu+Q1s7+25xeE9AwSc97Z\n1VeEaXN05CSHmgJ6D9nvvDLyEFJUNabSXXsBYKfrxROXKq2uy6kpr6ci/1QXBnqB\nInfl82yU/1gyoZs2nJcrN0hOhrS/VqRcnepf6tH+SSqsz8G/Bl/Jupj3P7f6+NXY\nCVJmjeeLgX6VlpNm4kHFVjsW7jQVgY1qlQbPrqQHM+AjAyoBly+A3D4=\n-----END CERTIFICATE-----";
+      var SAMPLE_EXPIRED = "-----BEGIN CERTIFICATE-----\nMIID5jCCAs6gAwIBAgIUO8V1rOSEEITAKKrSwpuYrBjiJH0wDQYJKoZIhvcNAQEL\nBQAwejELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcM\nDVNhbiBGcmFuY2lzY28xHjAcBgNVBAoMFVRvb2xzaGVkIFRlc3QgUm9vdCBDQTEe\nMBwGA1UEAwwVVG9vbHNoZWQgVGVzdCBSb290IENBMB4XDTIwMDEwMTAwMDAwMFoX\nDTIxMDEwMTAwMDAwMFowRzELMAkGA1UEBhMCVVMxGjAYBgNVBAoMEVRvb2xzaGVk\nIFRlc3QgTHRkMRwwGgYDVQQDDBNleHBpcmVkLmV4YW1wbGUuY29tMIIBIjANBgkq\nhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx9eoNyxYC9LrhKeivboMb0epfEObRosJ\njrD7dmf9jkqPGjtXoW6qbsZ0mxLCXYUuozijO5rgzrhcByw3N/b0Sv60DpDEPI6o\nfUpZ86sb2MUVqD4mMk+p/qymKL3pLmdTLpv+xJLInck4Jm5o6kIZ5wIwEwX6m0IK\nIs/j/ql0sUw274cT/kaOvD4KXibiXu6DCASDIL8G4j3pxNmPwp0ZjCfLJyLJzgCj\nT4pCU++QFIuHA5bi+OecIVeinbDDlojLBBnHjTJfUBidZaWo3wv0fLX2UlRgLbLO\n1NVqMhl6a3CCbHxz671yl6TGv79bEou7J8m+ljUp7AKhT9EGJNOZmwIDAQABo4GW\nMIGTMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsG\nAQUFBwMBMB4GA1UdEQQXMBWCE2V4cGlyZWQuZXhhbXBsZS5jb20wHQYDVR0OBBYE\nFEteLndGteZd+VhJwmEO8nmi9VLVMB8GA1UdIwQYMBaAFPY/PSiAyLd1N7Qy8eB3\nsykSvSgxMA0GCSqGSIb3DQEBCwUAA4IBAQBXBhqvaz9h/wOXIfoQn721j2SbILWz\nBO517imUr5aVey1wpZoukuypKl1vGDG5NiSs5E7OcmYzyYrDzSAtiNKy+WiY5Cl4\nLdAhvnqrt3NR9tkg1Bht7UkwMFzJtX3OaVlS4no4E2SPGxlMk+00bipMYIAf+B48\nGA3jrPWv02/6Ba3khVAWCm+vIdhB5jB7MuHKwxRF1xS17hiffUoyiW0JEXBdLzZf\n+ejd4+DwBaFSEDvKHBY1Qtryxutmj53NswhQBxikDWQYM3VzOLh4BpQO6Hbw25iE\n9+5fGIQtRtGYS/YV9vRdFFUt5pwuMaMSj2g6FhU6sE98VwQvjwCnNE5P\n-----END CERTIFICATE-----";
+      var SAMPLE_CSR = "-----BEGIN CERTIFICATE REQUEST-----\nMIIDFzCCAf8CAQAwWDELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWEx\nGjAYBgNVBAoMEVRvb2xzaGVkIFRlc3QgTHRkMRgwFgYDVQQDDA9hcGkuZXhhbXBs\nZS5kZXYwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCwm5z05/G/6QUZ\ncv5/1uuoGfc72Kr2KXjilhXGhUILqXHvEMDeOVLzyGDBIKT6r0qJQcG3kd2XgCRL\nyLf73EC1pLEl3eLrzI6DO5IG0IU/e/MciKGMU0DZy9yUpYNW217MjRFR9OBqFjKR\n4DxG3zwQYHT1FfDKwx1NDZpVzHqLAEbq2GmIudeDsqOdYVO1hAOzmk6RGM4rT1vN\nAIGK0MrKkVNnK6l7teOEhqqfOOuc9QH7MPqhohWaxTLGp8mIFZ9DXnQi1O3T8C1N\narB2Rc4dWFT/aT2Ur/kTcjDZSGquxcJYtnBurLwFMKfqHZr6XUQaoOKxqhVQ3e7a\ncsc1k1MhAgMBAAGgejB4BgkqhkiG9w0BCQ4xazBpMAwGA1UdEwEB/wQCMAAwDgYD\nVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMDQGA1UdEQQtMCuCD2Fw\naS5leGFtcGxlLmRldoIYYXBpLmludGVybmFsLmV4YW1wbGUuZGV2MA0GCSqGSIb3\nDQEBCwUAA4IBAQAF3n1Y4fedvrxBw2ja55h0lOJ2+jp4fLudQNKvqcwkLSIe42lp\ng3oTk3EuhUlJPCcdQCqfTM9YVn89hajcnHmQkB3lYkdCKxu4sjnBzyYKPu+iWDj+\nlumQWER4QNeVpgojAgMADxtzsYtnxaqFVL8fu/ModhDr1yz/hHb0l06rrk6v6p+X\nGlpH5oAFFl+VVvM5Naw324+AW/2mu3tzHo8xP85HXMvOokdP5XsAswayDsRG4M+u\n67f5Mde1aReSZjbMjjn40ISXExVq2ynT/M4LhBvDHrdHdTI34lDWqEtMmSarZ6vS\nj9rBbq2WIfEFY3RyqE91T6JjRstxe+HYl2cn\n-----END CERTIFICATE REQUEST-----";
+
+      // ---------------------------------------------------------------
+      // Small DOM helpers — every value is inserted as text, never markup.
+      // ---------------------------------------------------------------
+
+      function $(id) { return document.getElementById(id); }
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+      function span(cls, text) { return el("span", cls, text); }
+      function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+      function setStatus(node, message, kind) {
+        clear(node);
+        node.classList.remove("hidden", "error", "ok");
+        if (!message) { node.classList.add("hidden"); return; }
+        node.textContent = message;
+        if (kind) node.classList.add(kind);
+      }
+
+      function badge(level, text) {
+        var label = text || (level === "error" ? "error" : level === "warning" ? "warning" : level === "info" ? "note" : level);
+        return span("ci-badge " + level, label);
+      }
+
+      function chip(key, value, cls) {
+        var c = el("span", "ci-chip" + (cls ? " " + cls : ""));
+        c.appendChild(span("ci-chip-k", key));
+        c.appendChild(span("ci-chip-v", value));
+        return c;
+      }
+
+      function fact(label, value, opts) {
+        opts = opts || {};
+        var dl = el("dl", "ci-fact" + (opts.wide ? " wide" : ""));
+        dl.appendChild(el("dt", null, label));
+        var dd = el("dd", opts.mono ? "mono" : null);
+        if (value === null || value === undefined || value === "") {
+          dd.appendChild(span("ci-muted", "—"));
+        } else {
+          dd.textContent = String(value);
+        }
+        dl.appendChild(dd);
+        return dl;
+      }
+
+      function copyText(text, button, statusNode, label) {
+        if (!text) return;
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          setStatus(statusNode || $("status"), "The Clipboard API is unavailable in this browser.", "error");
+          return;
+        }
+        navigator.clipboard.writeText(text).then(function () {
+          var old = button.textContent;
+          button.textContent = (label || "Copied") + " ✓";
+          setTimeout(function () { button.textContent = old; }, 1400);
+        }).catch(function () {
+          setStatus(statusNode || $("status"), "The browser blocked the clipboard write.", "error");
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // State
+      // ---------------------------------------------------------------
+
+      var state = { result: null, selected: -1, chain: null };
+
+      // ---------------------------------------------------------------
+      // Inspection
+      // ---------------------------------------------------------------
+
+      function renderEmpty(message) {
+        state.result = null;
+        state.selected = -1;
+        state.chain = null;
+
+        var items = $("items");
+        clear(items);
+        items.appendChild(el("p", "ci-empty", message || "Nothing parsed yet. Paste a certificate or load one of the samples to begin."));
+        $("block-count").textContent = "";
+
+        var overview = $("overview");
+        clear(overview);
+        overview.appendChild(el("p", "ci-empty", "Select a block to see its details."));
+        $("overview-note").textContent = "";
+
+        var findings = $("findings");
+        clear(findings);
+        findings.appendChild(el("li", "ci-empty", "Decode a certificate or request to see its review."));
+        $("finding-count").textContent = "";
+
+        renderExtensions(null);
+        renderChain(null);
+
+        $("btn-copy-report").disabled = true;
+        $("btn-download-report").disabled = true;
+        $("btn-verify").disabled = true;
+      }
+
+      function inspect() {
+        var raw = $("input").value;
+        if (raw.trim() === "") { renderEmpty(); setStatus($("status"), ""); return; }
+
+        return ci.inspect(raw).then(function (res) {
+          if (!res.ok) {
+            renderEmpty();
+            setStatus($("status"), res.error || "That input could not be parsed.", "error");
+            return;
+          }
+          state.result = res;
+          setStatus($("status"), "");
+          renderItems(res);
+          selectItem(0);
+          if (res.skippedPrivateKeys) {
+            setStatus($("status"), res.skippedPrivateKeys + " private key block(s) were skipped — the inspector only reads certificates and requests.", "ok");
+          }
+        }).catch(function (err) {
+          renderEmpty();
+          setStatus($("status"), "Something went wrong while parsing: " + (err && err.message ? err.message : String(err)), "error");
+        });
+      }
+
+      function itemLabel(item) {
+        var cn = item.subject ? ci.nameValue(item.subject, "CN") : null;
+        if (cn) return cn;
+        if (item.subject && item.subject.formatted) return item.subject.formatted;
+        return item.kind === "csr" ? "Certificate request" : "Certificate";
+      }
+
+      function itemSub(item) {
+        var parts = [item.kind === "csr" ? "PKCS#10 request" : "X.509 v" + (item.version || "?")];
+        if (item.kind === "certificate" && item.validity && item.validity.notAfter && item.validity.notAfter.iso) {
+          parts.push("expires " + item.validity.notAfter.iso.slice(0, 10));
+        }
+        if (item.publicKey) parts.push(item.publicKey.keySizeLabel || item.publicKey.keyType);
+        return parts.join(" · ");
+      }
+
+      function validityBadge(item) {
+        var st = ci.validityState(item);
+        if (st === "expired") return badge("error", "expired");
+        if (st === "not-yet-valid") return badge("error", "not yet valid");
+        if (st === "expiring") return badge("warn", "expiring soon");
+        if (st === "valid") return badge("ok", "valid");
+        return badge("info", "dates unreadable");
+      }
+
+      function renderItems(res) {
+        var wrap = $("items");
+        clear(wrap);
+
+        res.items.forEach(function (item, index) {
+          var btn = el("button", "ci-item");
+          btn.type = "button";
+          btn.setAttribute("aria-pressed", index === state.selected ? "true" : "false");
+
+          var top = el("div", "ci-item-top");
+          top.appendChild(span("ci-item-name", itemLabel(item)));
+          if (item.kind === "certificate") top.appendChild(validityBadge(item));
+          else top.appendChild(badge("info", "request"));
+          btn.appendChild(top);
+          btn.appendChild(el("div", "ci-item-sub", itemSub(item)));
+
+          btn.addEventListener("click", function () { selectItem(index); });
+          wrap.appendChild(btn);
+        });
+
+        var certs = res.items.filter(function (i) { return i.kind === "certificate"; }).length;
+        var csrs = res.items.length - certs;
+        var bits = [];
+        if (certs) bits.push(certs + " certificate" + (certs === 1 ? "" : "s"));
+        if (csrs) bits.push(csrs + " request" + (csrs === 1 ? "" : "s"));
+        $("block-count").textContent = bits.join(" · ");
+
+        if (res.errors && res.errors.length) {
+          setStatus($("status"), res.errors.length + " block(s) could not be parsed: " + res.errors[0].error, "error");
+        }
+
+        renderChain(res.items);
+      }
+
+      function selectItem(index) {
+        if (!state.result || !state.result.items[index]) return;
+        state.selected = index;
+
+        var buttons = $("items").querySelectorAll(".ci-item");
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].setAttribute("aria-pressed", i === index ? "true" : "false");
+        }
+
+        var item = state.result.items[index];
+        renderOverview(item);
+        renderFindings(item);
+        renderExtensions(item);
+
+        $("btn-copy-report").disabled = false;
+        $("btn-download-report").disabled = false;
+      }
+
+      // ---------------------------------------------------------------
+      // Overview
+      // ---------------------------------------------------------------
+
+      function renderOverview(item) {
+        var box = $("overview");
+        clear(box);
+
+        box.appendChild(fact("Kind", item.kind === "csr" ? "PKCS#10 certificate request" : "X.509 certificate"));
+        if (item.kind === "certificate") {
+          box.appendChild(fact("Version", "v" + item.version));
+          box.appendChild(fact("Serial number", item.serialHex, { mono: true }));
+        }
+
+        if (item.kind === "certificate") {
+          var st = ci.validityState(item);
+          var days = item.validity && item.validity.notAfter && item.validity.notAfter.valid
+            ? ci.relativeDays(item.validity.notAfter.epoch, Date.now()) : null;
+          var statusText = st === "expired" ? "Expired" + (days !== null ? " " + Math.abs(days) + " day(s) ago" : "")
+            : st === "not-yet-valid" ? "Not yet valid"
+            : st === "expiring" ? "Valid, expires in " + days + " day(s)"
+            : st === "valid" ? "Valid, expires in " + days + " day(s)"
+            : "Dates unreadable";
+          box.appendChild(fact("Validity status", statusText));
+
+          var windowFact = el("dl", "ci-fact wide");
+          windowFact.appendChild(el("dt", null, "Validity window"));
+          var dd = el("dd");
+          dd.appendChild(el("div", null, ci.formatDate(item.validity.notBefore.epoch) + " → " + ci.formatDate(item.validity.notAfter.epoch)));
+          var bar = el("div", "ci-window");
+          var fill = el("div", "ci-window-fill");
+          var nb = item.validity.notBefore.epoch, na = item.validity.notAfter.epoch;
+          var ratio = (na > nb) ? (Date.now() - nb) / (na - nb) : 1;
+          ratio = Math.max(0, Math.min(1, ratio));
+          fill.style.width = (ratio * 100).toFixed(1) + "%";
+          if (st === "expired" || st === "not-yet-valid") fill.className = "ci-window-fill error";
+          else if (st === "expiring") fill.className = "ci-window-fill warn";
+          bar.appendChild(fill);
+          dd.appendChild(bar);
+          var legend = el("div", "ci-window-legend");
+          legend.appendChild(span(null, item.validity.notBefore.iso ? item.validity.notBefore.iso.slice(0, 10) : "—"));
+          legend.appendChild(span(null, item.validity.notAfter.iso ? item.validity.notAfter.iso.slice(0, 10) : "—"));
+          dd.appendChild(legend);
+          windowFact.appendChild(dd);
+          box.appendChild(windowFact);
+        }
+
+        box.appendChild(fact("Subject", item.subject ? item.subject.formatted : "—", { wide: true }));
+
+        if (item.kind === "certificate") {
+          box.appendChild(fact("Issuer", item.issuer ? item.issuer.formatted : "—", { wide: true }));
+          box.appendChild(fact("Is a CA", item.isCA ? "Yes" + (item.pathLen !== null && item.pathLen !== undefined ? " (path length " + item.pathLen + ")" : "") : "No"));
+          box.appendChild(fact("Self-issued", item.issuer && item.subject && item.issuer.formatted === item.subject.formatted ? "Yes" : "No"));
+        }
+
+        if (item.publicKey) {
+          box.appendChild(fact("Public key", item.publicKey.keySizeLabel || item.publicKey.keyType));
+          if (item.publicKey.curve) box.appendChild(fact("Named curve", item.publicKey.curve));
+          if (item.publicKey.rsa) {
+            var modHex = String(item.publicKey.rsa.modulus || "");
+            var prettyMod = modHex.replace(/(.{2})(?=.)/g, "$1:").replace(/((?::[0-9A-Fa-f]{2}){16})(?=:)/g, "$1\n");
+            box.appendChild(fact("RSA modulus", prettyMod, { mono: true, wide: true }));
+            box.appendChild(fact("RSA exponent", item.publicKey.rsa.exponent));
+          }
+        }
+
+        box.appendChild(fact("Signature algorithm", item.signatureAlgorithm ? item.signatureAlgorithm.name : "—"));
+        if (item.signatureHash) box.appendChild(fact("Signature hash", item.signatureHash));
+        var sigLen = typeof item.signatureBytes === "number"
+          ? item.signatureBytes
+          : (Array.isArray(item.signatureBytes) ? item.signatureBytes.length : null);
+        if (sigLen) box.appendChild(fact("Signature size", sigLen + " bytes"));
+        box.appendChild(fact("Encoded size", item.size + " bytes"));
+
+        if (item.kind === "certificate" && item.keyUsage) {
+          box.appendChild(fact("Key usage", item.keyUsage.summary || "—", { wide: true }));
+        }
+        if (item.kind === "certificate" && item.extendedKeyUsage) {
+          box.appendChild(fact("Extended key usage", item.extendedKeyUsage.summary || "—", { wide: true }));
+        }
+        if (item.subjectAltNames && item.subjectAltNames.length) {
+          var sans = item.subjectAltNames.map(function (n) { return n.kind + ": " + n.value; }).join("\n");
+          box.appendChild(fact("Subject alternative names (" + item.subjectAltNames.length + ")", sans, { wide: true }));
+        }
+        if (item.subjectKeyIdentifier) {
+          box.appendChild(fact("Subject key identifier", item.subjectKeyIdentifier.colon, { mono: true, wide: true }));
+        }
+        if (item.authorityKeyIdentifier && item.authorityKeyIdentifier.keyIdentifierColon) {
+          box.appendChild(fact("Authority key identifier", item.authorityKeyIdentifier.keyIdentifierColon, { mono: true, wide: true }));
+        }
+
+        if (item.fingerprints) {
+          var fp = el("dl", "ci-fact wide");
+          fp.appendChild(el("dt", null, "Fingerprints"));
+          var fdd = el("dd", "mono");
+          ["SHA-256", "SHA-1", "SHA-384", "SHA-512"].forEach(function (alg, i) {
+            var row = el("div");
+            row.style.marginTop = i === 0 ? "0" : "6px";
+            row.appendChild(span(null, alg + "  "));
+            row.appendChild(span(null, item.fingerprints[alg].colon));
+            fdd.appendChild(row);
+          });
+          fp.appendChild(fdd);
+          box.appendChild(fp);
+        }
+
+        var note = "Everything above is read from the certificate itself. Nothing was fetched, and no signature was checked here — use section 6 for that.";
+        $("overview-note").textContent = note;
+      }
+
+      // ---------------------------------------------------------------
+      // Security review
+      // ---------------------------------------------------------------
+
+      function renderFindings(item) {
+        var list = $("findings");
+        clear(list);
+
+        var findings = (item.analysis && item.analysis.findings) || [];
+        var errors = findings.filter(function (f) { return f.severity === "error"; }).length;
+        var warnings = findings.filter(function (f) { return f.severity === "warning"; }).length;
+
+        $("finding-count").textContent = findings.length === 0
+          ? "no findings"
+          : (errors + " error · " + warnings + " warning · " + (findings.length - errors - warnings) + " note");
+
+        if (findings.length === 0) {
+          list.appendChild(el("li", "ci-empty", "No findings — the certificate is inside its validity window, uses a modern algorithm and carries the extensions it should."));
+          return;
+        }
+
+        findings.forEach(function (f) {
+          var li = el("li", "ci-finding " + f.severity);
+          li.appendChild(badge(f.severity));
+          var body = el("div", "ci-finding-body");
+          body.appendChild(el("div", "ci-finding-title", f.title));
+          body.appendChild(el("div", "ci-finding-detail", f.detail));
+          li.appendChild(body);
+          list.appendChild(li);
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Extensions
+      // ---------------------------------------------------------------
+
+      function extensionList(item) {
+        if (!item) return null;
+        if (item.kind === "csr") return item.extensionRequest || [];
+        return item.extensions || [];
+      }
+
+      function renderExtensions(item) {
+        var body = $("extensions");
+        clear(body);
+
+        var exts = extensionList(item);
+        if (!item) {
+          $("ext-count").textContent = "";
+          $("ext-caption").textContent = "Extensions carried by the selected certificate or request";
+          var tr0 = el("tr");
+          var td0 = el("td", "ci-empty", "No extensions to show.");
+          td0.colSpan = 4;
+          tr0.appendChild(td0);
+          body.appendChild(tr0);
+          return;
+        }
+
+        var label = item.kind === "csr" ? "requested extension" : "extension";
+        $("ext-count").textContent = exts.length + " " + label + (exts.length === 1 ? "" : "s");
+        $("ext-caption").textContent = (item.kind === "csr" ? "Extensions requested by" : "Extensions carried by") + " " + itemLabel(item);
+
+        if (!exts.length) {
+          var tr = el("tr");
+          var td = el("td", "ci-empty", item.kind === "csr" ? "This request asks for no extensions." : "This certificate carries no extensions.");
+          td.colSpan = 4;
+          tr.appendChild(td);
+          body.appendChild(tr);
+          return;
+        }
+
+        exts.forEach(function (ext) {
+          var tr = el("tr");
+          tr.appendChild(el("td", null, ext.name + (ext.oid ? "" : "")));
+          var crit = el("td");
+          crit.appendChild(ext.critical ? badge("warn", "critical") : span("ci-muted", "no"));
+          tr.appendChild(crit);
+          var summary = ext.decoded && ext.decoded.summary ? ext.decoded.summary : "(unparsed)";
+          tr.appendChild(el("td", null, summary));
+          tr.appendChild(el("td", "mono", ext.oid));
+          body.appendChild(tr);
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Chain
+      // ---------------------------------------------------------------
+
+      function renderChain(items) {
+        var box = $("chain");
+        clear(box);
+        state.chain = null;
+        setStatus($("chain-status"), "");
+
+        var certs = (items || []).filter(function (i) { return i && i.kind === "certificate"; });
+        if (certs.length === 0) {
+          box.appendChild(el("p", "ci-empty", "Load two or more certificates to build and verify a chain."));
+          $("btn-verify").disabled = true;
+          return;
+        }
+
+        var built = ci.buildChain(certs);
+        state.chain = built;
+        $("btn-verify").disabled = false;
+
+        if (!built.chain || built.chain.length === 0) {
+          box.appendChild(el("p", "ci-empty", "No chain could be assembled from the certificates provided."));
+          return;
+        }
+
+        renderChainRows(built, null);
+
+        if (!built.complete) {
+          box.appendChild(el("p", "ci-empty", "The chain is incomplete — at least one issuer is missing, so the last certificate cannot be traced to a root."));
+        }
+        if (built.unused && built.unused.length) {
+          box.appendChild(el("p", "ci-empty", built.unused.length + " certificate(s) could not be placed in the chain."));
+        }
+      }
+
+      /* Renders (or re-renders) one row per certificate. `verified` is the
+       * result of verifyChain — its links[i] covers the pair (chain[i],
+       * chain[i + 1]), so the last row uses selfSignature instead. */
+      function renderChainRows(built, verified) {
+        var box = $("chain");
+        clear(box);
+
+        built.chain.forEach(function (cert, index) {
+          var link = built.links[index] || null;
+          var row = el("div", "ci-link");
+
+          var rail = el("div", "ci-link-rail");
+          var dot = el("div", "ci-link-dot", String(index + 1));
+          rail.appendChild(dot);
+          row.appendChild(rail);
+
+          var body = el("div", "ci-link-body");
+          body.appendChild(el("div", "ci-link-name", itemLabel(cert)));
+          var sub = itemSub(cert);
+          if (link) sub += " · " + link.reason;
+          body.appendChild(el("div", "ci-link-sub", sub));
+
+          var verdict = el("div", "ci-link-verdict");
+          body.appendChild(verdict);
+
+          var isLast = index === built.chain.length - 1;
+          var selfIssued = !!(cert.subject && cert.issuer && cert.subject.formatted === cert.issuer.formatted);
+          var result = null;
+          if (verified) {
+            result = isLast
+              ? (verified.selfSignature ? verified.selfSignature.result : null)
+              : (verified.links[index] ? verified.links[index].result : null);
+          }
+
+          if (result) {
+            if (result.status === "valid") {
+              dot.className = "ci-link-dot ok";
+              dot.textContent = "✓";
+              verdict.className = "ci-link-verdict ok";
+              verdict.textContent = isLast
+                ? "✓ Self-signature verified against its own key (" + (result.hash || "hash") + ")."
+                : "✓ Signature verified against the issuer's key (" + (result.hash || "hash") + ").";
+            } else if (result.status === "invalid") {
+              dot.className = "ci-link-dot error";
+              dot.textContent = "✕";
+              verdict.className = "ci-link-verdict error";
+              verdict.textContent = isLast
+                ? "✕ The self-signature does not match this certificate's own key — it is not a genuine self-signed root."
+                : "✕ Signature does not match the issuer's key. The certificate was altered, or the wrong issuer was supplied.";
+            } else {
+              dot.className = "ci-link-dot unsupported";
+              dot.textContent = "•";
+              verdict.className = "ci-link-verdict unsupported";
+              verdict.textContent = "• Not verified — " + (result.reason || "this algorithm or key type is not supported by the browser's Web Crypto API.");
+            }
+          } else if (isLast && selfIssued) {
+            verdict.className = "ci-link-verdict unsupported";
+            verdict.textContent = "Self-signed root — its signature is checked against its own key by Verify chain.";
+          } else if (link && !isLast) {
+            verdict.className = "ci-link-verdict unsupported";
+            verdict.textContent = "Signature not checked yet — press Verify chain.";
+          } else {
+            verdict.className = "ci-link-verdict unsupported";
+            verdict.textContent = "Chain stops here: the issuer is not in the input.";
+          }
+
+          row.appendChild(body);
+          box.appendChild(row);
+        });
+      }
+
+      function verifyChainNow() {
+        if (!state.chain || !state.chain.chain || state.chain.chain.length === 0) {
+          setStatus($("chain-status"), "There is no chain to verify.", "error");
+          return Promise.resolve();
+        }
+        var btn = $("btn-verify");
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = "Verifying…";
+        setStatus($("chain-status"), "Checking signatures with the Web Crypto API…");
+
+        return ci.verifyChain(state.chain.chain).then(function (res) {
+          btn.disabled = false;
+          btn.textContent = original;
+
+          renderChainRows(state.chain, res);
+
+          var valid = 0, invalid = 0, unsupported = 0;
+          res.links.forEach(function (link) {
+            if (link.result.status === "valid") valid++;
+            else if (link.result.status === "invalid") invalid++;
+            else unsupported++;
+          });
+
+          var self = res.selfSignature;
+          var messages = [];
+          if (res.links.length === 0) {
+            messages.push("no links to check");
+          } else {
+            if (valid) messages.push(valid + " link(s) verified");
+            if (invalid) messages.push(invalid + " link(s) failed");
+            if (unsupported) messages.push(unsupported + " link(s) not checkable");
+          }
+          if (self) {
+            if (self.result.status === "valid") messages.push("the root's self-signature is valid");
+            else if (self.result.status === "invalid") messages.push("the root's self-signature does NOT match");
+            else messages.push("the root's self-signature could not be checked");
+          }
+          var bad = invalid > 0 || (self && self.result.status === "invalid");
+          setStatus($("chain-status"), messages.join(" · ") + ".", bad ? "error" : "ok");
+        }).catch(function (err) {
+          btn.disabled = false;
+          btn.textContent = original;
+          setStatus($("chain-status"), "Verification failed: " + (err && err.message ? err.message : String(err)), "error");
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Reports
+      // ---------------------------------------------------------------
+
+      function currentReport() {
+        if (!state.result || !state.result.items[state.selected]) return null;
+        return ci.toJsonReport({ items: [state.result.items[state.selected]] }).items[0];
+      }
+
+      // ---------------------------------------------------------------
+      // File input and drag-and-drop
+      // ---------------------------------------------------------------
+
+      function applyText(text, name) {
+        $("input").value = text;
+        $("file-name").textContent = name ? name : "";
+        return inspect();
+      }
+
+      function readFile(file) {
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var bytes = new Uint8Array(reader.result);
+            var asText = new TextDecoder("utf-8").decode(bytes);
+            if (asText.indexOf("-----BEGIN") !== -1) {
+              applyText(asText, file.name);
+            } else if (bytes.length > 0 && bytes[0] === 0x30) {
+              // Binary DER — hand the parser its Base64 form.
+              applyText(ci.bytesToBase64(bytes), file.name);
+            } else {
+              applyText(asText, file.name);
+            }
+          } catch (err) {
+            setStatus($("status"), "That file could not be read: " + (err && err.message ? err.message : String(err)), "error");
+          }
+        };
+        reader.onerror = function () {
+          setStatus($("status"), "That file could not be read.", "error");
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      // ---------------------------------------------------------------
+      // Wiring
+      // ---------------------------------------------------------------
+
+      var debounce = null;
+      $("input").addEventListener("input", function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(inspect, 160);
+      });
+
+      $("btn-sample-chain").addEventListener("click", function () { applyText(SAMPLE_CHAIN, "sample-chain.pem"); });
+      $("btn-sample-expired").addEventListener("click", function () { applyText(SAMPLE_EXPIRED, "expired.example.com.pem"); });
+      $("btn-sample-csr").addEventListener("click", function () { applyText(SAMPLE_CSR, "api.example.dev.csr"); });
+
+      $("btn-clear").addEventListener("click", function () {
+        $("input").value = "";
+        $("file-name").textContent = "";
+        renderEmpty();
+        setStatus($("status"), "");
+        $("input").focus();
+      });
+
+      $("btn-file").addEventListener("click", function () { $("file").click(); });
+      $("file").addEventListener("change", function () {
+        readFile($("file").files && $("file").files[0]);
+        $("file").value = "";
+      });
+
+      var zone = $("dropzone");
+      ["dragenter", "dragover"].forEach(function (type) {
+        zone.addEventListener(type, function (e) {
+          e.preventDefault();
+          zone.classList.add("ci-dragover");
+        });
+      });
+      ["dragleave", "dragend", "drop"].forEach(function (type) {
+        zone.addEventListener(type, function (e) {
+          e.preventDefault();
+          if (type === "dragleave" && zone.contains(e.relatedTarget)) return;
+          zone.classList.remove("ci-dragover");
+        });
+      });
+      zone.addEventListener("drop", function (e) {
+        var dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) readFile(dt.files[0]);
+      });
+
+      $("btn-verify").addEventListener("click", function () { verifyChainNow(); });
+
+      $("btn-copy-report").addEventListener("click", function () {
+        var report = currentReport();
+        if (!report) return;
+        copyText(JSON.stringify(report, null, 2), $("btn-copy-report"), $("status"), "Copied");
+      });
+
+      $("btn-download-report").addEventListener("click", function () {
+        var report = currentReport();
+        if (!report) return;
+        var name = itemLabel(state.result.items[state.selected]).replace(/[^A-Za-z0-9._-]+/g, "_") || "certificate";
+        var blob = new Blob([JSON.stringify(report, null, 2) + "\n"], { type: "application/json" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = name + ".json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setStatus($("status"), "Downloaded " + a.download + ".", "ok");
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          inspect();
+        }
+      });
+
+      // ---------------------------------------------------------------
+      // Boot
+      // ---------------------------------------------------------------
+
+      renderEmpty();
+      applyText(SAMPLE_CHAIN, "sample-chain.pem").then(function () { verifyChainNow(); });
+    })();
+  </script>
+</body>
+</html>
