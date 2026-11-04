@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f7">
+  <title>Archive Inspector — Toolshed</title>
+  <meta name="description" content="Open a ZIP, GZIP or TAR archive in your browser: see every entry, sizes, compression, file types, checksum status and safety findings — without uploading anything.">
+  <link rel="icon" href="../../assets/logo.svg">
+  <link rel="stylesheet" href="../../assets/toolshed.css">
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <header class="hd">
+  <div class="wrap hd-in">
+    <a class="logo" href="../..">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Toolshed
+    </a>
+    <nav>
+      <a href="../..#index">Tools</a>
+      <a href="../..">Home</a>
+      <a class="gh" href="https://github.com/sarthakbystander/toolshed" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+  <main class="wrap">
+    <section class="toolhead">
+      <div class="crumb"><a href="../..">← back to the drawer</a> / archive-inspector</div>
+      <h1>Archive Inspector</h1>
+      <p class="lede">Open a <strong>.zip</strong>, <strong>.gz</strong> or <strong>.tar</strong> file and see exactly what is inside — every entry, real sizes, compression ratio, file-type mix, checksum status and safety warnings such as path traversal, duplicate names and decompression bombs. Everything is read locally in your tab.</p>
+    </section>
+
+    <section class="toolbody ai">
+      <!-- Input -->
+      <div class="pane ai-span">
+        <div class="pane-header">
+          <span class="pane-title">ARCHIVE</span>
+          <span class="ai-badge hidden" id="fmt-badge"></span>
+        </div>
+
+        <div class="ai-drop" id="drop" role="button" tabindex="0" aria-label="Choose an archive or drop one here">
+          <input type="file" id="file" accept=".zip,.gz,.tgz,.tar,.tar.gz,application/zip,application/gzip,application/x-tar" hidden>
+          <p class="ai-drop-main">Choose an archive or drop one here</p>
+          <p class="ai-drop-sub">ZIP · GZIP (.gz, .tgz) · TAR — read entirely in your browser, nothing is uploaded.</p>
+          <p class="ai-drop-file hidden" id="drop-file"></p>
+        </div>
+
+        <div class="row">
+          <button type="button" class="btn" id="btn-pick">Choose file</button>
+          <button type="button" class="btn secondary" id="btn-sample">Try sample</button>
+          <button type="button" class="btn danger" id="btn-clear">Clear</button>
+        </div>
+
+        <p class="status hidden" id="status" role="status" aria-live="polite"></p>
+      </div>
+
+      <!-- Overview -->
+      <div class="pane ai-span hidden" id="pane-overview">
+        <div class="pane-header">
+          <span class="pane-title">OVERVIEW</span>
+          <div class="row">
+            <button type="button" class="btn secondary sm" id="btn-report">Download report</button>
+          </div>
+        </div>
+        <div class="ai-stats" id="stats"></div>
+        <div class="ai-findings" id="findings"></div>
+      </div>
+
+      <!-- Contents + preview -->
+      <div class="pane ai-span hidden" id="pane-contents">
+        <div class="pane-header">
+          <span class="pane-title">CONTENTS</span>
+          <div class="row">
+            <input type="text" id="filter" class="ai-filter" placeholder="Filter by name or extension…" autocomplete="off" spellcheck="false" aria-label="Filter entries">
+            <button type="button" class="btn secondary sm" id="btn-csv">Download list (CSV)</button>
+          </div>
+        </div>
+        <p class="ai-note hidden" id="table-note"></p>
+        <div class="ai-split">
+          <div class="ai-tablewrap">
+            <table class="ai-table">
+              <caption class="sr-only">Archive entries</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col" class="num">Size</th>
+                  <th scope="col" class="num">Packed</th>
+                  <th scope="col" class="num">Ratio</th>
+                  <th scope="col">Method</th>
+                  <th scope="col">Modified</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+            <p class="ai-empty" id="table-empty">No entries match this filter.</p>
+          </div>
+
+          <div class="ai-preview" id="preview">
+            <p class="ai-preview-hint">Select a file on the left to preview it here.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type breakdown -->
+      <div class="pane ai-span hidden" id="pane-types">
+        <div class="pane-header"><span class="pane-title">FILE TYPES</span></div>
+        <div class="ai-types" id="types"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="pane ai-span" id="pane-empty">
+        <p class="ai-welcome">No archive loaded yet.</p>
+        <p class="ai-welcome-sub">Drop a file above, or <button type="button" class="linklike" id="btn-sample2">load the sample bundle</button> to see how a report looks. Nothing leaves your device.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+  <div class="wrap foot-in">
+    <div class="cr">
+      Toolshed · MIT · Built by <a href="https://github.com/sarthakbystander" target="_blank" rel="noopener">@sarthakbystander</a>
+    </div>
+    <nav>
+      <a href="../..">Home</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+      <a href="https://github.com/sarthakbystander/toolshed/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="tool.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var lib = window.Toolshed.archiveInspector;
+      var MAX_FILE_BYTES = 512 * 1024 * 1024; // 512 MB — past this the tab can run out of memory
+      var MAX_ROWS = 800;
+
+      var drop = document.getElementById("drop");
+      var fileInput = document.getElementById("file");
+      var dropFile = document.getElementById("drop-file");
+      var btnPick = document.getElementById("btn-pick");
+      var btnSample = document.getElementById("btn-sample");
+      var btnSample2 = document.getElementById("btn-sample2");
+      var btnClear = document.getElementById("btn-clear");
+      var btnReport = document.getElementById("btn-report");
+      var btnCsv = document.getElementById("btn-csv");
+      var statusEl = document.getElementById("status");
+      var fmtBadge = document.getElementById("fmt-badge");
+      var filterEl = document.getElementById("filter");
+      var rowsEl = document.getElementById("rows");
+      var tableEmpty = document.getElementById("table-empty");
+      var tableNote = document.getElementById("table-note");
+      var previewEl = document.getElementById("preview");
+      var typesEl = document.getElementById("types");
+      var statsEl = document.getElementById("stats");
+      var findingsEl = document.getElementById("findings");
+
+      var paneOverview = document.getElementById("pane-overview");
+      var paneContents = document.getElementById("pane-contents");
+      var paneTypes = document.getElementById("pane-types");
+      var paneEmpty = document.getElementById("pane-empty");
+
+      // Inline sample archive: a small ZIP with folders, text, JSON, a PNG,
+      // a nested archive, an executable, macOS junk and a traversal entry.
+      var SAMPLE_B64 =       "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";
+
+      var state = { bytes: null, analysis: null, name: "", selected: -1, previewUrl: null, rowIndexes: [] };
+
+      function setStatus(msg, kind) {
+        if (!msg) {
+          statusEl.className = "status hidden";
+          statusEl.textContent = "";
+          return;
+        }
+        statusEl.className = "status " + (kind || "");
+        statusEl.textContent = msg;
+      }
+
+      function b64ToBytes(b64) {
+        var bin = atob(b64);
+        var out = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+        return out;
+      }
+
+      function el(tag, cls, text) {
+        var n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (text !== undefined) n.textContent = text;
+        return n;
+      }
+
+      // --- loading ---------------------------------------------------------
+
+      function chooseFile() {
+        fileInput.click();
+      }
+
+      function handleFile(file) {
+        if (!file) return;
+        if (file.size === 0) {
+          setStatus("That file is empty.", "error");
+          return;
+        }
+        if (file.size > MAX_FILE_BYTES) {
+          setStatus("That file is " + lib.formatBytes(file.size) + ". Archives over " + lib.formatBytes(MAX_FILE_BYTES) + " are too large to open safely in a browser tab.", "error");
+          return;
+        }
+        setStatus("Reading " + file.name + "…");
+        dropFile.textContent = file.name;
+        dropFile.classList.remove("hidden");
+        var reader = new FileReader();
+        reader.onerror = function () {
+          setStatus("The file could not be read. It may have been moved or the browser blocked access.", "error");
+        };
+        reader.onload = function () {
+          // Yield once so the "Reading…" state paints before the parse runs.
+          setTimeout(function () {
+            analyse(file.name, new Uint8Array(reader.result));
+          }, 0);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function analyse(name, bytes) {
+        state.bytes = bytes;
+        state.name = name;
+        state.selected = -1;
+        revokePreview();
+
+        var t0 = (window.performance && performance.now) ? performance.now() : 0;
+        var result;
+        try {
+          result = lib.analyse(bytes, { filename: name });
+        } catch (err) {
+          result = { ok: false, error: "Something went wrong reading this file: " + err.message };
+        }
+        var ms = t0 ? Math.round((window.performance.now() - t0)) : null;
+
+        if (!result.ok) {
+          state.analysis = null;
+          showOnly(paneEmpty);
+          paneEmpty.innerHTML = "";
+          paneEmpty.appendChild(el("p", "ai-welcome", "This file could not be read as an archive."));
+          paneEmpty.appendChild(el("p", "ai-welcome-sub", capitalise(result.error)));
+          var label = result.formatLabel || (result.detected && lib.FORMAT_LABELS[result.detected]) || null;
+          if (label) {
+            paneEmpty.appendChild(el("p", "ai-welcome-sub", "Detected format: " + label + "."));
+          } else {
+            paneEmpty.appendChild(el("p", "ai-welcome-sub", "Supported formats: ZIP, GZIP (.gz, .tgz) and TAR."));
+          }
+          fmtBadge.classList.add("hidden");
+          setStatus("Could not read " + name + ".", "error");
+          return;
+        }
+
+        state.analysis = result;
+        fmtBadge.textContent = result.formatLabel;
+        fmtBadge.classList.remove("hidden");
+        setStatus("Loaded " + name + (ms !== null ? " in " + ms + " ms." : "."), "ok");
+        render(result);
+      }
+
+      function loadSample() {
+        var bytes;
+        try {
+          bytes = b64ToBytes(SAMPLE_B64);
+        } catch (err) {
+          setStatus("The sample could not be decoded in this browser.", "error");
+          return;
+        }
+        setStatus("Loading sample…");
+        dropFile.textContent = "sample-bundle.zip";
+        dropFile.classList.remove("hidden");
+        setTimeout(function () {
+          analyse("sample-bundle.zip", bytes);
+        }, 0);
+      }
+
+      function clearAll() {
+        state.bytes = null;
+        state.analysis = null;
+        state.selected = -1;
+        revokePreview();
+        fileInput.value = "";
+        dropFile.classList.add("hidden");
+        dropFile.textContent = "";
+        fmtBadge.classList.add("hidden");
+        filterEl.value = "";
+        setStatus("");
+        paneEmpty.innerHTML = "";
+        paneEmpty.appendChild(el("p", "ai-welcome", "No archive loaded yet."));
+        var sub = el("p", "ai-welcome-sub");
+        sub.appendChild(document.createTextNode("Drop a file above, or "));
+        var again = el("button", "linklike", "load the sample bundle");
+        again.type = "button";
+        again.addEventListener("click", loadSample);
+        sub.appendChild(again);
+        sub.appendChild(document.createTextNode(" to see how a report looks. Nothing leaves your device."));
+        paneEmpty.appendChild(sub);
+        showOnly(paneEmpty);
+      }
+
+      function showOnly(pane) {
+        [paneEmpty, paneOverview, paneContents, paneTypes].forEach(function (p) {
+          p.classList.toggle("hidden", p !== pane);
+        });
+      }
+
+      // --- rendering -------------------------------------------------------
+
+      function stat(k, v, cls) {
+        var box = el("div", "ai-stat" + (cls ? " " + cls : ""));
+        box.appendChild(el("span", "k", k));
+        box.appendChild(el("span", "v", v));
+        return box;
+      }
+
+      function render(r) {
+        paneEmpty.classList.add("hidden");
+        paneOverview.classList.remove("hidden");
+        paneContents.classList.remove("hidden");
+        paneTypes.classList.remove("hidden");
+
+        // Overview stats
+        statsEl.innerHTML = "";
+        var s = r.stats;
+        statsEl.appendChild(stat("Entries", String(s.entryCount)));
+        statsEl.appendChild(stat("Files", String(s.fileCount)));
+        statsEl.appendChild(stat("Folders", String(s.folderCount)));
+        statsEl.appendChild(stat("Archive size", lib.formatBytes(r.totalBytes)));
+        statsEl.appendChild(stat("Uncompressed", lib.formatBytes(s.totalUncompressed)));
+        statsEl.appendChild(stat("Packed", lib.formatBytes(s.totalCompressed)));
+        statsEl.appendChild(stat("Space saved", lib.formatPercent(s.savingPercent === null ? null : s.savingPercent), s.savingPercent > 0 ? "good" : null));
+        statsEl.appendChild(stat("Duplicates", String(s.duplicateCount), s.duplicateCount ? "warn" : null));
+        if (s.largest) statsEl.appendChild(stat("Largest", s.largest.path, "wide"));
+
+        // Findings
+        findingsEl.innerHTML = "";
+        if (r.findings.length === 0) {
+          findingsEl.appendChild(el("p", "ai-clean", "No structural or safety issues found."));
+        } else {
+          var head = el("p", "ai-findings-head", "Findings (" + r.findings.length + ")");
+          findingsEl.appendChild(head);
+          var list = el("ul", "ai-findlist");
+          r.findings.forEach(function (f) {
+            var li = el("li", "ai-finding ai-sev-" + f.severity);
+            li.appendChild(el("span", "ai-sev", f.severity));
+            li.appendChild(el("span", "ai-finding-msg", f.message));
+            list.appendChild(li);
+          });
+          findingsEl.appendChild(list);
+        }
+
+        // Type breakdown
+        typesEl.innerHTML = "";
+        if (r.typeBreakdown.length === 0) {
+          typesEl.appendChild(el("p", "ai-clean", "No files to break down."));
+        } else {
+          var max = r.typeBreakdown[0].bytes || 1;
+          r.typeBreakdown.slice(0, 24).forEach(function (t) {
+            var row = el("div", "ai-type");
+            row.appendChild(el("span", "ai-type-name", t.ext === "(no extension)" ? "(none)" : "." + t.ext));
+            var bar = el("span", "ai-type-bar");
+            var fill = el("span", "ai-type-fill");
+            fill.style.width = Math.max(2, Math.round((t.bytes / max) * 100)) + "%";
+            bar.appendChild(fill);
+            row.appendChild(bar);
+            row.appendChild(el("span", "ai-type-val", t.count + " · " + lib.formatBytes(t.bytes)));
+            typesEl.appendChild(row);
+          });
+        }
+
+        filterEl.value = "";
+        renderTable();
+      }
+
+      function renderTable() {
+        var r = state.analysis;
+        rowsEl.innerHTML = "";
+        if (!r) return;
+        var needle = filterEl.value.trim().toLowerCase();
+
+        var matches = [];
+        for (var i = 0; i < r.entries.length; i++) {
+          var e = r.entries[i];
+          if (needle && e.path.toLowerCase().indexOf(needle) === -1 && e.ext.indexOf(needle.replace(/^\./, "")) === -1) continue;
+          matches.push(e);
+        }
+
+        var shown = matches.slice(0, MAX_ROWS);
+        state.rowIndexes = shown.map(function (e) { return e.index; });
+
+        var frag = document.createDocumentFragment();
+        shown.forEach(function (e) {
+          var tr = el("tr");
+          if (e.index === state.selected) tr.className = "ai-sel";
+          tr.dataset.index = String(e.index);
+
+          var nameTd = el("td", "ai-name");
+          var btn = el("button", "ai-name-btn");
+          btn.type = "button";
+          btn.appendChild(el("span", "ai-ico " + (e.isDir ? "ai-ico-dir" : "ai-ico-file"), e.isDir ? "▸" : "•"));
+          btn.appendChild(el("span", "ai-name-text", e.path));
+          if (e.encrypted) btn.appendChild(el("span", "ai-tag ai-tag-enc", "encrypted"));
+          if (e.crcOk === false) btn.appendChild(el("span", "ai-tag ai-tag-bad", "bad crc"));
+          btn.addEventListener("click", function () { selectEntry(e.index); });
+          nameTd.appendChild(btn);
+          tr.appendChild(nameTd);
+
+          tr.appendChild(el("td", "num", e.isDir ? "—" : lib.formatBytes(e.size)));
+          tr.appendChild(el("td", "num", e.isDir ? "—" : lib.formatBytes(e.compressedSize)));
+          tr.appendChild(el("td", "num", e.isDir || e.ratio === null ? "—" : lib.formatRatio(e.ratio)));
+          tr.appendChild(el("td", "ai-method", e.methodLabel));
+          tr.appendChild(el("td", "ai-date", lib.formatDate(e.mtime)));
+
+          tr.addEventListener("click", function (ev) {
+            if (ev.target.closest("button")) return;
+            selectEntry(e.index);
+          });
+          frag.appendChild(tr);
+        });
+        rowsEl.appendChild(frag);
+
+        tableEmpty.classList.toggle("hidden", matches.length !== 0);
+        if (matches.length > MAX_ROWS) {
+          tableNote.textContent = "Showing the first " + MAX_ROWS + " of " + matches.length + " matching entries. Use the filter to narrow the list.";
+          tableNote.classList.remove("hidden");
+        } else if (needle) {
+          tableNote.textContent = matches.length + " of " + r.entries.length + " entries match.";
+          tableNote.classList.remove("hidden");
+        } else {
+          tableNote.classList.add("hidden");
+        }
+      }
+
+      function selectEntry(index) {
+        state.selected = index;
+        var rows = rowsEl.querySelectorAll("tr");
+        for (var i = 0; i < rows.length; i++) {
+          rows[i].classList.toggle("ai-sel", Number(rows[i].dataset.index) === index);
+        }
+        renderPreview();
+      }
+
+      function revokePreview() {
+        if (state.previewUrl) {
+          URL.revokeObjectURL(state.previewUrl);
+          state.previewUrl = null;
+        }
+      }
+
+      function renderPreview() {
+        revokePreview();
+        previewEl.innerHTML = "";
+        var r = state.analysis;
+        if (!r || state.selected < 0) {
+          previewEl.appendChild(el("p", "ai-preview-hint", "Select a file on the left to preview it here."));
+          return;
+        }
+        var entry = r.entries[state.selected];
+        var head = el("div", "ai-preview-head");
+        head.appendChild(el("span", "ai-preview-title", entry.path));
+        var meta = el("span", "ai-preview-meta", lib.describeEntry(entry) + (entry.mtime ? " · " + lib.formatDate(entry.mtime) : ""));
+        head.appendChild(meta);
+        previewEl.appendChild(head);
+
+        var p;
+        try {
+          p = lib.preview(state.bytes, r, state.selected);
+        } catch (err) {
+          p = { kind: "error", error: err.message };
+        }
+
+        if (p.kind === "error") {
+          previewEl.appendChild(el("p", "ai-preview-note ai-warn", p.error));
+          return;
+        }
+        if (p.kind === "dir") {
+          previewEl.appendChild(el("p", "ai-preview-note", "This is a folder entry."));
+          return;
+        }
+        if (p.kind === "binary") {
+          previewEl.appendChild(el("p", "ai-preview-note", "Binary file (" + lib.formatBytes(p.totalSize) + ") — no text preview. Download it to inspect the bytes."));
+          addDownload(entry);
+          return;
+        }
+        if (p.kind === "image") {
+          var blob = new Blob([p.bytes], { type: p.mime });
+          state.previewUrl = URL.createObjectURL(blob);
+          var img = el("img", "ai-preview-img");
+          img.src = state.previewUrl;
+          img.alt = "Preview of " + entry.path;
+          img.loading = "lazy";
+          previewEl.appendChild(img);
+          if (p.truncated) previewEl.appendChild(el("p", "ai-preview-note", "Preview shows the first " + lib.formatBytes(p.bytes.length) + " of " + lib.formatBytes(p.totalSize) + "."));
+          addDownload(entry);
+          return;
+        }
+        // text
+        var pre = el("pre", "ai-preview-text");
+        pre.textContent = p.text;
+        previewEl.appendChild(pre);
+        if (p.truncated) previewEl.appendChild(el("p", "ai-preview-note", "Showing the first " + lib.formatBytes(p.text.length) + " of " + lib.formatBytes(p.totalSize) + ". Download the file for the rest."));
+        addDownload(entry);
+      }
+
+      function addDownload(entry) {
+        var btn = el("button", "btn secondary sm", "Download entry");
+        btn.type = "button";
+        btn.addEventListener("click", function () {
+          try {
+            var ex = lib.extract(state.bytes, state.analysis, entry.index);
+            var blob = new Blob([ex.bytes], { type: "application/octet-stream" });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = entry.name || "entry";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+            setStatus("Downloaded " + entry.path + ".", "ok");
+          } catch (err) {
+            setStatus("Could not extract that entry: " + err.message, "error");
+          }
+        });
+        previewEl.appendChild(btn);
+      }
+
+      // --- exports ---------------------------------------------------------
+
+      function download(filename, text, mime) {
+        var blob = new Blob([text], { type: mime || "text/plain;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      }
+
+      function capitalise(text) {
+        return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+      }
+
+      function baseName(name) {
+        return name.replace(/\.(zip|gz|tgz|tar)$/i, "").replace(/[^\w.-]+/g, "_") || "archive";
+      }
+
+      function downloadReport() {
+        var r = state.analysis;
+        if (!r) return;
+        var report = {
+          tool: "Toolshed Archive Inspector",
+          file: r.filename,
+          format: r.format,
+          formatLabel: r.formatLabel,
+          archiveBytes: r.totalBytes,
+          zip64: r.zip64,
+          comment: r.comment,
+          stats: r.stats,
+          fileTypes: r.typeBreakdown,
+          findings: r.findings,
+          entries: r.entries.map(function (e) {
+            return {
+              path: e.path,
+              isDir: e.isDir,
+              size: e.size,
+              compressedSize: e.compressedSize,
+              method: e.methodLabel,
+              ratio: e.ratio,
+              crc32: e.crc32 === null || e.crc32 === undefined ? null : ("0x" + (e.crc32 >>> 0).toString(16).padStart(8, "0")),
+              crcOk: e.crcOk === undefined ? null : e.crcOk,
+              modified: e.mtime,
+              encrypted: e.encrypted,
+            };
+          }),
+        };
+        download(baseName(r.filename) + "-report.json", JSON.stringify(report, null, 2), "application/json");
+        setStatus("Report downloaded.", "ok");
+      }
+
+      function csvCell(v) {
+        var s = v === null || v === undefined ? "" : String(v);
+        return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }
+
+      function downloadCsv() {
+        var r = state.analysis;
+        if (!r) return;
+        var lines = ["path,type,size,packed,ratio,method,crc32,crc_ok,modified,encrypted"];
+        r.entries.forEach(function (e) {
+          lines.push([
+            csvCell(e.path),
+            e.isDir ? "folder" : "file",
+            e.isDir ? "" : e.size,
+            e.isDir ? "" : e.compressedSize,
+            e.ratio === null ? "" : e.ratio.toFixed(3),
+            e.methodLabel,
+            e.crc32 === null || e.crc32 === undefined ? "" : ("0x" + (e.crc32 >>> 0).toString(16).padStart(8, "0")),
+            e.crcOk === undefined ? "" : (e.crcOk ? "yes" : "no"),
+            e.mtime || "",
+            e.encrypted ? "yes" : "no",
+          ].join(","));
+        });
+        download(baseName(r.filename) + "-contents.csv", lines.join("\n") + "\n", "text/csv;charset=utf-8");
+        setStatus("File list downloaded.", "ok");
+      }
+
+      // --- wiring ----------------------------------------------------------
+
+      btnPick.addEventListener("click", chooseFile);
+      btnSample.addEventListener("click", loadSample);
+      btnSample2.addEventListener("click", loadSample);
+      btnClear.addEventListener("click", clearAll);
+      btnReport.addEventListener("click", downloadReport);
+      btnCsv.addEventListener("click", downloadCsv);
+
+      drop.addEventListener("click", function (ev) {
+        if (ev.target.closest("button")) return;
+        chooseFile();
+      });
+      drop.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") {
+          ev.preventDefault();
+          chooseFile();
+        }
+      });
+      fileInput.addEventListener("change", function () {
+        if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+      });
+
+      ["dragenter", "dragover"].forEach(function (type) {
+        drop.addEventListener(type, function (ev) {
+          ev.preventDefault();
+          drop.classList.add("drag");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (type) {
+        drop.addEventListener(type, function (ev) {
+          ev.preventDefault();
+          if (type === "dragleave" && drop.contains(ev.relatedTarget)) return;
+          drop.classList.remove("drag");
+        });
+      });
+      drop.addEventListener("drop", function (ev) {
+        var files = ev.dataTransfer && ev.dataTransfer.files;
+        if (files && files[0]) handleFile(files[0]);
+      });
+
+      filterEl.addEventListener("input", renderTable);
+
+      // Only the pane needs to swallow the drop; stop the browser opening the file.
+      window.addEventListener("dragover", function (ev) { ev.preventDefault(); });
+      window.addEventListener("drop", function (ev) { ev.preventDefault(); });
+    })();
+  </script>
+</body>
+</html>

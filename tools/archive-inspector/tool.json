@@ -1,0 +1,14 @@
+{
+  "id": "archive-inspector",
+  "name": "Archive Inspector",
+  "description": "Open a ZIP, GZIP or TAR file and see every entry, real sizes, compression, file types and safety findings such as path traversal, duplicate names and decompression bombs — all read locally in the browser.",
+  "category": "Developer",
+  "tags": ["zip", "tar", "gzip", "archive", "compression", "security", "forensics", "files"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
