@@ -1,0 +1,14 @@
+{
+  "id": "subtitle-studio",
+  "name": "Subtitle Studio",
+  "description": "Open, retime, clean up and QA SubRip (.srt) and WebVTT (.vtt) subtitle files in your browser. Shift and stretch timings, repair overlaps, find and replace, rewrap long lines, check reading speed, split and merge cues, then export SRT, VTT, plain text or CSV. Nothing is uploaded.",
+  "category": "Text",
+  "tags": ["captions", "editor", "srt", "subtitles", "timing", "vtt", "video"],
+  "version": "1.0.0",
+  "runtime": "browser",
+  "privacy": {
+    "execution": "local",
+    "dataUploaded": false,
+    "storage": "none"
+  }
+}
